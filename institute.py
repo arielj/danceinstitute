@@ -28,13 +28,16 @@ class Controller:
 
   def add_teacher(self, widget):
     teacher = Teacher()
-    page = TeacherForm(teacher)
+    page = TeacherForm(self, teacher)
     self.window.add_page(page)
   
   def edit_teacher(self, widget):
     teacher = Teacher.find(1)
-    page = TeacherForm(teacher)
+    page = TeacherForm(self, teacher)
     self.window.add_page(page)
+  
+  def submit_teacher(self, form):
+    print form.get_values()
 
   def close_tab(self, page):
     self.window.remove_page(page)

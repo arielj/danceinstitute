@@ -1,15 +1,21 @@
 import gtk
 
 class TeacherForm(gtk.Frame):
-  def __init__(self,teacher):
+  def __init__(self, controller, teacher):
     gtk.Frame.__init__(self)
     self.teacher = teacher
+    self.controller = controller
 
-    self.fields = self.get_form()
+    self.fields = self.get_form_fields()
+    
+    self.submit = gtk.Button('Guardar')
+    self.submit.connect('clicked',self.controller.submit_teacher, self)
+    self.fields.pack_start(self.submit,False)
+    
     self.add(self.fields)
     
     self.show_all()
-  
+
   def get_tab_label(self):
     if self.teacher.id:
       title = 'Profesor' if self.teacher.male else 'Profesora'
@@ -17,7 +23,7 @@ class TeacherForm(gtk.Frame):
     else:
       return 'Agregar Profesor'
   
-  def get_form(self):
+  def get_form_fields(self):
     self.name_l = gtk.Label('Nombre')
     self.name_e = gtk.Entry(100)
     
@@ -67,3 +73,6 @@ class TeacherForm(gtk.Frame):
     fields.pack_start(self.birthday_e,False)
       
     return fields
+  
+  def get_values(self):
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text()}

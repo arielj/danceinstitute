@@ -27,7 +27,7 @@ class MainWindow(gtk.Window):
     num = self.notebook.append_page(page,label)
     self.notebook.set_current_page(num)
     
-    label.close.connect_object('clicked', self.controller.close_tab, page)
+    label.close.connect('clicked', self.controller.close_tab, page)
   
   def remove_page(self, page):
     num = self.notebook.page_num(page)
