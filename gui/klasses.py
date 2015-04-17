@@ -1,5 +1,5 @@
 import gtk
-from room import Room
+from models import Room
 
 class KlassForm(gtk.Frame):
   def __init__(self, controller, klass):

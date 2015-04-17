@@ -5,8 +5,7 @@ pygtk.require('2.0')
 import gtk
 from gui import *
 from settings import Settings
-from teacher import Teacher
-from klass import Klass
+from models import *
 
 class Controller:
   def main(self):
