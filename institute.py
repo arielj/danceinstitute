@@ -58,6 +58,24 @@ class Controller:
   def submit_klass(self, widget, form):
     print form.klass.id
     print form.get_values()
+  
+  #students controls
+  def add_student(self, widget):
+    student = Student()
+    page = StudentForm(self, student)
+    self.window.add_page(page)
+  
+  def edit_student(self, widget):
+    student = Student.find(1)
+    page = StudentForm(self, student)
+    self.window.add_page(page)
+  
+  def submit_student(self, widget, form):
+    print form.student.id
+    print form.get_values()
+
+  def search_student(self, widget):
+    print "buscar usuarios..."
     
 if __name__ == "__main__":
   ctrlr = Controller()

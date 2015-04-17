@@ -21,7 +21,7 @@ class TeacherForm(gtk.Frame):
       title = 'Profesor' if self.teacher.male else 'Profesora'
       return 'Editar ' + title + ': ' + self.teacher.name + ' ' + self.teacher.lastname
     else:
-      return 'Agregar Profesor'
+      return 'Agregar Profesor/a'
   
   def get_form_fields(self):
     self.name_l = gtk.Label('Nombre')
@@ -47,6 +47,9 @@ class TeacherForm(gtk.Frame):
     self.birthday_l = gtk.Label('Fecha de nacimiento')
     self.birthday_e = gtk.Entry(10)
     
+    self.email_l = gtk.Label('Email')
+    self.email_e = gtk.Entry(256)
+    
     self.name_e.set_text(self.teacher.name)
     self.lastname_e.set_text(self.teacher.lastname)
     self.dni_e.set_text(self.teacher.dni)
@@ -54,6 +57,7 @@ class TeacherForm(gtk.Frame):
     self.cellphone_e.set_text(self.teacher.cellphone)
     self.address_e.set_text(self.teacher.address)
     self.birthday_e.set_text(self.teacher.birthday)
+    self.email_e.set_text(self.teacher.email)
     
     fields = gtk.VBox()
     fields.pack_start(self.name_l,False)
@@ -71,8 +75,10 @@ class TeacherForm(gtk.Frame):
     fields.pack_start(self.address_e,False)
     fields.pack_start(self.birthday_l,False)
     fields.pack_start(self.birthday_e,False)
+    fields.pack_start(self.email_l,False)
+    fields.pack_start(self.email_e,False)
       
     return fields
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text()}
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}

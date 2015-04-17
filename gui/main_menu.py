@@ -63,9 +63,9 @@ class MainMenu(gtk.MenuBar):
   def bind_events(self):
     self.quit.connect('activate',self.controller.quit)
     self.add_teacher.connect('activate', self.controller.add_teacher)
-    ##
-    self.view_teachers.connect('activate', self.controller.edit_teacher)
-    ##
+    self.view_teachers.connect('activate', self.controller.edit_teacher) ##
     self.add_klass.connect('activate', self.controller.add_klass)
-    self.view_klasses.connect('activate', self.controller.edit_klass)
+    self.view_klasses.connect('activate', self.controller.edit_klass) ##
+    self.add_student.connect('activate', self.controller.add_student)
+    self.search_student.connect('activate', self.controller.edit_student) ##
 

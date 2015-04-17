@@ -8,6 +8,7 @@ class User():
     self.birthday = ''
     self.address = ''
     self.male = True
+    self.email = ''
     self.is_teacher = False
 
   @classmethod
@@ -21,6 +22,7 @@ class User():
     user.birthday = '12/02/1991'
     user.address = '9 de Julio 1140'
     user.male = False
+    user.email = 'lali_gut@yahoo.com.ar'
     user.is_teacher = False
     
     return user
