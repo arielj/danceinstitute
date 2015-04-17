@@ -20,4 +20,5 @@ class Klass():
     klass.to_time = '21:30'
     klass.room = 'Fuego'
     klass.teachers = [Teacher.find(1)]
+    return klass
 

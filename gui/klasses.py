@@ -60,7 +60,7 @@ class KlassForm(gtk.Frame):
   
   def get_selected_room(self):
     for r in ROOMS:
-      if self.rooms[r].is_active():
+      if self.rooms[r].get_active() is True:
         return r
     return ''
 

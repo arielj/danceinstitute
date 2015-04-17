@@ -58,6 +58,7 @@ class Controller:
   
   def submit_klass(self, widget, form):
     print form.klass.id
+    print form.get_values()
     
 if __name__ == "__main__":
   ctrlr = Controller()
