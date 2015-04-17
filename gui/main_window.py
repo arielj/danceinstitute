@@ -27,15 +27,19 @@ class MainWindow(gtk.Window):
     num = self.notebook.append_page(page,label)
     self.notebook.set_current_page(num)
     
-    label.close.connect_object('clicked', self.controller.close_tab, page)
+    label.close_handler = label.close.connect_object('clicked', self.controller.close_tab, page)
   
   def remove_page(self, page):
+    label = self.notebook.get_tab_label(page)
+    label.close.disconnect(label.close_handler)
     num = self.notebook.page_num(page)
     self.notebook.remove_page(num)
 
 class NotebookTabLabel(gtk.HBox):
   def __init__(self, page):
     gtk.HBox.__init__(self, False, 0)
+    self.close_handler = False
+    
     label = gtk.Label(page.get_tab_label())
     self.pack_start(label)
 
