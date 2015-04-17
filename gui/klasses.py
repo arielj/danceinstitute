@@ -1,6 +1,5 @@
 import gtk
-
-ROOMS = ['Agua', 'Fuego', 'Aire']
+from room import Room
 
 class KlassForm(gtk.Frame):
   def __init__(self, controller, klass):
@@ -34,7 +33,9 @@ class KlassForm(gtk.Frame):
     self.room_l = gtk.Label('Sala')
     self.rooms = {}
     radio_group = None
-    for r in ROOMS:
+    
+    rooms = Room.all()
+    for r in rooms:
       self.rooms[r] = gtk.RadioButton(radio_group, r)
       if radio_group is None:
         radio_group = self.rooms[r]
@@ -42,7 +43,7 @@ class KlassForm(gtk.Frame):
     self.name_e.set_text(self.klass.name)
     self.from_time_e.set_text(self.klass.from_time)
     self.to_time_e.set_text(self.klass.to_time)
-    for r in ROOMS:
+    for r in rooms:
       self.rooms[r].set_active(self.klass.room == r)
     
     fields = gtk.VBox()
@@ -53,13 +54,13 @@ class KlassForm(gtk.Frame):
     fields.pack_start(self.to_time_l,False)
     fields.pack_start(self.to_time_e,False)
     fields.pack_start(self.room_l,False)
-    for r in ROOMS:
+    for r in rooms:
       fields.pack_start(self.rooms[r],False)
       
     return fields
   
   def get_selected_room(self):
-    for r in ROOMS:
+    for r in Room.all():
       if self.rooms[r].get_active() is True:
         return r
     return ''
