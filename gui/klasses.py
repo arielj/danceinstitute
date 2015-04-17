@@ -1,5 +1,4 @@
 import gtk
-from models import Room
 
 class KlassForm(gtk.Frame):
   def __init__(self, controller, klass):
@@ -32,9 +31,9 @@ class KlassForm(gtk.Frame):
         
     self.room_l = gtk.Label('Sala')
     self.rooms = {}
+
     radio_group = None
-    
-    rooms = Room.all()
+    rooms = self.klass.__class__.possible_rooms()
     for r in rooms:
       self.rooms[r] = gtk.RadioButton(radio_group, r)
       if radio_group is None:

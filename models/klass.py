@@ -1,5 +1,6 @@
 from teacher import Teacher
 from user import User
+from room import Room
 
 class Klass():
   def __init__(self):
@@ -21,4 +22,8 @@ class Klass():
     klass.room = 'Fuego'
     klass.teachers = [Teacher.find(1)]
     return klass
+
+  @classmethod
+  def possible_rooms(cls):
+    return Room.all()
 
