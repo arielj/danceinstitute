@@ -25,6 +25,7 @@ class Controller:
     self.window = MainWindow(self)
     
     self.window.set_size_request(1000,700)
+    self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
   def close_tab(self, page):
     self.window.remove_page(page)

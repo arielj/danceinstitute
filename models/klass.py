@@ -1,29 +1,24 @@
 from teacher import Teacher
-from user import User
-from room import Room
+from schedule import Schedule
 
 class Klass():
   def __init__(self):
-    self.id = 1
+    self.id = False
     self.name = ''
     self.from_time = '16:00'
     self.to_time = '17:00'
     self.room = 'Agua'
     self.teachers = []
-    #self.users = ...
+    self.schedules = []
+    self.users = []
 
   @classmethod
   def find(cls,id):
     klass = cls()
     klass.id = id
     klass.name = 'Flamenco Adultos'
-    klass.from_time = '20:00'
-    klass.to_time = '21:30'
-    klass.room = 'Fuego'
     klass.teachers = [Teacher.find(1)]
+    klass.schedules = [Schedule({'from_time': '20:30', 'to_time': '21:30', 'room': 'Fuego', 'day': 0}),
+                       Schedule({'from_time': '20:30', 'to_time': '21:30', 'room': 'Fuego', 'day': 3})]
     return klass
-
-  @classmethod
-  def possible_rooms(cls):
-    return Room.all()
 
