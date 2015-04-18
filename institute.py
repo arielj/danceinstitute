@@ -48,18 +48,36 @@ class Controller:
   #klasses controls
   def add_klass(self, widget):
     klass = Klass()
-    page = KlassForm(self, klass)
+    page = KlassForm(klass)
+    page.submit.connect('clicked',self.submit_klass, page)
     self.window.add_page(page)
   
   def edit_klass(self, widget):
     klass = Klass.find(1)
-    page = KlassForm(self, klass)
+    page = KlassForm(klass)
+    page.add_schedule.connect('clicked', self.add_schedule)
+    page.submit.connect('clicked',self.submit_klass, page)
     self.window.add_page(page)
   
   def submit_klass(self, widget, form):
     print form.klass.id
     print form.get_values()
   
+  #schedules controls
+  def add_schedule(self, widget):
+    schedule = Schedule()
+    dialog = ScheduleDialog(schedule)
+    dialog.connect('response', self.schedule_dialog_response, schedule)
+    dialog.run()
+  
+  def schedule_dialog_response(self, dialog, response, schedule):
+    if response == gtk.RESPONSE_ACCEPT:
+      print "bien"
+      print dialog.get_values()
+    elif response == gtk.RESPONSE_REJECT:
+      print "no!"
+      dialog.destroy()
+
   #students controls
   def add_student(self, widget):
     student = Student()

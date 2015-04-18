@@ -3,16 +3,31 @@
 
 import gtk
 
-class SchedulesForm():
-  def __init__(self, controller, schedule):
+class ScheduleDialog(gtk.Dialog):
+  def __init__(self, schedule):
+    self.form = SchedulesForm(schedule)
+    
+    gtk.Dialog.__init__(self, self.form.get_tab_label(), None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                       (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+    self.schedule = schedule
+    
+    self.vbox.pack_start(self.form)
+    self.form.show_all()
+  
+  def get_values(self):
+    return self.form.get_values()
+
+class SchedulesPage(gtk.Frame):
+  def __init__(self, schedule):
     gtk.Frame.__init__(self)
     self.schedule = schedule
-    self.controller = controller
 
-    self.fields = self.get_form_fields()
+    self.fields = SchedulesForm(schedule)
     
     self.submit = gtk.Button('Aceptar')
-    #self.submit.connect('clicked',self.controller.submit_schedule, self)
     self.fields.pack_start(self.submit,False)
     
     self.add(self.fields)
@@ -20,29 +35,34 @@ class SchedulesForm():
     self.show_all()
 
   def get_tab_label(self):
-    return 'Editar Horario' if self.teacher.id else 'Agregar Horario'
-  
-  def get_form_fields(self):
+    return self.fields.get_tab_label()
+
+class SchedulesForm(gtk.VBox):
+  def __init__(self, schedule):
+    gtk.VBox.__init__(self)
+    self.schedule = schedule
+
     self.room_l = gtk.Label('Sala')
-    fields.pack_start(self.room_l,False)
+    self.pack_start(self.room_l,False)
 
+    # create rooms radios
     self.rooms = {}
-
     radio_group = None
-    rooms = self.klass.__class__.possible_rooms()
+    rooms = self.schedule.__class__.possible_rooms()
     rooms_hbox = gtk.HBox()
     for r in rooms:
       self.rooms[r] = gtk.RadioButton(radio_group, r)
       if radio_group is None:
         radio_group = self.rooms[r]
       rooms_hbox.pack_start(self.rooms[r], False)
-    fields.pack_start(self.rooms[r], False)
+    self.pack_start(rooms_hbox, False)
 
     self.day_l = gtk.Label('Día')
-    fields.pack_start(self.day_l, False)
+    self.pack_start(self.day_l, False)
 
+    # create days radios
     self.days= {}
-    days = self.klass.__class__.get_days()
+    days = self.schedule.__class__.get_days()
     days_hbox = gtk.HBox()
     for day in days:
       self.days[day] = gtk.RadioButton(radio_group, day)
@@ -50,37 +70,44 @@ class SchedulesForm():
         radio_group = self.days[day]
       days_hbox.pack_start(self.days[day], False)
 
-    fields.pack_start(days_hbox, False)
+    self.pack_start(days_hbox, False)
   
     self.from_time_l = gtk.Label('Desde')
     self.from_time_e = gtk.Entry(5)
-    fields.pack_start(self.from_time_l,False)
-    fields.pack_start(self.from_time_e,False)
-
+    self.pack_start(self.from_time_l,False)
+    self.pack_start(self.from_time_e,False)
 
     self.to_time_l = gtk.Label('Hasta')
     self.to_time_e = gtk.Entry(5)
-    fields.pack_start(self.to_time_l,False)
-    fields.pack_start(self.to_time_e,False)
-
+    self.pack_start(self.to_time_l,False)
+    self.pack_start(self.to_time_e,False)
         
     self.from_time_e.set_text(self.schedule.from_time)
     self.to_time_e.set_text(self.schedule.to_time)
     for r in rooms:
       self.rooms[r].set_active(self.schedule.room == r)
     for d in days:
-      self.days[d].set_active(self.schedule.get_name_day() == d)
-    
-    return fields
+      self.days[d].set_active(self.schedule.get_day_name() == d)
+
+  def get_tab_label(self):
+    return 'Editar Horario' if self.schedule.id else 'Agregar Horario'
 
   def get_selected_room(self):
-    for r in self.schedule.__class__.possible_rooms():
+    for r in self.rooms.iterkeys():
       if self.rooms[r].get_active() is True:
         return r
     return ''
+    
+  def get_selected_day(self):
+    i = 0
+    for key in self.days.iterkeys():
+      if self.days[key].get_active() is True:
+        return i
+      i += 1
+    return 0
   
   def get_values(self):
-    return {'room': self.get_selected_room(), 'day': self.day_e.get_text(), 'from_time': self.from_time_e.get_text(), 'to_time': self.time_time_e.get_text()}
+    return {'room': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
 
 class SchedulesTable(gtk.TreeView):
   def __init__(self, schedules):

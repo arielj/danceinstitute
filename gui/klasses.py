@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import gtk
-from schedules import SchedulesTable
+from schedules import *
 
 class KlassForm(gtk.Frame):
-  def __init__(self, controller, klass):
+  def __init__(self, klass):
     gtk.Frame.__init__(self)
     self.klass = klass
-    self.controller = controller
 
     self.fields = self.get_form_fields()
 
@@ -16,7 +15,6 @@ class KlassForm(gtk.Frame):
       self.add_schedules_table()
     
     self.submit = gtk.Button('Guardar')
-    self.submit.connect('clicked',self.controller.submit_klass, self)
     self.fields.pack_start(self.submit,False)
     
     self.add(self.fields)
@@ -38,12 +36,15 @@ class KlassForm(gtk.Frame):
     return fields
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text(), 'room': self.get_selected_room()}
+    return {'name': self.name_e.get_text()}
 
   def add_schedules_table(self):
     self.schedules_l = gtk.Label('Horarios')
     self.schedules_t = SchedulesTable(self.klass.schedules)
     
-    self.fields.pack_start(self.schedules_l,False)
-    self.fields.pack_start(self.schedules_t,False)
+    self.add_schedule = gtk.Button('Agregar horario')
+    
+    self.fields.pack_start(self.schedules_l, False)
+    self.fields.pack_start(self.schedules_t, False)
+    self.fields.pack_start(self.add_schedule, False)
 
