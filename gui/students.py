@@ -1,15 +1,13 @@
 import gtk
 
 class StudentForm(gtk.Frame):
-  def __init__(self, controller, student):
+  def __init__(self, student):
     gtk.Frame.__init__(self)
     self.student = student
-    self.controller = controller
 
     self.fields = self.get_form_fields()
     
     self.submit = gtk.Button('Guardar')
-    self.submit.connect('clicked',self.controller.submit_student, self)
     self.fields.pack_start(self.submit,False)
     
     self.add(self.fields)

@@ -81,12 +81,14 @@ class Controller:
   #students controls
   def add_student(self, widget):
     student = Student()
-    page = StudentForm(self, student)
+    page = StudentForm(student)
+    page.submit.connect('clicked',self.submit_student, page)
     self.window.add_page(page)
   
   def edit_student(self, widget):
     student = Student.find(1)
-    page = StudentForm(self, student)
+    page = StudentForm(student)
+    page.submit.connect('clicked',self.submit_student, page)
     self.window.add_page(page)
   
   def submit_student(self, widget, form):
