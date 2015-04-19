@@ -6,7 +6,6 @@ class MainWindow(gtk.Window):
     gtk.Window.__init__(self,gtk.WINDOW_TOPLEVEL)
     
     self.controller = controller
-    self.bind_events()
     
     self.menu = MainMenu(self)
     self.v_box = gtk.VBox()
@@ -17,10 +16,6 @@ class MainWindow(gtk.Window):
     self.v_box.pack_start(self.notebook,True)
 
     self.show_all()
-
-  def bind_events(self):
-    self.connect("delete_event", self.controller.delete_event)
-    self.connect("destroy", self.controller.quit)
 
   def add_page(self, page):
     label = NotebookTabLabel(page)

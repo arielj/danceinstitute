@@ -23,6 +23,8 @@ class Controller:
     self.settings = Settings.get_settings()
 
     self.window = MainWindow(self)
+    self.window.connect("delete_event", self.delete_event)
+    self.window.connect("destroy", self.quit)
     
     self.window.set_size_request(1000,700)
     self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
