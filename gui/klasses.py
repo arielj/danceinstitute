@@ -56,7 +56,12 @@ class KlassForm(gtk.Frame):
     self.info_l = gtk.Label('Información')
     self.info_e = gtk.TextView()
     self.info_e.set_editable(True)
-    self.info_e.set_text(self.klass.info)
+    self.info_e.get_buffer().set_text(self.klass.info)
+    self.info_e.set_wrap_mode(gtk.WRAP_WORD)
+    scroll_window = gtk.ScrolledWindow()
+    scroll_window.add(self.info_e)
+    scroll_window.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+    scroll_window.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
     
     fields = gtk.VBox()
     fields.pack_start(self.name_l, False)
@@ -73,20 +78,27 @@ class KlassForm(gtk.Frame):
     fields.pack_start(self.max_age_e, False)
     fields.pack_start(self.quota_l, False)
     fields.pack_start(self.quota_e, False)
-    fields.pack_start(self.info_e, True, False)
+    fields.pack_start(self.info_l, False)
+    fields.pack_start(scroll_window, True)
 
     return fields
   
   def get_values(self):
-    return {'name': self.name_e.get_text()}
+    return {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'half_fee': self.half_fee_e.get_text(), 'once_fee': self.once_fee_e.get_text(), 'min_age': self.min_age_e.get_text(), 'max_age': self.max_age_e.get_text(), 'quota': self.quota_e.get_text(), 'info': self.info_e.get_buffer().get_text(), 'schedules': self.schedules_t.get_values()}
 
   def add_schedules_table(self):
     self.schedules_l = gtk.Label('Horarios')
     self.schedules_t = SchedulesTable(self.klass.schedules)
     
-    self.add_schedule = gtk.Button('Agregar horario')
+    self.add_schedule_b = gtk.Button('Agregar horario')
     
     self.fields.pack_start(self.schedules_l, False)
     self.fields.pack_start(self.schedules_t, False)
-    self.fields.pack_start(self.add_schedule, False)
+    self.fields.pack_start(self.add_schedule_b, False)
+  
+  def add_schedule(self, schedule):
+    self.klass.schedules.append(schedule)
+    self.update_schedules()
 
+  def update_schedules(self):
+    self.schedules_t.update(self.klass.schedules)

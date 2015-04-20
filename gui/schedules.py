@@ -62,13 +62,16 @@ class SchedulesForm(gtk.VBox):
 
     # create days radios
     self.days= {}
+    days_group = None
     days = self.schedule.__class__.get_days()
     days_hbox = gtk.HBox()
+    idx = 0
     for day in days:
-      self.days[day] = gtk.RadioButton(radio_group, day)
-      if radio_group is None:
-        radio_group = self.days[day]
-      days_hbox.pack_start(self.days[day], False)
+      self.days[day] = {'btn': gtk.RadioButton(days_group, day), 'idx': idx}
+      if days_group is None:
+        days_group = self.days[day]['btn']
+      days_hbox.pack_start(self.days[day]['btn'], False)
+      idx += 1
 
     self.pack_start(days_hbox, False)
   
@@ -87,7 +90,7 @@ class SchedulesForm(gtk.VBox):
     for r in rooms:
       self.rooms[r].set_active(self.schedule.room == r)
     for d in days:
-      self.days[d].set_active(self.schedule.get_day_name() == d)
+      self.days[d]['btn'].set_active(self.schedule.get_day_name() == d)
 
   def get_tab_label(self):
     return 'Editar Horario' if self.schedule.id else 'Agregar Horario'
@@ -99,11 +102,9 @@ class SchedulesForm(gtk.VBox):
     return ''
     
   def get_selected_day(self):
-    i = 0
     for key in self.days.iterkeys():
-      if self.days[key].get_active() is True:
-        return i
-      i += 1
+      if self.days[key]['btn'].get_active() is True:
+        return self.days[key]['idx']
     return 0
   
   def get_values(self):
@@ -112,20 +113,31 @@ class SchedulesForm(gtk.VBox):
 class SchedulesTable(gtk.TreeView):
   def __init__(self, schedules):
     #day, room, from_time, to_time
-    self.store = gtk.ListStore(str,str,str,str)
-    self.schedules = schedules
-    for sch in self.schedules:
-      self.store.append([sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
+    self.store = gtk.ListStore(int,str,str,str,str)
+    
+    self.set_model(schedules)
     
     gtk.TreeView.__init__(self,self.store)
 
-    self.day_col = gtk.TreeViewColumn('Día', gtk.CellRendererText(), text=0)
-    self.room_col = gtk.TreeViewColumn('Sala', gtk.CellRendererText(), text=1)
-    self.from_col = gtk.TreeViewColumn('Desde', gtk.CellRendererText(), text=2)
-    self.to_col = gtk.TreeViewColumn('Hasta', gtk.CellRendererText(), text=3)
+    self.day_col = gtk.TreeViewColumn('Día', gtk.CellRendererText(), text=1)
+    self.room_col = gtk.TreeViewColumn('Sala', gtk.CellRendererText(), text=2)
+    self.from_col = gtk.TreeViewColumn('Desde', gtk.CellRendererText(), text=3)
+    self.to_col = gtk.TreeViewColumn('Hasta', gtk.CellRendererText(), text=4)
     
     self.append_column(self.day_col)
     self.append_column(self.room_col)
     self.append_column(self.from_col)
     self.append_column(self.to_col)
+  
+  def get_values(self):
+    return self.schedules
+    
+  def update(self, schedules):
+    self.store.clear()
+    self.set_model(schedules)
+
+  def set_model(self, schedules):
+    self.schedules = schedules
+    for sch in self.schedules:
+      self.store.append([sch.id, sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
 
