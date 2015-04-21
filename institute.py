@@ -33,39 +33,49 @@ class Controller:
   def close_tab(self, page):
     self.window.remove_page(page)
 
+
+
   #teachers controls
   def add_teacher(self, widget):
     teacher = Teacher()
-    page = TeacherForm(self, teacher)
-    self.window.add_page(page)
+    page = self.teacher_form(widget, teacher)
   
-  def edit_teacher(self, widget):
-    teacher = Teacher.find(1)
-    page = TeacherForm(self, teacher)
+  def edit_teacher(self, widget, teacher):
+    page = self.teacher_form(widget, teacher)
+
+  def teacher_form(self, widget, teacher = None):
+    page = TeacherForm(teacher)
+    page.submit.connect_object('clicked',self.submit_teacher, page)
     self.window.add_page(page)
+    return page
   
-  def submit_teacher(self, widget, form):
-    print form.teacher.id
+  def submit_teacher(self, form):
+    print form.object.id
     print form.get_values()
+
+  def list_teachers(self, widget):
+    teachers = Teacher.all()
+    page = TeachersList(teachers)
+    self.window.add_page(page)
+    page.connect('teacher-edit', self.edit_teacher)
 
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):
     klass = Klass()
-    if room or time or day:
+    if room or time or day_idx:
       schedule = Schedule({'from_time': time, 'room': room, 'day': day_idx})
       klass.schedules = [schedule]
     page = self.klass_form(widget, klass)
   
-  def edit_klass(self, widget, klass_id):
-    klass = Klass.find(klass_id)
+  def edit_klass(self, widget, klass):
     page = self.klass_form(widget, klass)
-    page.add_schedule_b.connect('clicked', self.add_schedule, page)
-    page.connect('row-activated', self.edit_schedule)
-    return page
   
   def klass_form(self, widget, klass = None):
     page = KlassForm(klass)
-    page.submit.connect('clicked',self.submit_klass, page)
+    page.submit.connect_object('clicked',self.submit_klass, page)
+    page.add_schedule_b.connect_object('clicked', self.add_schedule, page)
+    page.connect('schedule-edit', self.edit_schedule)
+    page.connect('schedule-add', self.add_schedule)
     self.window.add_page(page)
     return page
 
@@ -73,15 +83,17 @@ class Controller:
     klasses = Klass.by_room_and_time()
     page = KlassesList(klasses)
     self.window.add_page(page)
-    page.connect('dclick-klass-edit', self.edit_klass)
-    page.connect('dclick-klass-add', self.add_klass)
+    page.connect('klass-edit', self.edit_klass)
+    page.connect('klass-add', self.add_klass)
   
-  def submit_klass(self, widget, form):
-    print form.klass.id
+  def submit_klass(self, form):
+    print form.object.id
     print form.get_values()
-  
+
+
+
   #schedules controls
-  def add_schedule(self, widget, page):
+  def add_schedule(self, page):
     schedule = Schedule()
     self.show_schedule_dialog(schedule, page)
   
@@ -94,36 +106,48 @@ class Controller:
     dialog.run()
 
   def schedule_dialog_response(self, dialog, response, schedule, page):
+    destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       schedule.set_attrs(dialog.get_values())
-      if schedule.id:
+      if schedule in page.object.schedules:
         page.update_schedules()
       else:
         page.add_schedule(schedule)
+
+    elif response == gtk.RESPONSE_DELETE_EVENT:
+      if schedule in page.object.schedules:
+        page.object.schedules.remove(schedule)
+        page.update_schedules()
+      
+    if destroy_dialog:
       dialog.destroy()
-    elif response == gtk.RESPONSE_REJECT:
-      dialog.destroy()
+
+
 
   #students controls
   def add_student(self, widget):
     student = Student()
-    page = StudentForm(student)
-    page.submit.connect('clicked',self.submit_student, page)
-    self.window.add_page(page)
+    page = self.student_form(student)
   
   def edit_student(self, widget):
     student = Student.find(1)
-    page = StudentForm(student)
-    page.submit.connect('clicked',self.submit_student, page)
-    self.window.add_page(page)
+    page = self.student_form(student)
   
-  def submit_student(self, widget, form):
-    print form.student.id
+  def student_form(self, student):
+    page = StudentForm(student)
+    page.submit.connect_object('clicked',self.submit_student, page)
+    self.window.add_page(page)
+    return page
+  
+  def submit_student(self, form):
+    print form.object.id
     print form.get_values()
 
   def search_student(self, widget):
-    print "buscar usuarios..."
-    
+    print "buscar alumno..."
+
+
+
 if __name__ == "__main__":
   ctrlr = Controller()
   ctrlr.main()

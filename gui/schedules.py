@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
+import gobject
 
 class ScheduleDialog(gtk.Dialog):
   def __init__(self, schedule):
@@ -10,7 +11,8 @@ class ScheduleDialog(gtk.Dialog):
     gtk.Dialog.__init__(self, self.form.get_tab_label(), None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                        gtk.STOCK_DELETE, gtk.RESPONSE_DELETE_EVENT))
 
     self.schedule = schedule
     
@@ -113,7 +115,7 @@ class SchedulesForm(gtk.VBox):
 class SchedulesTable(gtk.TreeView):
   def __init__(self, schedules):
     #day, room, from_time, to_time
-    self.store = gtk.ListStore(int,str,str,str,str)
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
     
     self.set_model(schedules)
     
@@ -139,5 +141,6 @@ class SchedulesTable(gtk.TreeView):
   def set_model(self, schedules):
     self.schedules = schedules
     for sch in self.schedules:
-      self.store.append([sch.id, sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
+      self.store.append([sch, sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
+    self.store.append([None,'','','',''])
 

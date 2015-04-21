@@ -24,10 +24,10 @@ class MainMenu(gtk.MenuBar):
     
     self.klasses_menu = gtk.Menu()
     self.add_klass = gtk.MenuItem('Agregar Clase')
-    self.view_klasses = gtk.MenuItem('Ver Clases')
+    self.list_klasses = gtk.MenuItem('Ver Clases')
     
     self.klasses_menu.append(self.add_klass)
-    self.klasses_menu.append(self.view_klasses)
+    self.klasses_menu.append(self.list_klasses)
     
     self.klasses.set_submenu(self.klasses_menu)
     
@@ -36,11 +36,11 @@ class MainMenu(gtk.MenuBar):
     self.append(self.teachers)
     
     self.teachers_menu = gtk.Menu()
-    self.add_teacher = gtk.MenuItem('Agregar Profesor')
-    self.view_teachers = gtk.MenuItem('Ver Profesores')
+    self.add_teacher = gtk.MenuItem('Agregar Profesor/a')
+    self.list_teachers = gtk.MenuItem('Profesores/as')
     
     self.teachers_menu.append(self.add_teacher)
-    self.teachers_menu.append(self.view_teachers)
+    self.teachers_menu.append(self.list_teachers)
     
     self.teachers.set_submenu(self.teachers_menu)
     
@@ -49,8 +49,8 @@ class MainMenu(gtk.MenuBar):
     self.append(self.students)
     
     self.students_menu = gtk.Menu()
-    self.add_student = gtk.MenuItem('Agregar Alumno')
-    self.search_student = gtk.MenuItem('Buscar Alumno')
+    self.add_student = gtk.MenuItem('Agregar Alumno/a')
+    self.search_student = gtk.MenuItem('Buscar Alumno/a')
     
     self.students_menu.append(self.add_student)
     self.students_menu.append(self.search_student)
@@ -63,9 +63,9 @@ class MainMenu(gtk.MenuBar):
   def bind_events(self):
     self.quit.connect('activate',self.controller.quit)
     self.add_teacher.connect('activate', self.controller.add_teacher)
-    self.view_teachers.connect('activate', self.controller.edit_teacher) ##
+    self.list_teachers.connect('activate', self.controller.list_teachers)
     self.add_klass.connect('activate', self.controller.add_klass)
-    self.view_klasses.connect('activate', self.controller.list_klasses) ##
+    self.list_klasses.connect('activate', self.controller.list_klasses)
     self.add_student.connect('activate', self.controller.add_student)
     self.search_student.connect('activate', self.controller.edit_student) ##
 

@@ -41,14 +41,14 @@ class Klass():
     for r in Schedule.possible_rooms():
       klasses[r] = {}
       for h in range(14,23,1):
-        klasses[r][str(h) + ':00'] = {'mon': ['', ''], 'tue': ['', ''], 'wed': ['', ''], 'thu': ['', ''],
-                                 'fri': ['', ''], 'sat': ['', ''], 'sun': ['', '']}
-        klasses[r][str(h) + ':30'] = {'mon': ['', ''], 'tue': ['', ''], 'wed': ['', ''], 'thu': ['', ''],
-                                 'fri': ['', ''], 'sat': ['', ''], 'sun': ['', '']}
-    
-    klasses['Fuego']['20:00']['mon'] = [1, 'Flamenco adultos']
-    klasses['Fuego']['20:30']['mon'] = [1, 'Flamenco adultos']
-    klasses['Fuego']['21:00']['mon'] = [1, 'Flamenco adultos']
+        for h2 in [str(h) + ':00', str(h) + ':30']:
+          klasses[r][h2] = {'mon': None, 'tue': None, 'wed': None, 'thu': None,
+                            'fri': None, 'sat': None, 'sun': None}
+   
+    kls = cls.find(1)
+    klasses['Fuego']['20:00']['mon'] = kls
+    klasses['Fuego']['20:30']['mon'] = kls
+    klasses['Fuego']['21:00']['mon'] = kls
     
     return klasses
 
