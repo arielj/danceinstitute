@@ -4,7 +4,7 @@
 from room import Room
 
 class Schedule():
-  DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes']
+  DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 
   def __init__(self, attrs = None):
     self.id = False
