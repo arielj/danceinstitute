@@ -30,3 +30,4 @@ class Schedule():
   @classmethod
   def get_days(cls):
     return cls.DAYS
+

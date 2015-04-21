@@ -65,7 +65,7 @@ class MainMenu(gtk.MenuBar):
     self.add_teacher.connect('activate', self.controller.add_teacher)
     self.view_teachers.connect('activate', self.controller.edit_teacher) ##
     self.add_klass.connect('activate', self.controller.add_klass)
-    self.view_klasses.connect('activate', self.controller.edit_klass) ##
+    self.view_klasses.connect('activate', self.controller.list_klasses) ##
     self.add_student.connect('activate', self.controller.add_student)
     self.search_student.connect('activate', self.controller.edit_student) ##
 
