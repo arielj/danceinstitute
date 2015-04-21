@@ -148,30 +148,21 @@ class RoomKlassesTable(gtk.TreeView):
     
     gtk.TreeView.__init__(self,self.store)
     
-    self.hour_col = ListColumn('Horario', 0, 'hour',-1)
-    self.mon_col = ListColumn('Lunes', 1, 'mon',0)
-    self.tue_col = ListColumn('Martes', 2, 'tue',1)
-    self.wed_col = ListColumn('Miércoles', 3, 'wed',2)
-    self.thu_col = ListColumn('Jueves', 4, 'thu',3)
-    self.fri_col = ListColumn('Viernes', 5, 'fri',4)
-    self.sat_col = ListColumn('Sábado', 6, 'sat',5)
-    self.sun_col = ListColumn('Domingo', 7, 'sun',6)
-    self.mon_col.set_expand(True)
-    self.tue_col.set_expand(True)
-    self.wed_col.set_expand(True)
-    self.thu_col.set_expand(True)
-    self.fri_col.set_expand(True)
-    self.sat_col.set_expand(True)
-    self.sun_col.set_expand(True)
-    
-    self.append_column(self.hour_col)
-    self.append_column(self.mon_col)
-    self.append_column(self.tue_col)
-    self.append_column(self.wed_col)
-    self.append_column(self.thu_col)
-    self.append_column(self.fri_col)
-    self.append_column(self.sat_col)
-    self.append_column(self.sun_col)
+    col = self.add_column('Horario', 0, 'hour',-1)
+    col.set_expand(False)
+
+    self.add_column('Lunes', 1, 'mon',0)
+    self.add_column('Martes', 2, 'tue',1)
+    self.add_column('Miércoles', 3, 'wed',2)
+    self.add_column('Jueves', 4, 'thu',3)
+    self.add_column('Viernes', 5, 'fri',4)
+    self.add_column('Sábado', 6, 'sat',5)
+    self.add_column('Domingo', 7, 'sun',6)
+  
+  def add_column(self, label, idx, name, day_idx):
+    col = ListColumn(label, idx, name, day_idx)
+    self.append_column(col)
+    return col
   
   def create_store(self, klasses):
     # hour, monday, tuesday, wednesday, thursday, friday, saturday, sunday
@@ -190,4 +181,5 @@ class ListColumn(gtk.TreeViewColumn):
     gtk.TreeViewColumn.__init__(self,label,gtk.CellRendererText(), text=idx)
     self.day_name = name
     self.day_idx = day_idx
+    self.set_expand(True)
 
