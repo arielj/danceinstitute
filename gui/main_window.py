@@ -13,6 +13,7 @@ class MainWindow(gtk.Window):
     self.v_box.pack_start(self.menu,False)
     
     self.notebook = gtk.Notebook()
+    self.notebook.set_tab_pos(gtk.POS_LEFT)
     self.v_box.pack_start(self.notebook,True)
 
     self.show_all()

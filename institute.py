@@ -60,12 +60,13 @@ class Controller:
     page.connect('teacher-edit', self.edit_teacher)
     page.connect('teacher-add', self.add_teacher)
 
+
+
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):
     klass = Klass()
-    if room or time or day_idx:
-      schedule = Schedule({'from_time': time, 'room': room, 'day': day_idx})
-      klass.schedules = [schedule]
+    if room and time:
+      klass.build_schedule({'from_time': time, 'room': room, 'day': day_idx})
     page = self.klass_form(widget, klass)
   
   def edit_klass(self, widget, klass):

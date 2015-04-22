@@ -22,7 +22,7 @@ class KlassForm(FormFor):
     self.show_all()
 
   def get_tab_label(self):
-    return 'Editar Clase: ' + self.object.name if self.object.id else 'Agregar Clase'
+    return 'Editar Clase:\n' + self.object.name if self.object.id else 'Agregar Clase'
   
   def create_form_fields(self):
     self.fields = gtk.VBox()
@@ -98,6 +98,8 @@ gobject.signal_new('schedule-add', \
 class KlassesList(gtk.ScrolledWindow):
   def __init__(self, klasses):
     gtk.ScrolledWindow.__init__(self)
+    self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_ALWAYS)
+    
     self.klasses = klasses
     
     self.vbox = gtk.VBox()
@@ -147,6 +149,8 @@ class RoomKlassesTable(gtk.TreeView):
     self.create_store(klasses)
     
     gtk.TreeView.__init__(self,self.store)
+    
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
     col = self.add_column('Horario', 0, 'hour',-1)
     col.set_expand(False)

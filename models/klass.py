@@ -57,3 +57,8 @@ class Klass():
       if sch.id == sch_id:
         return sch
     return None
+
+  def build_schedule(self, data):
+    sch = Schedule(data)
+    self.schedules.append(sch)
+    return sch

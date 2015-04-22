@@ -21,7 +21,7 @@ class TeacherForm(FormFor):
   def get_tab_label(self):
     if self.object.id:
       title = 'Profesor' if self.object.male else 'Profesora'
-      return 'Editar ' + title + ': ' + self.object.name + ' ' + self.object.lastname
+      return 'Editar ' + title + ":\n" + self.object.name + ' ' + self.object.lastname
     else:
       return 'Agregar Profesor/a'
   
@@ -106,11 +106,18 @@ class TeachersList(gtk.ScrolledWindow):
       self.emit('teacher-edit', teacher)
   
   def on_delete_clicked(self, btn):
-    print 'borrar??'
+    model, iter = self.t_selection.get_selected()
+    if iter is not None:
+      teacher = model.get_value(iter,0)
+      self.emit('teacher-delete', teacher)
     
 
 gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
+                   TeachersList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('teacher-delete', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
@@ -125,23 +132,19 @@ class TeachersTable(gtk.TreeView):
     
     gtk.TreeView.__init__(self,self.store)
     
-    self.name_col = gtk.TreeViewColumn('Nombre', gtk.CellRendererText(), text=1)
-    self.lastname_col = gtk.TreeViewColumn('Apellido', gtk.CellRendererText(), text=2)
-    self.dni_col = gtk.TreeViewColumn('D.N.I.', gtk.CellRendererText(), text=3)
-    self.email_col = gtk.TreeViewColumn('Email', gtk.CellRendererText(), text=4)
-    self.address_col = gtk.TreeViewColumn('Dirección', gtk.CellRendererText(), text=5)
-
-    self.name_col.set_expand(True)
-    self.lastname_col.set_expand(True)
-    self.dni_col.set_expand(True)
-    self.email_col.set_expand(True)
-    self.address_col.set_expand(True)
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
-    self.append_column(self.name_col)
-    self.append_column(self.lastname_col)
-    self.append_column(self.dni_col)
-    self.append_column(self.email_col)
-    self.append_column(self.address_col)
+    self.add_column('Nombre',1)
+    self.add_column('Apellido',2)
+    self.add_column('D.N.I.',3)
+    self.add_column('Email',4)
+    self.add_column('Dirección',5)
+    
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.append_column(col)
+    return col
   
   def create_store(self, teachers):
     # teacher, name, lastname, dni, email, address
