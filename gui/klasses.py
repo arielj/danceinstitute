@@ -57,31 +57,30 @@ class KlassForm(FormFor):
 
   def add_schedules_table(self):
     self.schedules_l = gtk.Label('Horarios')
-    self.schedules_t = SchedulesTable(self.object.schedules)
-    self.schedules_t.connect('row-activated', self.on_row_activated)
-    
-    self.add_schedule_b = gtk.Button('Agregar horario')
-    
+    self.schedules_ls = SchedulesList(self.object.schedules)
+    self.schedules_ls.connect('schedule-add', self.on_schedule_add)
+    self.schedules_ls.connect('schedule-edit', self.on_schedule_edit)
+    self.schedules_ls.connect('schedule-delete', self.on_schedule_delete)
+        
     self.fields.pack_start(self.schedules_l, False)
-    self.fields.pack_start(self.schedules_t, False)
-    self.fields.pack_start(self.add_schedule_b, False)
+    self.fields.pack_start(self.schedules_ls, True)
   
   def add_schedule(self, schedule):
     self.object.schedules.append(schedule)
     self.update_schedules()
 
   def update_schedules(self):
-    self.schedules_t.update(self.object.schedules)
+    self.schedules_ls.update_table(self.object.schedules)
 
-  def on_row_activated(self, tree, path, column):
-    model = tree.get_model()
-    itr = model.get_iter(path)
-    schedule = model.get_value(itr, 0)
-    if schedule:
-      self.emit('schedule-edit', schedule)
-    else:
-      self.emit('schedule-add')
-    
+  def on_schedule_add(self, widget):
+    self.emit('schedule-add')
+  
+  def on_schedule_edit(self, widget, schedule):
+    self.emit('schedule-edit', schedule)
+
+  def on_schedule_delete(self, widget, schedule):
+    print 'borrar....'
+
 gobject.type_register(KlassForm)
 gobject.signal_new('schedule-edit', \
                    KlassForm, \

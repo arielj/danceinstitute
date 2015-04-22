@@ -112,6 +112,81 @@ class SchedulesForm(gtk.VBox):
   def get_values(self):
     return {'room': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
 
+class SchedulesList(gtk.Frame):
+  def __init__(self, schedules, with_actions = True):
+    gtk.Frame.__init__(self)
+    self.vbox = gtk.VBox()
+    
+    self.table = SchedulesTable(schedules)
+    self.table.connect('row-activated', self.on_row_activated)
+    
+    self.vbox.pack_start(self.table, True)
+    
+    if with_actions:
+      self.add_b = gtk.Button('Agregar horario')
+      self.add_b.connect('clicked', self.on_add_clicked)
+      self.edit_b = gtk.Button('Editar horario')
+      self.edit_b.connect('clicked', self.on_edit_clicked)
+      self.delete_b = gtk.Button('Eliminar horario')
+      self.delete_b.connect('clicked', self.on_delete_clicked)
+      self.edit_b.set_sensitive(False)
+      self.delete_b.set_sensitive(False)
+      self.table.get_selection().connect('changed', self.on_selection_change)
+      
+      self.actions = gtk.HBox()
+      self.actions.pack_start(self.add_b, False)
+      self.actions.pack_start(self.edit_b, False)
+      self.actions.pack_start(self.delete_b, False)
+      self.vbox.pack_start(self.actions, False)
+    
+    self.add(self.vbox)
+
+  def update_table(self, schedules):
+    self.table.update(schedules)
+
+  def on_selection_change(self, selection):
+    model, iter = selection.get_selected()
+    self.edit_b.set_sensitive(iter is not None)
+    self.delete_b.set_sensitive(iter is not None)
+
+  def on_add_clicked(self, btn):
+    self.emit('schedule-add')
+
+  def on_edit_clicked(self, btn):
+    model, iter = self.table.get_selection().get_selected()
+    if iter is not None:
+      schedule = model.get_value(iter,0)
+      self.emit('schedule-edit', schedule)
+
+  def on_delete_clicked(self, btn):
+    model, iter = self.table.get_selection().get_selected()
+    if iter is not None:
+      schedule = model.get_value(iter,0)
+      self.emit('schedule-delete', schedule)
+
+  def on_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    schedule = model.get_value(itr, 0)
+    if schedule:
+      self.emit('schedule-edit', schedule)
+    else:
+      self.emit('schedule-add')
+
+gobject.type_register(SchedulesList)
+gobject.signal_new('schedule-edit', \
+                   SchedulesList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('schedule-delete', \
+                   SchedulesList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('schedule-add', \
+                   SchedulesList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+
 class SchedulesTable(gtk.TreeView):
   def __init__(self, schedules):
     #day, room, from_time, to_time

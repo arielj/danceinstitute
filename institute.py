@@ -75,7 +75,6 @@ class Controller:
   def klass_form(self, widget, klass = None):
     page = KlassForm(klass)
     page.submit.connect_object('clicked',self.submit_klass, page)
-    page.add_schedule_b.connect_object('clicked', self.add_schedule, page)
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
     self.window.add_page(page)
