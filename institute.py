@@ -58,6 +58,7 @@ class Controller:
     page = TeachersList(teachers)
     self.window.add_page(page)
     page.connect('teacher-edit', self.edit_teacher)
+    page.connect('teacher-add', self.add_teacher)
 
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):

@@ -57,6 +57,8 @@ class TeachersList(gtk.ScrolledWindow):
     
     self.teachers_t = TeachersTable(teachers)
     self.teachers_t.connect('row-activated', self.on_row_activated)
+    self.t_selection = self.teachers_t.get_selection()
+    self.t_selection.connect('changed', self.on_selection_changed)
     
     self.vbox.pack_start(self.teachers_t, True)
     
@@ -65,6 +67,9 @@ class TeachersList(gtk.ScrolledWindow):
     self.edit_b.set_sensitive(False)
     self.delete_b = gtk.Button('Borrar')
     self.delete_b.set_sensitive(False)
+    self.add_b.connect('clicked', self.on_add_clicked)
+    self.edit_b.connect('clicked', self.on_edit_clicked)
+    self.delete_b.connect('clicked', self.on_delete_clicked)
     
     self.actions = gtk.HBox()
     self.actions.pack_start(self.add_b, False)
@@ -83,14 +88,36 @@ class TeachersList(gtk.ScrolledWindow):
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
     itr = model.get_iter(path)
-    teacher_id = model.get_value(itr, 0)
-    self.emit('teacher-edit', teacher_id)
+    teacher = model.get_value(itr, 0)
+    self.emit('teacher-edit', teacher)
+
+  def on_selection_changed(self, selection):
+    model, iter = selection.get_selected()
+    self.edit_b.set_sensitive(iter is not None)
+    self.delete_b.set_sensitive(iter is not None)
+
+  def on_add_clicked(self, btn):
+    self.emit('teacher-add')
+
+  def on_edit_clicked(self, btn):
+    model, iter = self.t_selection.get_selected()
+    if iter is not None:
+      teacher = model.get_value(iter,0)
+      self.emit('teacher-edit', teacher)
+  
+  def on_delete_clicked(self, btn):
+    print 'borrar??'
+    
 
 gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('teacher-add', \
+                   TeachersList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 class TeachersTable(gtk.TreeView):
   def __init__(self, teachers):
