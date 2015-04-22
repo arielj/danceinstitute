@@ -63,7 +63,7 @@ class KlassForm(FormFor):
     self.schedules_ls.connect('schedule-delete', self.on_schedule_delete)
         
     self.fields.pack_start(self.schedules_l, False)
-    self.fields.pack_start(self.schedules_ls, True)
+    self.fields.pack_start(self.schedules_ls, False)
   
   def add_schedule(self, schedule):
     self.object.schedules.append(schedule)

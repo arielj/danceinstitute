@@ -51,6 +51,7 @@ class TeacherForm(FormFor):
 class TeachersList(gtk.ScrolledWindow):
   def __init__(self, teachers):
     gtk.ScrolledWindow.__init__(self)
+    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
     self.teachers = teachers
     
     self.vbox = gtk.VBox()
@@ -139,6 +140,7 @@ class TeachersTable(gtk.TreeView):
     self.add_column('D.N.I.',3)
     self.add_column('Email',4)
     self.add_column('Dirección',5)
+    self.add_column('Celular', 6)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
@@ -147,9 +149,9 @@ class TeachersTable(gtk.TreeView):
     return col
   
   def create_store(self, teachers):
-    # teacher, name, lastname, dni, email, address
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str)
+    # teacher, name, lastname, dni, email, address, cellphone
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str,str)
     
     for t in teachers:
-      self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address))
+      self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 

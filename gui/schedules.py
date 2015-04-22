@@ -146,8 +146,12 @@ class SchedulesList(gtk.Frame):
 
   def on_selection_change(self, selection):
     model, iter = selection.get_selected()
-    self.edit_b.set_sensitive(iter is not None)
-    self.delete_b.set_sensitive(iter is not None)
+    self.edit_b.set_sensitive(iter is None)
+    self.delete_b.set_sensitive(iter is None)
+    if iter is not None:
+      sch = model.get_value(iter,0)
+      self.edit_b.set_sensitive(sch is not None)
+      self.delete_b.set_sensitive(sch is not None)
 
   def on_add_clicked(self, btn):
     self.emit('schedule-add')
