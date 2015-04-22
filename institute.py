@@ -25,7 +25,7 @@ class Controller:
     self.window = MainWindow(self)
     self.window.connect("delete_event", self.delete_event)
     self.window.connect("destroy", self.quit)
-    
+
     #self.window.set_size_request(1000,700)
     #self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     self.window.maximize()
@@ -39,7 +39,7 @@ class Controller:
   def add_teacher(self, widget):
     teacher = Teacher()
     page = self.teacher_form(widget, teacher)
-  
+
   def edit_teacher(self, widget, teacher):
     page = self.teacher_form(widget, teacher)
 
@@ -48,7 +48,7 @@ class Controller:
     page.submit.connect_object('clicked',self.submit_teacher, page)
     self.window.add_page(page)
     return page
-  
+
   def submit_teacher(self, form):
     print form.object.id
     print form.get_values()
@@ -119,7 +119,7 @@ class Controller:
       if schedule in page.object.schedules:
         page.object.schedules.remove(schedule)
         page.update_schedules()
-      
+
     if destroy_dialog:
       dialog.destroy()
 
@@ -129,17 +129,17 @@ class Controller:
   def add_student(self, widget):
     student = Student()
     page = self.student_form(student)
-  
+
   def edit_student(self, widget):
     student = Student.find(1)
     page = self.student_form(student)
-  
+
   def student_form(self, student):
     page = StudentForm(student)
     page.submit.connect_object('clicked',self.submit_student, page)
     self.window.add_page(page)
     return page
-  
+
   def submit_student(self, form):
     print form.object.id
     print form.get_values()

@@ -49,9 +49,9 @@ class SchedulesForm(gtk.VBox):
 
     # create rooms radios
     self.rooms = {}
-    radio_group = None
     rooms = self.schedule.__class__.possible_rooms()
     rooms_hbox = gtk.HBox()
+    radio_group = None
     for r in rooms:
       self.rooms[r] = gtk.RadioButton(radio_group, r)
       if radio_group is None:
@@ -64,16 +64,14 @@ class SchedulesForm(gtk.VBox):
 
     # create days radios
     self.days= {}
-    days_group = None
     days = self.schedule.__class__.get_days()
     days_hbox = gtk.HBox()
-    idx = 0
-    for day in days:
+    days_group = None
+    for idx, day in enumerate(days):
       self.days[day] = {'btn': gtk.RadioButton(days_group, day), 'idx': idx}
       if days_group is None:
         days_group = self.days[day]['btn']
       days_hbox.pack_start(self.days[day]['btn'], False)
-      idx += 1
 
     self.pack_start(days_hbox, False)
   
@@ -102,12 +100,11 @@ class SchedulesForm(gtk.VBox):
       if self.rooms[r].get_active() is True:
         return r
     return ''
-    
+
   def get_selected_day(self):
     for key in self.days.iterkeys():
       if self.days[key]['btn'].get_active() is True:
         return self.days[key]['idx']
-    return 0
   
   def get_values(self):
     return {'room': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
@@ -148,10 +145,6 @@ class SchedulesList(gtk.Frame):
     model, iter = selection.get_selected()
     self.edit_b.set_sensitive(iter is None)
     self.delete_b.set_sensitive(iter is None)
-    if iter is not None:
-      sch = model.get_value(iter,0)
-      self.edit_b.set_sensitive(sch is not None)
-      self.delete_b.set_sensitive(sch is not None)
 
   def on_add_clicked(self, btn):
     self.emit('schedule-add')
@@ -221,5 +214,4 @@ class SchedulesTable(gtk.TreeView):
     self.schedules = schedules
     for sch in self.schedules:
       self.store.append([sch, sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
-    self.store.append([None,'','','',''])
 
