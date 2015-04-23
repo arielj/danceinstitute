@@ -49,10 +49,11 @@ class TeacherForm(FormFor):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
 
 class TeachersList(gtk.ScrolledWindow):
-  def __init__(self, teachers):
+  def __init__(self, teachers, with_actions = True):
     gtk.ScrolledWindow.__init__(self)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.teachers = teachers
+    self.with_actions = with_actions
     
     self.vbox = gtk.VBox()
     
@@ -63,21 +64,22 @@ class TeachersList(gtk.ScrolledWindow):
     
     self.vbox.pack_start(self.teachers_t, True)
     
-    self.add_b = gtk.Button('Agregar')
-    self.edit_b = gtk.Button('Editar')
-    self.edit_b.set_sensitive(False)
-    self.delete_b = gtk.Button('Borrar')
-    self.delete_b.set_sensitive(False)
-    self.add_b.connect('clicked', self.on_add_clicked)
-    self.edit_b.connect('clicked', self.on_edit_clicked)
-    self.delete_b.connect('clicked', self.on_delete_clicked)
-    
-    self.actions = gtk.HBox()
-    self.actions.pack_start(self.add_b, False)
-    self.actions.pack_start(self.edit_b, False)
-    self.actions.pack_start(self.delete_b, False)
-    
-    self.vbox.pack_start(self.actions, False)
+    if self.with_actions:
+      self.add_b = gtk.Button('Agregar')
+      self.edit_b = gtk.Button('Editar')
+      self.edit_b.set_sensitive(False)
+      self.delete_b = gtk.Button('Borrar')
+      self.delete_b.set_sensitive(False)
+      self.add_b.connect('clicked', self.on_add_clicked)
+      self.edit_b.connect('clicked', self.on_edit_clicked)
+      self.delete_b.connect('clicked', self.on_delete_clicked)
+      
+      self.actions = gtk.HBox()
+      self.actions.pack_start(self.add_b, False)
+      self.actions.pack_start(self.edit_b, False)
+      self.actions.pack_start(self.delete_b, False)
+      
+      self.vbox.pack_start(self.actions, False)
     
     self.add_with_viewport(self.vbox)
     
@@ -86,6 +88,9 @@ class TeachersList(gtk.ScrolledWindow):
   def get_tab_label(self):
     return 'Profesores/as'
 
+  def update_table(self, teachers):
+    self.teachers_t.update(teachers)
+
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
     itr = model.get_iter(path)
@@ -93,9 +98,10 @@ class TeachersList(gtk.ScrolledWindow):
     self.emit('teacher-edit', teacher)
 
   def on_selection_changed(self, selection):
-    model, iter = selection.get_selected()
-    self.edit_b.set_sensitive(iter is not None)
-    self.delete_b.set_sensitive(iter is not None)
+    if self.with_actions:
+      model, iter = selection.get_selected()
+      self.edit_b.set_sensitive(iter is not None)
+      self.delete_b.set_sensitive(iter is not None)
 
   def on_add_clicked(self, btn):
     self.emit('teacher-add')
@@ -151,7 +157,41 @@ class TeachersTable(gtk.TreeView):
   def create_store(self, teachers):
     # teacher, name, lastname, dni, email, address, cellphone
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str,str)
-    
+    self.set_model(teachers)
+
+  def update(self, teachers):
+    self.store.clear()
+    self.set_model(teachers)
+  
+  def set_model(self, teachers):
     for t in teachers:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
+
+class SelectTeacherDialog(gtk.Dialog):
+  def __init__(self, teachers):
+    gtk.Dialog.__init__(self, 'Seleccioná un/a profesor/a', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                       (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+    self.teachers = teachers
+    
+    self.add_teachers_list()
+  
+    self.vbox.show_all()
+
+  def add_teachers_list(self):
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    self.list = gtk.TreeView(self.store)
+    col = gtk.TreeViewColumn('Apellido, Nombre', gtk.CellRendererText(), text=1)
+    col.set_expand(True)
+    self.list.append_column(col)
+    for t in self.teachers:
+      self.store.append((t, t.lastname + ', ' + t.name))
+    
+    self.vbox.pack_start(self.list, True)
+
+  def get_selected_teacher(self):
+    model, iter = self.list.get_selection().get_selected()
+    return model.get_value(iter,0) if iter is not None else None
 

@@ -5,6 +5,7 @@ import gtk
 import gobject
 from forms import FormFor
 from schedules import *
+from teachers import *
 
 class KlassForm(FormFor):
   def __init__(self, klass):
@@ -12,7 +13,10 @@ class KlassForm(FormFor):
 
     self.create_form_fields()
 
+    self.relationships_hbox = gtk.HBox(False, 8)
+    self.fields.pack_start(self.relationships_hbox, True)
     self.add_schedules_table()
+    self.add_teachers_table()
     
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit, False)
@@ -25,16 +29,22 @@ class KlassForm(FormFor):
     return 'Editar Clase:\n' + self.object.name if self.object.id else 'Agregar Clase'
   
   def create_form_fields(self):
-    self.fields = gtk.VBox()
+    self.fields = gtk.VBox(False, 5)
     self.add_field('Clase', 'name', attrs=30)
-    self.add_field('Precio', 'fee', attrs=5)
-    self.add_field('Precio alternativo', 'half_fee', attrs=5)
-    self.add_field('Precio por clase individual', 'once_fee', attrs=5)
-    self.add_field('Inscripción', 'inscription_fee', attrs=5)
-    self.add_field('Edad mínima', 'min_age', attrs=2)
-    self.add_field('Edad máxima', 'max_age', attrs=2)
-    self.add_field('Cupo máximo', 'quota', attrs=2)
+    prices_hbox = gtk.HBox(True, 8)
+    self.add_field('Precio', 'fee', attrs=5, box=prices_hbox)
+    self.add_field('Precio alternativo', 'half_fee', attrs=5, box=prices_hbox)
+    self.add_field('Precio por clase individual', 'once_fee', attrs=5, box=prices_hbox)
+    self.add_field('Inscripción', 'inscription_fee', attrs=5, box=prices_hbox)
+    self.fields.pack_start(prices_hbox, False)
+
+    students_hbox = gtk.HBox(True, 8)
+    self.add_field('Edad mínima', 'min_age', attrs=2, box=students_hbox)
+    self.add_field('Edad máxima', 'max_age', attrs=2, box=students_hbox)
+    self.add_field('Cupo máximo', 'quota', attrs=2, box=students_hbox)
+    self.fields.pack_start(students_hbox, False)
     
+    field = gtk.VBox()
     self.info_l = gtk.Label('Información')
     self.info_e = gtk.TextView()
     self.info_e.set_editable(True)
@@ -45,8 +55,10 @@ class KlassForm(FormFor):
     scroll_window.set_shadow_type(gtk.SHADOW_ETCHED_IN)
     scroll_window.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
     
-    self.fields.pack_start(self.info_l, False)
-    self.fields.pack_start(scroll_window, True)
+    field.pack_start(self.info_l, False)
+    field.pack_start(scroll_window, True)
+    
+    self.fields.pack_start(field, True)
   
   def get_info_text(self):
     buff = self.info_e.get_buffer()
@@ -61,9 +73,28 @@ class KlassForm(FormFor):
     self.schedules_ls.connect('schedule-add', self.on_schedule_add)
     self.schedules_ls.connect('schedule-edit', self.on_schedule_edit)
     self.schedules_ls.connect('schedule-delete', self.on_schedule_delete)
-        
-    self.fields.pack_start(self.schedules_l, False)
-    self.fields.pack_start(self.schedules_ls, False)
+
+    field = gtk.VBox()
+    field.pack_start(self.schedules_l, False)
+    field.pack_start(self.schedules_ls, True)
+    self.relationships_hbox.pack_start(field, True)
+    
+  def add_teachers_table(self):
+    self.teachers_l = gtk.Label('Profesores/as')
+    self.teachers_ls = TeachersList(self.object.teachers, with_actions=False)
+    
+    actions = gtk.HBox()
+    self.assign_b = gtk.Button('Asignar')
+    self.assign_b.connect('clicked', self.on_assign_clicked)
+    actions.pack_start(self.assign_b, False)
+    
+    self.teachers_ls.vbox.pack_start(actions, False)
+
+    field = gtk.VBox()
+    field.set_size_request(650,-1)
+    field.pack_start(self.teachers_l, False)
+    field.pack_start(self.teachers_ls, True)
+    self.relationships_hbox.pack_start(field, True)
   
   def add_schedule(self, schedule):
     self.object.schedules.append(schedule)
@@ -71,6 +102,9 @@ class KlassForm(FormFor):
 
   def update_schedules(self):
     self.schedules_ls.update_table(self.object.schedules)
+
+  def update_teachers(self):
+    self.teachers_ls.update_table(self.object.teachers)
 
   def on_schedule_add(self, widget):
     self.emit('schedule-add')
@@ -81,18 +115,30 @@ class KlassForm(FormFor):
   def on_schedule_delete(self, widget, schedule):
     print 'borrar....'
 
+  def on_assign_clicked(self, widget):
+    self.emit('teacher-search')
+
 gobject.type_register(KlassForm)
 gobject.signal_new('schedule-edit', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-
 gobject.signal_new('schedule-add', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
-                   
-
+gobject.signal_new('teacher-edit', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('teacher-add', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('teacher-search', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 class KlassesList(gtk.ScrolledWindow):
   def __init__(self, klasses):

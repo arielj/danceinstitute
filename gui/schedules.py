@@ -109,22 +109,24 @@ class SchedulesForm(gtk.VBox):
   def get_values(self):
     return {'room': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
 
-class SchedulesList(gtk.Frame):
+class SchedulesList(gtk.ScrolledWindow):
   def __init__(self, schedules, with_actions = True):
-    gtk.Frame.__init__(self)
+    gtk.ScrolledWindow.__init__(self)
+    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.vbox = gtk.VBox()
+    self.with_actions = with_actions
     
     self.table = SchedulesTable(schedules)
     self.table.connect('row-activated', self.on_row_activated)
     
     self.vbox.pack_start(self.table, True)
     
-    if with_actions:
-      self.add_b = gtk.Button('Agregar horario')
+    if self.with_actions:
+      self.add_b = gtk.Button('Agregar')
       self.add_b.connect('clicked', self.on_add_clicked)
-      self.edit_b = gtk.Button('Editar horario')
+      self.edit_b = gtk.Button('Editar')
       self.edit_b.connect('clicked', self.on_edit_clicked)
-      self.delete_b = gtk.Button('Eliminar horario')
+      self.delete_b = gtk.Button('Eliminar')
       self.delete_b.connect('clicked', self.on_delete_clicked)
       self.edit_b.set_sensitive(False)
       self.delete_b.set_sensitive(False)
@@ -136,15 +138,16 @@ class SchedulesList(gtk.Frame):
       self.actions.pack_start(self.delete_b, False)
       self.vbox.pack_start(self.actions, False)
     
-    self.add(self.vbox)
+    self.add_with_viewport(self.vbox)
 
   def update_table(self, schedules):
     self.table.update(schedules)
 
   def on_selection_change(self, selection):
-    model, iter = selection.get_selected()
-    self.edit_b.set_sensitive(iter is None)
-    self.delete_b.set_sensitive(iter is None)
+    if self.with_actions:
+      model, iter = selection.get_selected()
+      self.edit_b.set_sensitive(iter is not None)
+      self.delete_b.set_sensitive(iter is not None)
 
   def on_add_clicked(self, btn):
     self.emit('schedule-add')
@@ -192,16 +195,19 @@ class SchedulesTable(gtk.TreeView):
     self.set_model(schedules)
     
     gtk.TreeView.__init__(self,self.store)
-
-    self.day_col = gtk.TreeViewColumn('Día', gtk.CellRendererText(), text=1)
-    self.room_col = gtk.TreeViewColumn('Sala', gtk.CellRendererText(), text=2)
-    self.from_col = gtk.TreeViewColumn('Desde', gtk.CellRendererText(), text=3)
-    self.to_col = gtk.TreeViewColumn('Hasta', gtk.CellRendererText(), text=4)
     
-    self.append_column(self.day_col)
-    self.append_column(self.room_col)
-    self.append_column(self.from_col)
-    self.append_column(self.to_col)
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+
+    self.add_column('Día', 1)
+    self.add_column('Sala', 2)
+    self.add_column('Desde', 3)
+    self.add_column('Hasta', 4)
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.append_column(col)
+    return col
   
   def get_values(self):
     return self.schedules

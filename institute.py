@@ -77,6 +77,7 @@ class Controller:
     page.submit.connect_object('clicked',self.submit_klass, page)
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
+    page.connect('teacher-search', self.show_select_teacher_dialog)
     self.window.add_page(page)
     return page
 
@@ -91,7 +92,23 @@ class Controller:
     print form.object.id
     print form.get_values()
 
+  def show_select_teacher_dialog(self, page):
+    teachers = Teacher.all()
+    dialog = SelectTeacherDialog(teachers)
+    dialog.connect('response', self.select_teacher_dialog_response, page)
+    dialog.run()
 
+  def select_teacher_dialog_response(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      teacher = dialog.get_selected_teacher()
+      if teacher is not None:
+        if teacher.id not in map(lambda t: t.id, page.object.teachers):
+          page.object.teachers.append(teacher)
+          page.update_teachers()
+
+    if destroy_dialog:
+      dialog.destroy()
 
   #schedules controls
   def add_schedule(self, page):

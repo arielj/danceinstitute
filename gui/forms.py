@@ -5,7 +5,7 @@ class FormFor(gtk.Frame):
     gtk.Frame.__init__(self)
     self.object = obj
     
-  def add_field(self, label, method, gtktype = 'entry', attrs = None):
+  def add_field(self, label, method, gtktype = 'entry', attrs = None, box = None):
     l = gtk.Label(label)
     vars(self)[method + "_l"] = l
 
@@ -13,6 +13,12 @@ class FormFor(gtk.Frame):
     e.set_text(vars(self.object)[method])
     vars(self)[method + "_e"] = e
     
-    self.fields.pack_start(l, False)
-    self.fields.pack_start(e, False)
+    field = gtk.VBox()
+    field.pack_start(l, False)
+    field.pack_start(e, False)
+    
+    if box is not None:
+      box.pack_start(field, True)
+    else:
+      self.fields.pack_start(field, False)
 
