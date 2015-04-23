@@ -1,3 +1,6 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 import gtk
 
 class MainMenu(gtk.MenuBar):
@@ -10,10 +13,12 @@ class MainMenu(gtk.MenuBar):
     self.append(self.home)
     
     self.show_home = gtk.MenuItem('Inicio')
+    self.config = gtk.MenuItem('Configuración')
     self.quit = gtk.MenuItem('Salir')
     
     self.home_menu = gtk.Menu()
     self.home_menu.append(self.show_home)
+    self.home_menu.append(self.config)
     self.home_menu.append(self.quit)
     
     self.home.set_submenu(self.home_menu)
@@ -76,6 +81,7 @@ class MainMenu(gtk.MenuBar):
     self.show_all()
 
   def bind_events(self):
+    self.config.connect('activate', self.controller.show_config)
     self.quit.connect('activate',self.controller.quit)
     self.add_teacher.connect('activate', self.controller.add_teacher)
     self.list_teachers.connect('activate', self.controller.list_teachers)

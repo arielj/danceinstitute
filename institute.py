@@ -26,12 +26,21 @@ class Controller:
     self.window.connect("delete_event", self.delete_event)
     self.window.connect("destroy", self.quit)
 
-    #self.window.set_size_request(1000,700)
-    #self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
-    self.window.maximize()
+    if self.settings.startup_size != '':
+      self.window.set_size_request(1000,700)
+      self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+    else:
+      self.window.maximize()
 
   def close_tab(self, page):
     self.window.remove_page(page)
+
+
+
+  #config controls
+  def show_config(self, widget):
+    page = Config(self.settings)
+    self.window.add_page(page)
 
 
 
@@ -82,7 +91,7 @@ class Controller:
     return page
 
   def list_klasses(self, widget):
-    klasses = Klass.by_room_and_time()
+    klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
     page = KlassesList(klasses)
     self.window.add_page(page)
     page.connect('klass-edit', self.edit_klass)

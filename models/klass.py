@@ -36,11 +36,11 @@ class Klass():
     return klass
 
   @classmethod
-  def by_room_and_time(cls):
+  def by_room_and_time(cls, from_time, to_time):
     klasses = {}
     for r in Schedule.possible_rooms():
       klasses[r] = {}
-      for h in range(14,23,1):
+      for h in range(from_time, to_time, 1):
         for h2 in [str(h) + ':00', str(h) + ':30']:
           klasses[r][h2] = {'mon': None, 'tue': None, 'wed': None, 'thu': None,
                             'fri': None, 'sat': None, 'sun': None}

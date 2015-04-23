@@ -217,13 +217,14 @@ class RoomKlassesTable(gtk.TreeView):
     # hour, monday, tuesday, wednesday, thursday, friday, saturday, sunday
     self.store = gtk.ListStore(str,str,str,str,str,str,str,str)
     
-    for h in range(14,23,1):
-      for h2 in [str(h)+':00', str(h)+':30']:
-        k = klasses[h2]
-        insert = [h2]
-        for d in ['mon','tue','wed','thu','fri','sat','sun']:
-          insert.append(k[d].name if k[d] else '')
-        self.store.append(insert)
+    keys = klasses.keys()
+    keys.sort()
+    for h in keys:
+      k = klasses[h]
+      insert = [h]
+      for d in ['mon','tue','wed','thu','fri','sat','sun']:
+        insert.append(k[d].name if k[d] else '')
+      self.store.append(insert)
 
 class ListColumn(gtk.TreeViewColumn):
   def __init__(self, label, idx, name, day_idx):
