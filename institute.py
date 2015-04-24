@@ -22,9 +22,12 @@ class Controller:
   def __init__(self):
     self.settings = Settings.get_settings()
 
-    self.window = MainWindow(self)
+    self.window = MainWindow()
     self.window.connect("delete_event", self.delete_event)
     self.window.connect("destroy", self.quit)
+    self.window.connect('close-tab', self.close_tab)
+    
+    self.bind_main_menu()
 
     if self.settings.startup_size != '':
       self.window.set_size_request(1000,700)
@@ -32,9 +35,18 @@ class Controller:
     else:
       self.window.maximize()
 
-  def close_tab(self, page):
+  def close_tab(self, window, page):
     self.window.remove_page(page)
 
+  def bind_main_menu(self):
+    self.window.menu.config.connect('activate', self.show_config)
+    self.window.menu.quit.connect('activate',self.quit)
+    self.window.menu.add_teacher.connect('activate', self.add_teacher)
+    self.window.menu.list_teachers.connect('activate', self.list_teachers)
+    self.window.menu.add_klass.connect('activate', self.add_klass)
+    self.window.menu.list_klasses.connect('activate', self.list_klasses)
+    self.window.menu.add_student.connect('activate', self.add_student)
+    self.window.menu.search_student.connect('activate', self.edit_student)
 
 
   #config controls

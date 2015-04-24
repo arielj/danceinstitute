@@ -1,13 +1,12 @@
 import gtk
+import gobject
 from main_menu import *
 
 class MainWindow(gtk.Window):
-  def __init__(self,controller):
+  def __init__(self):
     gtk.Window.__init__(self,gtk.WINDOW_TOPLEVEL)
     
-    self.controller = controller
-    
-    self.menu = MainMenu(self)
+    self.menu = MainMenu()
     self.v_box = gtk.VBox()
     self.add(self.v_box)
     self.v_box.pack_start(self.menu, False)
@@ -22,14 +21,21 @@ class MainWindow(gtk.Window):
     label = NotebookTabLabel(page)
     num = self.notebook.append_page(page,label)
     self.notebook.set_current_page(num)
-    
-    label.close_handler = label.close.connect_object('clicked', self.controller.close_tab, page)
+    label.close.connect('clicked', self.on_close_tab, page)
   
   def remove_page(self, page):
     label = self.notebook.get_tab_label(page)
-    label.close.disconnect(label.close_handler)
     num = self.notebook.page_num(page)
     self.notebook.remove_page(num)
+
+  def on_close_tab(self, widget, page):
+    self.emit('close-tab', page)
+
+gobject.type_register(MainWindow)
+gobject.signal_new('close-tab', \
+                   MainWindow, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
 class NotebookTabLabel(gtk.HBox):
   def __init__(self, page):

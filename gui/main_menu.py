@@ -4,9 +4,8 @@
 import gtk
 
 class MainMenu(gtk.MenuBar):
-  def __init__(self,main_window):
+  def __init__(self):
     gtk.MenuBar.__init__(self)
-    self.controller = main_window.controller
 
     #dashboard menu
     self.home = gtk.MenuItem('Inicio')
@@ -76,17 +75,6 @@ class MainMenu(gtk.MenuBar):
     self.help_menu.append(self.about_us)
     
     self.help.set_submenu(self.help_menu)
-    
-    self.bind_events()
-    self.show_all()
 
-  def bind_events(self):
-    self.config.connect('activate', self.controller.show_config)
-    self.quit.connect('activate',self.controller.quit)
-    self.add_teacher.connect('activate', self.controller.add_teacher)
-    self.list_teachers.connect('activate', self.controller.list_teachers)
-    self.add_klass.connect('activate', self.controller.add_klass)
-    self.list_klasses.connect('activate', self.controller.list_klasses)
-    self.add_student.connect('activate', self.controller.add_student)
-    self.search_student.connect('activate', self.controller.edit_student) ##
+    self.show_all()
 
