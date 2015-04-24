@@ -46,7 +46,7 @@ class Controller:
     self.window.menu.add_klass.connect('activate', self.add_klass)
     self.window.menu.list_klasses.connect('activate', self.list_klasses)
     self.window.menu.add_student.connect('activate', self.add_student)
-    self.window.menu.search_student.connect('activate', self.edit_student)
+    self.window.menu.search_student.connect('activate', self.search_student)
 
 
   #config controls
@@ -178,8 +178,7 @@ class Controller:
     student = Student()
     page = self.student_form(student)
 
-  def edit_student(self, widget):
-    student = Student.find(1)
+  def edit_student(self, widget, student):
     page = self.student_form(student)
 
   def student_form(self, student):
@@ -193,9 +192,14 @@ class Controller:
     print form.get_values()
 
   def search_student(self, widget):
-    print "buscar alumno..."
-
-
+    page = SearchStudent()
+    self.window.add_page(page)
+    page.connect('search', self.on_student_search)
+    page.connect('student-edit', self.edit_student)
+  
+  def on_student_search(self, page, value):
+    students = Student.search(value)
+    page.update_results(students)
 
 if __name__ == "__main__":
   ctrlr = Controller()
