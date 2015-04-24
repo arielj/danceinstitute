@@ -87,6 +87,7 @@ class Controller:
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
     page.connect('teacher-search', self.show_select_teacher_dialog)
+    page.connect('teacher-remove', self.on_remove_teacher)
     self.window.add_page(page)
     return page
 
@@ -118,6 +119,15 @@ class Controller:
 
     if destroy_dialog:
       dialog.destroy()
+
+  def on_remove_teacher(self, page, teacher):
+    if teacher is not None:
+      for t in page.object.teachers:
+        if teacher.id == t.id:
+          page.object.teachers.remove(t)
+          page.update_teachers()
+
+
 
   #schedules controls
   def add_schedule(self, page):

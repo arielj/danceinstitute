@@ -102,22 +102,24 @@ class TeachersList(gtk.ScrolledWindow):
       model, iter = selection.get_selected()
       self.edit_b.set_sensitive(iter is not None)
       self.delete_b.set_sensitive(iter is not None)
+    self.emit('selection-changed', selection)
 
   def on_add_clicked(self, btn):
     self.emit('teacher-add')
 
   def on_edit_clicked(self, btn):
-    model, iter = self.t_selection.get_selected()
-    if iter is not None:
-      teacher = model.get_value(iter,0)
+    teacher = self.get_selected()
+    if teacher is not None:
       self.emit('teacher-edit', teacher)
-  
+
   def on_delete_clicked(self, btn):
-    model, iter = self.t_selection.get_selected()
-    if iter is not None:
-      teacher = model.get_value(iter,0)
+    teacher = self.get_selected()
+    if teacher is not None:
       self.emit('teacher-delete', teacher)
-    
+
+  def get_selected(self):
+    model, iter = self.t_selection.get_selected()
+    return model.get_value(iter,0) if iter is not None else None
 
 gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
@@ -132,6 +134,10 @@ gobject.signal_new('teacher-add', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
+gobject.signal_new('selection-changed', \
+                   TeachersList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
 class TeachersTable(gtk.TreeView):
   def __init__(self, teachers):
@@ -190,8 +196,13 @@ class SelectTeacherDialog(gtk.Dialog):
       self.store.append((t, t.lastname + ', ' + t.name))
     
     self.vbox.pack_start(self.list, True)
+    
+    self.list.connect('row-activated', self.on_row_activated)
 
   def get_selected_teacher(self):
     model, iter = self.list.get_selection().get_selected()
     return model.get_value(iter,0) if iter is not None else None
 
+  def on_row_activated(self, tree, path, column):
+    t = self.get_selected_teacher()
+    self.emit('response', gtk.RESPONSE_ACCEPT)

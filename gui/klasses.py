@@ -82,11 +82,17 @@ class KlassForm(FormFor):
   def add_teachers_table(self):
     self.teachers_l = gtk.Label('Profesores/as')
     self.teachers_ls = TeachersList(self.object.teachers, with_actions=False)
+    self.teachers_ls.connect('selection-changed', self.on_selection_changed)
     
     actions = gtk.HBox()
     self.assign_b = gtk.Button('Asignar')
     self.assign_b.connect('clicked', self.on_assign_clicked)
     actions.pack_start(self.assign_b, False)
+    
+    self.remove_b = gtk.Button('Quitar')
+    self.remove_b.connect('clicked', self.on_remove_clicked)
+    self.remove_b.set_sensitive(False)
+    actions.pack_start(self.remove_b, False)
     
     self.teachers_ls.vbox.pack_start(actions, False)
 
@@ -118,6 +124,13 @@ class KlassForm(FormFor):
   def on_assign_clicked(self, widget):
     self.emit('teacher-search')
 
+  def on_remove_clicked(self, widget):
+    self.emit('teacher-remove', self.teachers_ls.get_selected())
+
+  def on_selection_changed(self, widget, selection):
+    model, iter = selection.get_selected()
+    self.remove_b.set_sensitive(iter is not None)
+
 gobject.type_register(KlassForm)
 gobject.signal_new('schedule-edit', \
                    KlassForm, \
@@ -127,18 +140,22 @@ gobject.signal_new('schedule-add', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
-gobject.signal_new('teacher-edit', \
-                   KlassForm, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('teacher-add', \
-                   KlassForm, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, ())
+#gobject.signal_new('teacher-edit', \
+#                   KlassForm, \
+#                   gobject.SIGNAL_RUN_FIRST, \
+#                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+#gobject.signal_new('teacher-add', \
+#                   KlassForm, \
+#                   gobject.SIGNAL_RUN_FIRST, \
+#                   gobject.TYPE_NONE, ())
 gobject.signal_new('teacher-search', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
+gobject.signal_new('teacher-remove', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
 class KlassesList(gtk.ScrolledWindow):
   def __init__(self, klasses):

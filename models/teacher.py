@@ -7,5 +7,5 @@ class Teacher(User):
   
   @classmethod
   def all(cls):
-    return [cls.find(1)]
+    return [cls.find(1),cls.find(2)]
 
