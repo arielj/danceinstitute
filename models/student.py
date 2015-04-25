@@ -1,8 +1,8 @@
 from user import User
 
 class Student(User):
-  def __init__(self):
-    User.__init__(self)
+  def __init__(self, data = {}):
+    User.__init__(self, data)
 
   @classmethod
   def search(cls, value):

@@ -1,8 +1,8 @@
 from user import User
 
 class Teacher(User):
-  def __init__(self):
-    User.__init__(self)
+  def __init__(self, data = {}):
+    User.__init__(self, data)
     self.is_teacher = True
   
   @classmethod

@@ -176,20 +176,22 @@ class Controller:
   #students controls
   def add_student(self, widget):
     student = Student()
-    page = self.student_form(student)
+    page = self.student_form(student, widget)
 
   def edit_student(self, widget, student):
-    page = self.student_form(student)
+    page = self.student_form(student, widget)
 
-  def student_form(self, student):
+  def student_form(self, student, parent = None):
     page = StudentForm(student)
-    page.submit.connect_object('clicked',self.submit_student, page)
+    page.submit.connect_object('clicked', self.submit_student, page, parent)
     self.window.add_page(page)
     return page
 
-  def submit_student(self, form):
-    print form.object.id
-    print form.get_values()
+  def submit_student(self, form, parent):
+    form.object.set_attrs(form.get_values())
+    form.object.save()
+    self.window.remove_page(form)
+    parent.update_results()
 
   def search_student(self, widget):
     page = SearchStudent()

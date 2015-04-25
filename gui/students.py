@@ -50,7 +50,7 @@ class StudentForm(FormFor):
 
 class SearchStudent(gtk.Frame):
   def get_tab_label(self):
-    return "Buscar un/a alumno/a"
+    return "Buscar alumno/a"
 
   def __init__(self):
     gtk.Frame.__init__(self)
@@ -68,8 +68,8 @@ class SearchStudent(gtk.Frame):
     
     self.show_all()
 
-  def update_results(self, students):
-    self.results.students_t.update(students)
+  def update_results(self, students = None):
+    self.results.update_table(students)
 
   def on_search(self, form, value):
     self.emit('search', value)
@@ -148,6 +148,7 @@ gobject.signal_new('student-activated', \
 
 class StudentsTable(gtk.TreeView):
   def __init__(self, students):
+    self.students = students
     self.create_store(students)
     
     gtk.TreeView.__init__(self,self.store)
@@ -173,10 +174,13 @@ class StudentsTable(gtk.TreeView):
     self.set_model(students)
 
   def update(self, students):
+    if students is not None:
+      self.students = students
     self.store.clear()
     self.set_model(students)
   
   def set_model(self, students):
-    for t in students:
+    for t in self.students:
+      print t
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 
