@@ -69,7 +69,7 @@ class KlassForm(FormFor):
 
   def add_schedules_table(self):
     self.schedules_l = gtk.Label('Horarios')
-    self.schedules_ls = SchedulesList(self.object.schedules)
+    self.schedules_ls = SchedulesList(self.object.get_schedules())
     self.schedules_ls.connect('schedule-add', self.on_schedule_add)
     self.schedules_ls.connect('schedule-edit', self.on_schedule_edit)
     self.schedules_ls.connect('schedule-delete', self.on_schedule_delete)
@@ -81,7 +81,7 @@ class KlassForm(FormFor):
     
   def add_teachers_table(self):
     self.teachers_l = gtk.Label('Profesores/as')
-    self.teachers_ls = TeachersList(self.object.teachers, with_actions=False)
+    self.teachers_ls = TeachersList(self.object.get_teachers(), with_actions=False)
     self.teachers_ls.connect('selection-changed', self.on_selection_changed)
     
     actions = gtk.HBox()
@@ -103,14 +103,14 @@ class KlassForm(FormFor):
     self.relationships_hbox.pack_start(field, True)
   
   def add_schedule(self, schedule):
-    self.object.schedules.append(schedule)
+    self.object.add_schedule(schedule)
     self.update_schedules()
 
   def update_schedules(self):
-    self.schedules_ls.update_table(self.object.schedules)
+    self.schedules_ls.update_table(self.object.get_schedules())
 
   def update_teachers(self):
-    self.teachers_ls.update_table(self.object.teachers)
+    self.teachers_ls.update_table(self.object.get_teachers())
 
   def on_schedule_add(self, widget):
     self.emit('schedule-add')

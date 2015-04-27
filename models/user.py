@@ -1,3 +1,5 @@
+from model import Model
+
 users = {1: {'name': 'Lau', 'lastname': 'Gut', 'dni': '35.592.392', 'cellphone': '0299-15-453-4315',
           'birthday': '12/02/1991', 'address': '9 de Julio 1140', 'male': False, 'email': 'lali_gut@yahoo.com.ar',
           'is_teacher': True},
@@ -6,9 +8,9 @@ users = {1: {'name': 'Lau', 'lastname': 'Gut', 'dni': '35.592.392', 'cellphone':
          'is_teacher': True}
         }
 
-class User(object):
+class User(Model):
   def __init__(self, data = {}):
-    self.id = None
+    Model.__init__(self)
     self.name = ''
     self.lastname = ''
     self.dni = ''
@@ -21,14 +23,10 @@ class User(object):
     
     self.set_attrs(data)
 
-  def set_attrs(self, data = {}):
-    for attr in data.keys():
-      self.__setattr__(attr,data[attr])
-
   @classmethod
-  def find(cls, id):
-    user = cls(users[id])
-    user.id = id
+  def find(cls, uid):
+    user = cls(users[uid])
+    user.id = uid
     return user
 
   def save(self):
@@ -39,5 +37,3 @@ class User(object):
                       'email': self.email, 'is_teacher': self.is_teacher}
     return True
 
-  def is_new_record(self):
-    return self.id is None

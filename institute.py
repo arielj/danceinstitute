@@ -132,8 +132,8 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       teacher = dialog.get_selected_teacher()
       if teacher is not None:
-        if teacher.id not in map(lambda t: t.id, page.object.teachers):
-          page.object.teachers.append(teacher)
+        if teacher.id not in map(lambda t: t.id, page.object.get_teachers()):
+          page.object.add_teacher(teacher)
           page.update_teachers()
 
     if destroy_dialog:
@@ -141,9 +141,9 @@ class Controller(gobject.GObject):
 
   def on_remove_teacher(self, page, teacher):
     if teacher is not None:
-      for t in page.object.teachers:
+      for t in page.object.get_teachers():
         if teacher.id == t.id:
-          page.object.teachers.remove(t)
+          page.object.remove_teacher(t)
           page.update_teachers()
 
 
@@ -165,14 +165,14 @@ class Controller(gobject.GObject):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       schedule.set_attrs(dialog.get_values())
-      if schedule in page.object.schedules:
+      if schedule in page.object.get_schedules():
         page.update_schedules()
       else:
         page.add_schedule(schedule)
 
     elif response == gtk.RESPONSE_DELETE_EVENT:
-      if schedule in page.object.schedules:
-        page.object.schedules.remove(schedule)
+      if schedule in page.object.get_schedules():
+        page.object.remove_schedule(schedule)
         page.update_schedules()
 
     if destroy_dialog:
@@ -200,18 +200,14 @@ class Controller(gobject.GObject):
     saved = form.object.save()
     self.window.remove_page(form)
     if saved:
-      if new_record:
-        self.emit('student-created', form.object)
-      else:
-        self.emit('student-updated', form.object)
+      self.emit('student-changed', form.object, new_record)
 
   def search_student(self, widget):
     page = SearchStudent()
     self.window.add_page(page)
     page.connect('search', self.on_student_search)
     page.connect('student-edit', self.edit_student)
-    self.save_signal(self.connect('student-updated', page.on_search), page)
-    self.save_signal(self.connect('student-created', page.on_search), page)
+    self.save_signal(self.connect('student-changed', page.on_search), page)
   
   def on_student_search(self, page, value):
     students = Student.search(value)
@@ -226,19 +222,17 @@ class Controller(gobject.GObject):
     self.connected_signals[obj].append(h_id)
 
   def remove_signals(self, obj):
-    for h_id in self.connected_signals[page]:
-      self.disconnect(h_id)
-    del self.connected_signals[page]
+    if obj in self.connected_signals:
+      for h_id in self.connected_signals[obj]:
+        self.disconnect(h_id)
+      del self.connected_signals[obj]
 
 gobject.type_register(Controller)
-gobject.signal_new('student-updated', \
+gobject.signal_new('student-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('student-created', \
-                   Controller, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #student object, creation(True value means the user just got created)
 
 if __name__ == "__main__":
   ctrlr = Controller()

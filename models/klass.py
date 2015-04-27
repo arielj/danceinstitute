@@ -1,9 +1,10 @@
+from model import Model
 from teacher import Teacher
 from schedule import Schedule
 
-class Klass():
+class Klass(Model):
   def __init__(self):
-    self.id = False
+    Model.__init__(self)
     self.name = ''
     self.fee = '0'
     self.half_fee = '0'
@@ -13,6 +14,9 @@ class Klass():
     self.max_age = '0'
     self.quota = '0'
     self.info = ''
+    self.teacher_ids = []
+    self.schedule_ids = []
+    self.user_ids = []
     self.teachers = []
     self.schedules = []
     self.users = []
@@ -30,9 +34,13 @@ class Klass():
     klass.max_age = '0'
     klass.quota = '15'
     klass.info = 'Traer zapatos con taco ancho y una pollera larga.'
-    klass.teachers = [Teacher.find(1)]
-    klass.schedules = [Schedule({'id': 1, 'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 0}),
-                       Schedule({'id': 2, 'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 3})]
+    klass.teacher_ids = [1]
+    klass.schedule_ids = [1,2]
+    klass.teachers = []
+    klass.schedules = []
+    klass.user_ids = []
+    klass.users = []
+    
     return klass
 
   @classmethod
@@ -62,3 +70,40 @@ class Klass():
     sch = Schedule(data)
     self.schedules.append(sch)
     return sch
+
+  def get_teachers(self, requery = False):
+    if requery or not self.teachers:
+      self.teachers = []
+      for id in self.teacher_ids:
+        self.teachers.append(Teacher.find(id))
+    return self.teachers
+
+  def get_schedules(self, requery = False):
+    if requery or not self.schedules:
+      self.teachers = []
+      for id in self.schedule_ids:
+        self.schedules.append(Schedule.find(id))
+    return self.schedules
+
+  def add_schedule(self, schedule):
+    if not schedule.is_new_record:
+      self.schedule_ids.append(schedule.id)
+    self.schedules.append(schedule)
+
+  def add_teacher(self, teacher):
+    if not teacher.is_new_record:
+      self.teacher_ids.append(teacher.id)
+    self.teachers.append(teacher)
+
+  def remove_schedule(self, schedule):
+    if schedule in self.get_schedules():
+      if schedule.id in self.schedule_ids:
+        self.schedule_ids.remove(schedule.id)
+      self.schedules.remove(schedule)
+
+  def remove_teacher(self, teacher):
+    if teacher in self.get_teachers():
+      if teacher.id in self.teacher_ids:
+        self.teacher_ids.remove(teacher.id)
+      self.teachers.remove(teacher)
+
