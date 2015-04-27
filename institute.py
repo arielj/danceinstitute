@@ -36,9 +36,13 @@ class Controller(gobject.GObject):
       self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     else:
       self.window.maximize()
+    
+    self.connected_signals = {}
 
   def close_tab(self, window, page):
     self.window.remove_page(page)
+    self.remove_signals(page)
+    page.destroy()
 
   def bind_main_menu(self):
     self.window.menu.config.connect('activate', self.show_config)
@@ -206,12 +210,25 @@ class Controller(gobject.GObject):
     self.window.add_page(page)
     page.connect('search', self.on_student_search)
     page.connect('student-edit', self.edit_student)
-    self.connect('student-updated', page.on_search)
-    self.connect('student-created', page.on_search)
+    self.save_signal(self.connect('student-updated', page.on_search), page)
+    self.save_signal(self.connect('student-created', page.on_search), page)
   
   def on_student_search(self, page, value):
     students = Student.search(value)
     page.update_results(students)
+
+
+
+  #save a reference of signals connected
+  def save_signal(self, h_id, obj):
+    if obj not in self.connected_signals:
+      self.connected_signals[obj] = []
+    self.connected_signals[obj].append(h_id)
+
+  def remove_signals(self, obj):
+    for h_id in self.connected_signals[page]:
+      self.disconnect(h_id)
+    del self.connected_signals[page]
 
 gobject.type_register(Controller)
 gobject.signal_new('student-updated', \
