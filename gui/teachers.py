@@ -14,7 +14,7 @@ class TeacherForm(FormFor):
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit,False)
     
-    self.add(self.fields)
+    self.pack_start(self.fields, True)
     
     self.show_all()
 

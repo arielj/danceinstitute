@@ -16,12 +16,9 @@ class StudentForm(FormFor):
     
     self.memberships_panel = MembershipsPanel(self.object)
     self.memberships_panel.set_sensitive(not self.object.is_new_record())
-    
-    columns_hbox = gtk.HBox()
-    columns_hbox.pack_start(self.fields, True)
-    columns_hbox.pack_start(self.memberships_panel, True)
-    
-    self.add(columns_hbox)
+
+    self.pack_start(self.fields, True)
+    self.pack_start(self.memberships_panel, True)
     
     self.show_all()
 
@@ -33,55 +30,60 @@ class StudentForm(FormFor):
       return 'Agregar Alumno/a'
   
   def create_form_fields(self):
-    self.fields = gtk.VBox()
-    full_name_box = gtk.HBox()
+    self.fields = gtk.VBox(False, 5)
+    full_name_box = gtk.HBox(True, 8)
     self.add_field('Nombre', 'name', attrs=100, box=full_name_box)
     self.add_field('Apellido', 'lastname', attrs=100, box=full_name_box)
     self.fields.pack_start(full_name_box, False)
     
-    personal_info_box = gtk.HBox()
+    personal_info_box = gtk.HBox(True, 8)
     self.add_field('D.N.I.', 'dni', attrs=10, box=personal_info_box)
     self.add_field('Fecha de nacimiento', 'birthday', attrs=10, box=personal_info_box)
     self.fields.pack_start(personal_info_box, False)
     
-    contact_info_box = gtk.HBox()
+    contact_info_box = gtk.HBox(True, 8)
+    self.add_field('Celular', 'cellphone', attrs=16, box=contact_info_box)
+    self.add_field('Email', 'email', attrs=256, box=contact_info_box)
+    self.fields.pack_start(contact_info_box, False)
+
+    hbox = gtk.HBox(True, 8)
+    self.add_field('Dirección', 'address', attrs=256, box=hbox)
     self.gender_l = gtk.Label('Sexo')
     self.male_r = gtk.RadioButton(None, 'Hombre')
     self.male_r.set_active(True)
     self.female_r = gtk.RadioButton(self.male_r, 'Mujer')
     self.female_r.set_active(not self.object.male)
-    self.fields.pack_start(self.gender_l,False)
-    self.fields.pack_start(self.male_r,False)
-    self.fields.pack_start(self.female_r,False)
-    
-    self.add_field('Celular', 'cellphone', attrs=16, box=contact_info_box)
-    self.add_field('Dirección', 'address', attrs=256, box=contact_info_box)
-    self.add_field('Email', 'email', attrs=256, box=contact_info_box)
-    self.fields.pack_start(contact_info_box, False)
-    
+
+    gender_field = gtk.VBox()
+    radios_hbox = gtk.HBox()
+    radios_hbox.pack_start(self.male_r, False)
+    radios_hbox.pack_start(self.female_r, False)
+    gender_field.pack_start(self.gender_l, False)
+    gender_field.pack_start(radios_hbox, False)
+    hbox.pack_start(gender_field, False)
+    self.fields.pack_start(hbox, False)
+
     self.add_field('Comentarios', 'comments', attrs=500)
   
   def get_values(self):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
 
-class SearchStudent(gtk.Frame):
+class SearchStudent(gtk.VBox):
   def get_tab_label(self):
     return "Buscar alumno/a"
 
   def __init__(self):
-    gtk.Frame.__init__(self)
-    
-    self.vbox = gtk.VBox()
-    self.add(self.vbox)
+    gtk.VBox.__init__(self)
+    self.set_border_width(4)
     
     self.form = SearchForm()
     self.form.submit.connect('clicked', self.on_search)
     self.form.entry.connect('activate', self.on_search)
-    self.vbox.pack_start(self.form, False)
+    self.pack_start(self.form, False)
     
     self.results = StudentsList([])
     self.results.connect('student-activated', self.on_student_activated)
-    self.vbox.pack_start(self.results, True)
+    self.pack_start(self.results, True)
     
     self.show_all()
 
@@ -199,26 +201,28 @@ class StudentsTable(gtk.TreeView):
     for t in self.students:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 
-class MembershipsPanel(gtk.Frame):
+class MembershipsPanel(gtk.VBox):
   def __init__(self, student):
-    gtk.Frame.__init__(self)
-    self.notebook = gtk.Notebook()
+    gtk.VBox.__init__(self)
     self.student = student
+    self.notebook = gtk.Notebook()
     
     for m in student.get_memberships():
       self.notebook.append_page(Membership(m),gtk.Label(m.get_klass().name))
-    
-    self.add(self.notebook)
+      
+    self.pack_start(gtk.Label('Clases y cuotas:'), False)
+
+    self.pack_start(self.notebook, True)
 
 class Membership(gtk.ScrolledWindow):
   def __init__(self, membership):
     gtk.ScrolledWindow.__init__(self)
     
-    #installment, year, month, base, recharges, paid
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,bool)
+    #installment, year, month, base, recharges, status
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
     
     for ins in membership.get_installments():
-      self.store.append((ins,ins.year,ins.get_month(),ins.amount, ins.get_amount(), ins.paid))
+      self.store.append((ins,ins.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
     
     self.list = gtk.TreeView(self.store)
     
@@ -226,7 +230,7 @@ class Membership(gtk.ScrolledWindow):
     self.add_column('Mes',2)
     self.add_column('Monto',3)
     self.add_column('Con intereses',4)
-    self.add_column('Pagado',5)
+    self.add_column('Estado',5)
     
     self.add_with_viewport(self.list)
     

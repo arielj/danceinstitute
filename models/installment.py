@@ -30,6 +30,14 @@ class Installment(Model):
   def get_month(self):
     return ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][self.month-1]
 
+  def get_status(self):
+    if self.paid:
+      return 'Pagado'
+    elif self.get_amount() != self.amount:
+      return 'Atrasado'
+    else:
+      return 'A pagar'
+
   @classmethod
   def find(cls, id):
     return cls(installments[id])

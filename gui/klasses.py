@@ -21,7 +21,7 @@ class KlassForm(FormFor):
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit, False)
     
-    self.add(self.fields)
+    self.pack_start(self.fields, True)
     
     self.show_all()
 
@@ -161,20 +161,27 @@ class KlassesList(gtk.ScrolledWindow):
   def __init__(self, klasses):
     gtk.ScrolledWindow.__init__(self)
     self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_ALWAYS)
+    self.set_shadow_type(gtk.SHADOW_NONE)
+    self.set_border_width(4)
     
     self.klasses = klasses
     
-    self.vbox = gtk.VBox()
+    self.vbox = gtk.VBox(False, 10)
     
     self.room_table = {}
     for room in klasses.iterkeys():
+      vbox = gtk.VBox(False, 3)
       label = gtk.Label('Horarios en sala: ' + room)
       self.room_table[room] = RoomKlassesTable(room, self.klasses[room])
       self.room_table[room].connect('row-activated', self.on_row_activated)
-      self.vbox.pack_start(label, False)
-      self.vbox.pack_start(self.room_table[room], False)
-    
-    self.add_with_viewport(self.vbox)
+      vbox.pack_start(label, False)
+      vbox.pack_start(self.room_table[room], False)
+      self.vbox.pack_start(vbox, False)
+
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.vbox)
+    self.add(viewport)
     
     self.show_all()
 

@@ -1,9 +1,10 @@
 import gtk
 
-class FormFor(gtk.Frame):
+class FormFor(gtk.HBox):
   def __init__(self, obj):
-    gtk.Frame.__init__(self)
+    gtk.HBox.__init__(self, True, 8)
     self.object = obj
+    self.set_border_width(4)
     
   def add_field(self, label, method, gtktype = 'entry', attrs = None, box = None):
     l = gtk.Label(label)
