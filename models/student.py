@@ -1,7 +1,10 @@
 from user import User
+from membership import Membership
 
 class Student(User):
   def __init__(self, data = {}):
+    self.memberships = []
+    self.membership_ids = []
     User.__init__(self, data)
 
   @classmethod
@@ -14,4 +17,11 @@ class Student(User):
       return [cls.find(1),cls.find(2)]
     else:
       return []
+
+  def get_memberships(self, requery = False):
+    if requery or not self.memberships:
+      self.memberships = []
+      for id in self.membership_ids:
+        self.memberships.append(Membership.find(id))
+    return self.memberships
 
