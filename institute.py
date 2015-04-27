@@ -3,11 +3,12 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gobject
 from gui import *
 from settings import Settings
 from models import *
 
-class Controller:
+class Controller(gobject.GObject):
   def main(self):
     gtk.main()
   
@@ -20,6 +21,7 @@ class Controller:
     gtk.main_quit()
 
   def __init__(self):
+    gobject.GObject.__init__(self)
     self.settings = Settings.get_settings()
 
     self.window = MainWindow()
@@ -47,6 +49,7 @@ class Controller:
     self.window.menu.list_klasses.connect('activate', self.list_klasses)
     self.window.menu.add_student.connect('activate', self.add_student)
     self.window.menu.search_student.connect('activate', self.search_student)
+
 
 
   #config controls
@@ -176,32 +179,49 @@ class Controller:
   #students controls
   def add_student(self, widget):
     student = Student()
-    page = self.student_form(student, widget)
+    page = self.student_form(student)
 
   def edit_student(self, widget, student):
-    page = self.student_form(student, widget)
+    page = self.student_form(student)
 
-  def student_form(self, student, parent = None):
+  def student_form(self, student):
     page = StudentForm(student)
-    page.submit.connect_object('clicked', self.submit_student, page, parent)
+    page.submit.connect_object('clicked', self.submit_student, page)
     self.window.add_page(page)
     return page
 
-  def submit_student(self, form, parent):
+  def submit_student(self, form):
+    new_record = form.object.is_new_record()
     form.object.set_attrs(form.get_values())
-    form.object.save()
+    saved = form.object.save()
     self.window.remove_page(form)
-    parent.update_results()
+    if saved:
+      if new_record:
+        self.emit('student-created', form.object)
+      else:
+        self.emit('student-updated', form.object)
 
   def search_student(self, widget):
     page = SearchStudent()
     self.window.add_page(page)
     page.connect('search', self.on_student_search)
     page.connect('student-edit', self.edit_student)
+    self.connect('student-updated', page.on_search)
+    self.connect('student-created', page.on_search)
   
   def on_student_search(self, page, value):
     students = Student.search(value)
     page.update_results(students)
+
+gobject.type_register(Controller)
+gobject.signal_new('student-updated', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('student-created', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
 if __name__ == "__main__":
   ctrlr = Controller()

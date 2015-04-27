@@ -59,7 +59,8 @@ class SearchStudent(gtk.Frame):
     self.add(self.vbox)
     
     self.form = SearchForm()
-    self.form.connect('search', self.on_search)
+    self.form.submit.connect('clicked', self.on_search)
+    self.form.entry.connect('activate', self.on_search)
     self.vbox.pack_start(self.form, False)
     
     self.results = StudentsList([])
@@ -71,8 +72,8 @@ class SearchStudent(gtk.Frame):
   def update_results(self, students = None):
     self.results.update_table(students)
 
-  def on_search(self, form, value):
-    self.emit('search', value)
+  def on_search(self, widget, data = None):
+    self.emit('search', self.form.get_value())
 
   def on_student_activated(self, widget, student):
     self.emit('student-edit', student)
@@ -93,22 +94,20 @@ class SearchForm(gtk.HBox):
 
     self.label = gtk.Label('Nombre, Apellido o D.N.I: ')
     self.entry = gtk.Entry(100)
-    self.entry.connect('activate', self.on_submit)
     self.submit = gtk.Button('Buscar')
-    self.submit.connect('clicked', self.on_submit)
     
     self.pack_start(self.label, False)
     self.pack_start(self.entry, False)
     self.pack_start(self.submit, False)
-  
-  def on_submit(self, widget):
-    self.emit('search', self.entry.get_text())
+
+  def get_value(self):
+    return self.entry.get_text()
 
 gobject.type_register(SearchForm)
 gobject.signal_new('search', \
                    SearchForm, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (str, ))
+                   gobject.TYPE_NONE, ())
 
 class StudentsList(gtk.ScrolledWindow):
   def __init__(self, students):
@@ -181,6 +180,5 @@ class StudentsTable(gtk.TreeView):
   
   def set_model(self, students):
     for t in self.students:
-      print t
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 

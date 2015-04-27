@@ -37,5 +37,7 @@ class User(object):
     users[self.id] = {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone,
                       'birthday': self.birthday, 'address': self.address, 'male': self.male,
                       'email': self.email, 'is_teacher': self.is_teacher}
-    print users
+    return True
 
+  def is_new_record(self):
+    return self.id is None
