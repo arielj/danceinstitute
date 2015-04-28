@@ -229,7 +229,7 @@ class Membership(gtk.ScrolledWindow):
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
     
     for ins in membership.get_installments():
-      self.store.append((ins,ins.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
+      self.store.append((ins,membership.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
     
     self.list = gtk.TreeView(self.store)
     

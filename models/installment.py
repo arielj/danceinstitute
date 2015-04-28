@@ -3,14 +3,13 @@
 
 from model import Model
 
-installments = {1: {'month': 4, 'year': 2015, 'paid': True, 'amount': '300'},
-                2: {'month': 5, 'year': 2015, 'paid': False, 'amount': '300'}}
+installments = {1: {'month': 4, 'paid': True, 'amount': '300'},
+                2: {'month': 5, 'paid': False, 'amount': '300'}}
 
 class Installment(Model):
   def __init__(self, data = {}):
     Model.__init__(self)
     self.month = 1
-    self.year = 2015
     self.membership_id = None
     self.paid = False
     self.amount = 0.00

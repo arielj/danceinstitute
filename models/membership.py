@@ -2,13 +2,14 @@ from model import Model
 from klass import Klass
 from installment import Installment
 
-memberships = {1: {'student_id': 1, 'klass_id': 1, 'installment_ids': [1,2]}}
+memberships = {1: {'student_id': 1, 'klass_id': 1, 'installment_ids': [1,2], 'year': 2015}}
 
 class Membership(Model):
   def __init__(self, data = {}):
     Model.__init__(self)
     self.student_id = None
     self.klass_id = None
+    self.year = 2015
     self.installment_ids = []
     self.installments = []
     
