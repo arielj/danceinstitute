@@ -51,6 +51,7 @@ class TeacherForm(FormFor):
 class TeachersList(gtk.ScrolledWindow):
   def __init__(self, teachers, with_actions = True):
     gtk.ScrolledWindow.__init__(self)
+    self.set_border_width(4)
     self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.teachers = teachers
     self.with_actions = with_actions
@@ -81,7 +82,10 @@ class TeachersList(gtk.ScrolledWindow):
       
       self.vbox.pack_start(self.actions, False)
     
-    self.add_with_viewport(self.vbox)
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.vbox)
+    self.add(viewport)
     
     self.show_all()
 

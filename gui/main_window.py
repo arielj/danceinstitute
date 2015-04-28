@@ -58,6 +58,7 @@ class NotebookTabLabel(gtk.HBox):
     style.xthickness = 0
     style.ythickness = 0
     self.close.modify_style(style)
+    self.set_size_request(150,-1)
 
     self.show_all()
 

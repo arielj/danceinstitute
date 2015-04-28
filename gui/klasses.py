@@ -44,21 +44,10 @@ class KlassForm(FormFor):
     self.add_field('Cupo máximo', 'quota', attrs=2, box=students_hbox)
     self.fields.pack_start(students_hbox, False)
     
-    field = gtk.VBox()
-    self.info_l = gtk.Label('Información')
-    self.info_e = gtk.TextView()
-    self.info_e.set_editable(True)
-    self.info_e.get_buffer().set_text(self.object.info)
-    self.info_e.set_wrap_mode(gtk.WRAP_WORD)
-    scroll_window = gtk.ScrolledWindow()
-    scroll_window.add(self.info_e)
-    scroll_window.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-    scroll_window.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
-    
-    field.pack_start(self.info_l, False)
-    field.pack_start(scroll_window, True)
-    
-    self.fields.pack_start(field, True)
+    f, l, e = self.add_field('Información', 'info', field_type = 'text')
+    e.set_size_request(-1,200)
+    f.set_child_packing(e,True,True,0,gtk.PACK_START)
+    self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
   
   def get_info_text(self):
     buff = self.info_e.get_buffer()
@@ -96,10 +85,12 @@ class KlassForm(FormFor):
     
     self.teachers_ls.vbox.pack_start(actions, False)
 
+    frame = gtk.Frame()
     field = gtk.VBox()
     field.set_size_request(650,-1)
     field.pack_start(self.teachers_l, False)
-    field.pack_start(self.teachers_ls, True)
+    frame.add(self.teachers_ls)
+    field.pack_start(frame, True)
     self.relationships_hbox.pack_start(field, True)
   
   def add_schedule(self, schedule):

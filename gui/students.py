@@ -25,12 +25,16 @@ class StudentForm(FormFor):
   def get_tab_label(self):
     if self.object.id:
       title = 'Alumno' if self.object.male else 'Alumna'
-      return 'Editar ' + title + ': ' + self.object.name + ' ' + self.object.lastname
+      return 'Editar ' + title + ":\n" + self.object.name + ' ' + self.object.lastname
     else:
       return 'Agregar Alumno/a'
   
   def create_form_fields(self):
     self.fields = gtk.VBox(False, 5)
+    
+    label = gtk.Label('Información personal:')
+    self.fields.pack_start(label, False)
+    
     full_name_box = gtk.HBox(True, 8)
     self.add_field('Nombre', 'name', attrs=100, box=full_name_box)
     self.add_field('Apellido', 'lastname', attrs=100, box=full_name_box)
@@ -63,7 +67,10 @@ class StudentForm(FormFor):
     hbox.pack_start(gender_field, False)
     self.fields.pack_start(hbox, False)
 
-    self.add_field('Comentarios', 'comments', attrs=500)
+    f, l, e = self.add_field('Comentarios', 'comments', field_type = 'text')
+    e.set_size_request(-1,200)
+    f.set_child_packing(e,True,True,0,gtk.PACK_START)
+    self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
   
   def get_values(self):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
@@ -73,7 +80,7 @@ class SearchStudent(gtk.VBox):
     return "Buscar alumno/a"
 
   def __init__(self):
-    gtk.VBox.__init__(self)
+    gtk.VBox.__init__(self, False, 8)
     self.set_border_width(4)
     
     self.form = SearchForm()
@@ -232,7 +239,10 @@ class Membership(gtk.ScrolledWindow):
     self.add_column('Con intereses',4)
     self.add_column('Estado',5)
     
-    self.add_with_viewport(self.list)
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.list)
+    self.add(viewport)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)

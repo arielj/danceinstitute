@@ -6,6 +6,7 @@ import gtk
 class Config(gtk.ScrolledWindow):
   def __init__(self, settings):
     gtk.ScrolledWindow.__init__(self)
+    self.set_border_width(4)
     
     self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
     
@@ -15,7 +16,10 @@ class Config(gtk.ScrolledWindow):
     
     self.create_form()
     
-    self.add_with_viewport(self.vbox)
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.vbox)
+    self.add(viewport)
     
     self.show_all()
 
