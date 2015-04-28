@@ -212,18 +212,23 @@ class MembershipsPanel(gtk.VBox):
   def __init__(self, student):
     gtk.VBox.__init__(self)
     self.student = student
+
+    self.pack_start(gtk.Label('Clases y cuotas:'), False)
+
+    self.enroll_b = gtk.Button('Incribir a una clase')
+    
+    self.pack_start(self.enroll_b, False)
+
     self.notebook = gtk.Notebook()
     
     for m in student.get_memberships():
-      self.notebook.append_page(Membership(m),gtk.Label(m.get_klass().name))
+      self.notebook.append_page(MembershipTab(m),gtk.Label(m.get_klass().name))
       
-    self.pack_start(gtk.Label('Clases y cuotas:'), False)
-
     self.pack_start(self.notebook, True)
 
-class Membership(gtk.ScrolledWindow):
+class MembershipTab(gtk.VBox):
   def __init__(self, membership):
-    gtk.ScrolledWindow.__init__(self)
+    gtk.VBox.__init__(self)
     
     #installment, year, month, base, recharges, status
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
@@ -238,11 +243,18 @@ class Membership(gtk.ScrolledWindow):
     self.add_column('Monto',3)
     self.add_column('Con intereses',4)
     self.add_column('Estado',5)
-    
+
+    self.scrolled = gtk.ScrolledWindow()
     viewport = gtk.Viewport()
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.list)
-    self.add(viewport)
+    self.scrolled.add(viewport)
+    
+    self.pack_start(self.scrolled, True)
+    
+    self.delete_b = gtk.Button('Eliminar inscripción')
+    
+    self.pack_start(self.delete_b, False)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
