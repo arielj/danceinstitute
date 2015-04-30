@@ -53,7 +53,16 @@ class Controller(gobject.GObject):
     self.window.menu.list_klasses.connect('activate', self.list_klasses)
     self.window.menu.add_student.connect('activate', self.add_student)
     self.window.menu.search_student.connect('activate', self.search_student)
+    self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
+    self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
+  def show_help_dialog(self, widget, dialog_class):
+    dialog = eval(dialog_class)()
+    dialog.connect('response', self.on_help_dialog_response)
+    dialog.run()
+
+  def on_help_dialog_response(self, dialog, reponse):
+    dialog.destroy()
 
 
   #config controls

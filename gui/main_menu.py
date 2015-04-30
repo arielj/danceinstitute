@@ -68,11 +68,11 @@ class MainMenu(gtk.MenuBar):
     self.help_menu = gtk.Menu()
     self.license = gtk.MenuItem('Licencia')
     self.show_help = gtk.MenuItem('Ayuda')
-    self.about_us = gtk.MenuItem('Acerca de')
+    self.about = gtk.MenuItem('Acerca de')
     
     self.help_menu.append(self.license)
     self.help_menu.append(self.show_help)
-    self.help_menu.append(self.about_us)
+    self.help_menu.append(self.about)
     
     self.help.set_submenu(self.help_menu)
 
