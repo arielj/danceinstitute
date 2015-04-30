@@ -10,6 +10,8 @@ class Membership(Model):
     self.student_id = None
     self.klass_id = None
     self.year = 2015
+    self.initial_month = 0
+    self.final_month = 11
     self.installment_ids = []
     self.installments = []
     

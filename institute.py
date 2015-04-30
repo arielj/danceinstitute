@@ -28,7 +28,7 @@ class Controller(gobject.GObject):
     self.window.connect("delete_event", self.delete_event)
     self.window.connect("destroy", self.quit)
     self.window.connect('close-tab', self.close_tab)
-    
+    self.window.set_title(self.settings.name)
     self.bind_main_menu()
 
     if self.settings.startup_size != '':
@@ -63,6 +63,7 @@ class Controller(gobject.GObject):
 
   def on_help_dialog_response(self, dialog, reponse):
     dialog.destroy()
+
 
 
   #config controls
@@ -200,6 +201,7 @@ class Controller(gobject.GObject):
   def student_form(self, student):
     page = StudentForm(student)
     page.submit.connect_object('clicked', self.submit_student, page)
+    page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
     self.window.add_page(page)
     return page
 
@@ -222,6 +224,22 @@ class Controller(gobject.GObject):
     students = Student.search(value)
     page.update_results(students)
 
+
+
+  # memberships
+  def new_membership(self, page):
+    membership = Membership()
+    dialog = MembershipDialog(membership)
+    dialog.connect('response', self.on_new_membership, page)
+    dialog.run()
+
+  def on_new_membership(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_OK:
+      page.update_memberships()
+
+    if destroy_dialog:
+      dialog.destroy()
 
 
   #save a reference of signals connected

@@ -4,6 +4,7 @@
 import gtk
 import gobject
 from forms import FormFor
+from memberships import *
 
 class StudentForm(FormFor):
   def __init__(self, student):
@@ -74,6 +75,8 @@ class StudentForm(FormFor):
   
   def get_values(self):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
+
+
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):
@@ -208,56 +211,3 @@ class StudentsTable(gtk.TreeView):
     for t in self.students:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 
-class MembershipsPanel(gtk.VBox):
-  def __init__(self, student):
-    gtk.VBox.__init__(self)
-    self.student = student
-
-    self.pack_start(gtk.Label('Clases y cuotas:'), False)
-
-    self.enroll_b = gtk.Button('Incribir a una clase')
-    
-    self.pack_start(self.enroll_b, False)
-
-    self.notebook = gtk.Notebook()
-    
-    for m in student.get_memberships():
-      self.notebook.append_page(MembershipTab(m),gtk.Label(m.get_klass().name))
-      
-    self.pack_start(self.notebook, True)
-
-class MembershipTab(gtk.VBox):
-  def __init__(self, membership):
-    gtk.VBox.__init__(self)
-    
-    #installment, year, month, base, recharges, status
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
-    
-    for ins in membership.get_installments():
-      self.store.append((ins,membership.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
-    
-    self.list = gtk.TreeView(self.store)
-    
-    self.add_column('Año',1)
-    self.add_column('Mes',2)
-    self.add_column('Monto',3)
-    self.add_column('Con intereses',4)
-    self.add_column('Estado',5)
-
-    self.scrolled = gtk.ScrolledWindow()
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.list)
-    self.scrolled.add(viewport)
-    
-    self.pack_start(self.scrolled, True)
-    
-    self.delete_b = gtk.Button('Eliminar inscripción')
-    
-    self.pack_start(self.delete_b, False)
-    
-  def add_column(self, label, text_idx):
-    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
-    col.set_expand(True)
-    self.list.append_column(col)
-    return col

@@ -5,3 +5,4 @@ from students import *
 from klasses import *
 from config import *
 from help import *
+from memberships import *

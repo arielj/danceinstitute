@@ -24,9 +24,12 @@ class Config(gtk.ScrolledWindow):
     self.show_all()
 
   def create_form(self):
-    self.add_field('Tamaño inicial', attrs=15)
+    self.add_field('Nombre del instituto/academia', attrs=100)
     self.add_field('Horario de apertura', attrs=5)
     self.add_field('Horario de cierre', attrs=5)
+
+
+    self.add_field('Tamaño inicial', attrs=15)
 
   def add_field(self, label, attrs=None, box=None):
     field = gtk.VBox()

@@ -6,6 +6,7 @@ class Settings():
     self.startup_size = ''
     self.opening = '18:00'
     self.closing = '24:00'
+    self.name = 'Instituto Superior de Danzas Sharife'
 
   def get_opening_h(self):
     return int(self.opening.split(':')[0])
