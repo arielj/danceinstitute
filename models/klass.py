@@ -6,13 +6,13 @@ class Klass(Model):
   def __init__(self):
     Model.__init__(self)
     self.name = ''
-    self.fee = '0'
-    self.half_fee = '0'
-    self.once_fee = '0'
-    self.inscription_fee = '0'
-    self.min_age = '0'
-    self.max_age = '0'
-    self.quota = '0'
+    self.normal_fee = 0
+    self.half_fee = 0
+    self.once_fee = 0
+    self.inscription_fee = 0
+    self.min_age = 0
+    self.max_age = 0
+    self.quota = 0
     self.info = ''
     self.teacher_ids = []
     self.schedule_ids = []
@@ -26,13 +26,13 @@ class Klass(Model):
     klass = cls()
     klass.id = id
     klass.name = 'Flamenco Adultos'
-    klass.fee = '350'
-    klass.half_fee = '200'
-    klass.once_fee = '50'
-    klass.inscription_fee = '0'
-    klass.min_age = '15'
-    klass.max_age = '0'
-    klass.quota = '15'
+    klass.normal_fee = 350
+    klass.half_fee = 200
+    klass.once_fee = 50
+    klass.inscription_fee = 0
+    klass.min_age = 15
+    klass.max_age = 0
+    klass.quota = 15
     klass.info = 'Traer zapatos con taco ancho y una pollera larga.'
     klass.teacher_ids = [1]
     klass.schedule_ids = [1,2]
@@ -59,6 +59,10 @@ class Klass(Model):
     klasses['Fuego']['21:00']['mon'] = kls
     
     return klasses
+
+  @classmethod
+  def all(cls):
+    return [cls.find(1)]
 
   def find_schedule(self, sch_id):
     for sch in self.schedules:
@@ -107,3 +111,5 @@ class Klass(Model):
         self.teacher_ids.remove(teacher.id)
       self.teachers.remove(teacher)
 
+  def get_fee_for(self, fee_type):
+    return vars(self)[fee_type+'_fee']

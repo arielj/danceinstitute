@@ -10,8 +10,12 @@ class Membership(Model):
     self.student_id = None
     self.klass_id = None
     self.year = 2015
+    self.type = 'normal'
+    self.info = ''
     self.initial_month = 0
     self.final_month = 11
+    self.date = ''
+    self.fee = 0
     self.installment_ids = []
     self.installments = []
     
@@ -29,3 +33,11 @@ class Membership(Model):
   @classmethod
   def find(cls, id):
     return cls(memberships[id])
+
+  @classmethod
+  def get_types(cls):
+    return {'normal': 'Normal', 'half': 'Mitad de clases', 'once': 'Una sola clase'}
+
+  @classmethod
+  def months(cls):
+    return ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']

@@ -6,7 +6,7 @@ class FormFor(gtk.HBox):
     self.object = obj
     self.set_border_width(4)
     
-  def add_field(self, label, method, field_type = 'entry', attrs = None, box = None):
+  def add_field(self, label, method, field_type = 'entry', attrs = None, box = None, list_store = None):
     l = gtk.Label(label)
     vars(self)[method + "_l"] = l
 
@@ -24,10 +24,18 @@ class FormFor(gtk.HBox):
       e.set_shadow_type(gtk.SHADOW_ETCHED_IN)
       e.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
       vars(self)[method + "_e"] = entry
+    elif field_type == 'combo':
+      e = gtk.ComboBox(list_store)
+      cell = gtk.CellRendererText()
+      e.pack_start(cell, True)
+      e.add_attribute(cell, 'text', 1)
+      vars(self)[method + "_e"] = e
+      e.get_model().foreach(self.set_active_item_on_combo, (method, e))
     
     field = gtk.VBox()
     field.pack_start(l, False)
     field.pack_start(e, False)
+    vars(self)[method + "_field"] = field
     
     if box is not None:
       box.pack_start(field, True)
@@ -35,4 +43,12 @@ class FormFor(gtk.HBox):
       self.fields.pack_start(field, False)
     
     return [field, l, e]
+
+  def set_active_item_on_combo(self, model, path, itr, data):
+    method, e = data
+    if model.get_value(itr,0) == vars(self.object)[method]:
+      e.set_active_iter(itr)
+      return True
+    else:
+      return False
 

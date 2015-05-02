@@ -229,7 +229,8 @@ class Controller(gobject.GObject):
   # memberships
   def new_membership(self, page):
     membership = Membership()
-    dialog = MembershipDialog(membership)
+    klasses = Klass.all()
+    dialog = MembershipDialog(membership, klasses)
     dialog.connect('response', self.on_new_membership, page)
     dialog.run()
 
@@ -240,6 +241,7 @@ class Controller(gobject.GObject):
 
     if destroy_dialog:
       dialog.destroy()
+
 
 
   #save a reference of signals connected
