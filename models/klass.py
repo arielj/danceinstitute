@@ -1,9 +1,15 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 from model import Model
 from teacher import Teacher
 from schedule import Schedule
 
+klasses = {1: {'name': 'Flamenco Adultos', 'normal_fee': 350, 'half_fee': 200, 'once_fee': 50, 'inscription_fee': 0, 'min_age': 15, 'max_age': 0, 'quota': 15, 'info': 'Traer zapatos con taco ancho y una pollera larga.', 'teacher_ids': [1], 'schedule_ids': [1,2]},
+           2: {'name': 'HipHop Adolescentes', 'normal_fee': 300, 'half_fee': 200, 'once_fee': 30, 'inscription_fee': 0, 'min_age': 13, 'max_age': 22, 'quota': 30, 'info': 'Zapatillas y ropa cómoda', 'teacher_ids': [2], 'schedule_ids': [3,4]}}
+
 class Klass(Model):
-  def __init__(self):
+  def __init__(self, data = {}):
     Model.__init__(self)
     self.name = ''
     self.normal_fee = 0
@@ -20,27 +26,13 @@ class Klass(Model):
     self.teachers = []
     self.schedules = []
     self.users = []
+    
+    self.set_attrs(data)
 
   @classmethod
   def find(cls, id):
-    klass = cls()
+    klass = cls(klasses[id])
     klass.id = id
-    klass.name = 'Flamenco Adultos'
-    klass.normal_fee = 350
-    klass.half_fee = 200
-    klass.once_fee = 50
-    klass.inscription_fee = 0
-    klass.min_age = 15
-    klass.max_age = 0
-    klass.quota = 15
-    klass.info = 'Traer zapatos con taco ancho y una pollera larga.'
-    klass.teacher_ids = [1]
-    klass.schedule_ids = [1,2]
-    klass.teachers = []
-    klass.schedules = []
-    klass.user_ids = []
-    klass.users = []
-    
     return klass
 
   @classmethod
@@ -53,16 +45,16 @@ class Klass(Model):
           klasses[r][h2] = {'mon': None, 'tue': None, 'wed': None, 'thu': None,
                             'fri': None, 'sat': None, 'sun': None}
    
-    kls = cls.find(1)
-    klasses['Fuego']['20:00']['mon'] = kls
-    klasses['Fuego']['20:30']['mon'] = kls
-    klasses['Fuego']['21:00']['mon'] = kls
+    for kls in cls.all():
+      for sch in kls.get_schedules():
+        for interval in sch.get_intervals():
+          klasses[sch.room][interval][sch.get_day_abbr()] = kls
     
     return klasses
 
   @classmethod
   def all(cls):
-    return [cls.find(1)]
+    return [cls.find(1), cls.find(2)]
 
   def find_schedule(self, sch_id):
     for sch in self.schedules:

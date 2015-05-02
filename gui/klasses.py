@@ -32,7 +32,7 @@ class KlassForm(FormFor):
     self.fields = gtk.VBox(False, 5)
     self.add_field('Clase', 'name', attrs=30)
     prices_hbox = gtk.HBox(True, 8)
-    self.add_field('Precio', 'fee', attrs=5, box=prices_hbox)
+    self.add_field('Precio', 'normal_fee', attrs=5, box=prices_hbox)
     self.add_field('Precio alternativo', 'half_fee', attrs=5, box=prices_hbox)
     self.add_field('Precio por clase individual', 'once_fee', attrs=5, box=prices_hbox)
     self.add_field('Inscripción', 'inscription_fee', attrs=5, box=prices_hbox)
