@@ -15,7 +15,7 @@ class Schedule(Model):
   days = ['mon','tue','wed','thu','fri','sat','sun']
 
   def __init__(self, attrs = {}):
-    self.id = False
+    Model.__init__(self)
     self.from_time = '00:00'
     self.to_time = '00:00'
     self.day = 0
@@ -53,6 +53,13 @@ class Schedule(Model):
 
   def _get_datetime(self,t):
     return datetime.datetime(2000,1,1,int(t[0:2]),int(t[3:5]),0)
+
+
+  def _is_valid(self):
+    if self.from_time >= self.to_time:
+      self.add_error('from_time', 'Horario inválidos.')
+    self.validate_presence_of('room')
+
 
 
   @classmethod

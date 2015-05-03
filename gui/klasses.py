@@ -30,31 +30,30 @@ class KlassForm(FormFor):
   
   def create_form_fields(self):
     self.fields = gtk.VBox(False, 5)
-    self.add_field('Clase', 'name', attrs=30)
+    self.add_field('name', attrs=30)
     prices_hbox = gtk.HBox(True, 8)
-    self.add_field('Precio', 'normal_fee', attrs=5, box=prices_hbox)
-    self.add_field('Precio alternativo', 'half_fee', attrs=5, box=prices_hbox)
-    self.add_field('Precio por clase individual', 'once_fee', attrs=5, box=prices_hbox)
-    self.add_field('Inscripción', 'inscription_fee', attrs=5, box=prices_hbox)
+    self.add_field('normal_fee', attrs=5, box=prices_hbox)
+    self.add_field('half_fee', attrs=5, box=prices_hbox)
+    self.add_field('once_fee', attrs=5, box=prices_hbox)
+    self.add_field('inscription_fee', attrs=5, box=prices_hbox)
     self.fields.pack_start(prices_hbox, False)
 
     students_hbox = gtk.HBox(True, 8)
-    self.add_field('Edad mínima', 'min_age', attrs=2, box=students_hbox)
-    self.add_field('Edad máxima', 'max_age', attrs=2, box=students_hbox)
-    self.add_field('Cupo máximo', 'quota', attrs=2, box=students_hbox)
+    self.add_field('min_age', attrs=2, box=students_hbox)
+    self.add_field('max_age', attrs=2, box=students_hbox)
+    self.add_field('quota', attrs=2, box=students_hbox)
     self.fields.pack_start(students_hbox, False)
     
-    f, l, e = self.add_field('Información', 'info', field_type = 'text')
+    f, l, e = self.add_field('info', field_type = 'text')
     e.set_size_request(-1,200)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
-    self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
   
   def get_info_text(self):
     buff = self.info_e.get_buffer()
     return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'half_fee': self.half_fee_e.get_text(), 'once_fee': self.once_fee_e.get_text(), 'min_age': self.min_age_e.get_text(), 'max_age': self.max_age_e.get_text(), 'quota': self.quota_e.get_text(), 'info': self.get_info_text()}
+    return {'name': self.name_e.get_text(), 'normal_fee': self.normal_fee_e.get_text(), 'half_fee': self.half_fee_e.get_text(), 'once_fee': self.once_fee_e.get_text(), 'min_age': self.min_age_e.get_text(), 'max_age': self.max_age_e.get_text(), 'quota': self.quota_e.get_text(), 'info': self.get_info_text()}
 
   def add_schedules_table(self):
     self.schedules_l = gtk.Label('Horarios')

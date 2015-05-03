@@ -29,6 +29,20 @@ class Klass(Model):
     
     self.set_attrs(data)
 
+  def _is_valid(self):
+    self.validate_presence_of('name')
+
+    if not self.normal_fee:
+      self.add_error('normal_fee', 'No puede ser 0.')
+    
+    for t in self.get_teachers():
+      if not t.is_valid():
+        self.add_error('teachers', 'No es válido.')
+    
+    for s in self.get_schedules():
+      if not s.is_valid():
+        self.add_error('schedules', 'No es válido.')
+
   @classmethod
   def find(cls, id):
     klass = cls(klasses[id])

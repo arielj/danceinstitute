@@ -6,3 +6,4 @@ from klasses import *
 from config import *
 from help import *
 from memberships import *
+from widgets import *

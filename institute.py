@@ -128,8 +128,10 @@ class Controller(gobject.GObject):
     page.connect('klass-add', self.add_klass)
   
   def submit_klass(self, form):
-    print form.object.id
-    print form.get_values()
+    kls = form.object
+    kls.set_attrs(form.get_values())
+    print kls.is_valid()
+    print kls.errors
 
   def show_select_teacher_dialog(self, page):
     teachers = Teacher.all()
@@ -175,10 +177,14 @@ class Controller(gobject.GObject):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       schedule.set_attrs(dialog.get_values())
-      if schedule in page.object.get_schedules():
-        page.update_schedules()
+      if schedule.is_valid():
+        if schedule in page.object.get_schedules():
+          page.update_schedules()
+        else:
+          page.add_schedule(schedule)
       else:
-        page.add_schedule(schedule)
+        destroy_dialog = False
+        ErrorMessage("No se puede guardar el horario:", schedule.full_errors()).run()
 
     elif response == gtk.RESPONSE_DELETE_EVENT:
       if schedule in page.object.get_schedules():
