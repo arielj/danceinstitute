@@ -14,6 +14,9 @@ class MainWindow(gtk.Window):
     self.notebook = gtk.Notebook()
     self.notebook.set_tab_pos(gtk.POS_LEFT)
     self.v_box.pack_start(self.notebook, True)
+    
+    self.statusbar = gtk.Statusbar()
+    self.v_box.pack_end(self.statusbar, False)
 
     self.show_all()
 
@@ -30,6 +33,14 @@ class MainWindow(gtk.Window):
 
   def on_close_tab(self, widget, page):
     self.emit('close-tab', page)
+
+  def update_label(self, page):
+    label = NotebookTabLabel(page)
+    self.notebook.set_tab_label(page,label)
+    label.close.connect('clicked', self.on_close_tab, page)
+
+  def show_status(self, status):
+    self.statusbar.push(1, status)
 
 gobject.type_register(MainWindow)
 gobject.signal_new('close-tab', \

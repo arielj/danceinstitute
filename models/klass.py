@@ -36,9 +36,20 @@ class Klass(Model):
 
   def _is_valid(self):
     self.validate_presence_of('name')
-
-    if not self.normal_fee:
-      self.add_error('normal_fee', 'El campo normal_fee no puede ser 0.')
+    self.validate_numericallity_of('normal_fee', greate_than = 0)
+    self.validate_numericallity_of('half_fee')
+    self.validate_numericallity_of('once_fee')
+    self.validate_numericallity_of('inscription_fee')
+    self.validate_numericallity_of('min_age')
+    self.validate_numericallity_of('max_age')
+    self.validate_numericallity_of('quota')
+    
+    valid_schedules = True
+    for s in self.get_schedules():
+      if not s.is_valid():
+        valid_schedules = False
+    if not valid_schedules:
+      self.add_error('schedules', 'Uno o más horarios no son válidos')
 
   def before_save(self):
     new_ids = []
@@ -48,8 +59,6 @@ class Klass(Model):
       new_ids.append(sch.id)
     self.schedule_ids = new_ids
     return True
-
-
 
   @classmethod
   def find(cls, id):

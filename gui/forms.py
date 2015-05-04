@@ -15,7 +15,10 @@ class FormFor(gtk.HBox):
 
     if field_type == 'entry':
       e = gtk.Entry(attrs)
-      e.set_text(str(vars(self.object)[method] or ''))
+      v = vars(self.object)[method]
+      if v is None:
+        v = ''
+      e.set_text(str(v))
       vars(self)[method + "_e"] = e
     elif field_type == 'text':
       entry = gtk.TextView()

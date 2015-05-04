@@ -34,7 +34,28 @@ class Model(object):
   def validate_presence_of(self, field):
     if not vars(self)[field]:
       self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
-  
+
+  def validate_numericallity_of(self, field, greate_than = None, less_than = None):
+    v = vars(self)[field]
+    field_name = _a(self.cls_name(),field)
+    err = False
+    extra = False
+    try:
+      v = int(v)
+      if greate_than is not None and v <= greate_than:
+        err = 'field_not_greate_than'
+        extra = {'than': greate_than}
+      if less_than is not None and v >= less_than:
+        err = 'field_not_less_than'
+        extra = {'than': less_than}
+    except:
+      err = 'field_not_number'
+    
+    if err:
+      args = {'field': field_name}
+      if extra:
+        args.update(extra)
+      self.add_error(field, _e(err) % args)
 
   def cls_name(self):
     return self.__class__.__name__
@@ -57,8 +78,9 @@ class Model(object):
 
   def do_save(self):
     # meter en DB real
-    i = max(self.__class__.db.keys())+1
-    self.id = i
+    if self.id is None:
+      i = max(self.__class__.db.keys())+1
+      self.id = i
     self.__class__.db[self.id] = self.to_db()
 
   def before_save(self):

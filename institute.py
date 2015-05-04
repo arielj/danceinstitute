@@ -51,6 +51,7 @@ class Controller(gobject.GObject):
     self.window.menu.list_teachers.connect('activate', self.list_teachers)
     self.window.menu.add_klass.connect('activate', self.add_klass)
     self.window.menu.list_klasses.connect('activate', self.list_klasses)
+    self.window.menu.show_schedules.connect('activate', self.show_schedules)
     self.window.menu.add_student.connect('activate', self.add_student)
     self.window.menu.search_student.connect('activate', self.search_student)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
@@ -120,17 +121,29 @@ class Controller(gobject.GObject):
     self.window.add_page(page)
     return page
 
-  def list_klasses(self, widget):
+  def show_schedules(self, widget):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
+    page = SchedulesTables(klasses)
+    self.window.add_page(page)
+    page.connect('klass-edit', self.edit_klass)
+    page.connect('klass-add', self.add_klass)
+    self.save_signal(self.connect('klass-changed', self.refresh_schedules, page), page)
+
+  def list_klasses(self, widget):
+    klasses = Klass.all()
     page = KlassesList(klasses)
     self.window.add_page(page)
     page.connect('klass-edit', self.edit_klass)
     page.connect('klass-add', self.add_klass)
     self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
 
-  def refresh_klasses(self, widget, kls, created, page):
+  def refresh_schedules(self, widget, kls, created, page):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
     page.refresh_tables(klasses)
+  
+  def refresh_klasses(self, widget, kls, created, page):
+    klasses = Klass.all()
+    page.refresh_list(klasses)
   
   def submit_klass(self, form):
     kls = form.object
@@ -138,6 +151,8 @@ class Controller(gobject.GObject):
     kls.set_attrs(form.get_values())
     if kls.save():
       self.emit('klass-changed', kls, new_record)
+      self.window.update_label(form)
+      self.window.show_status('Clase guardada')
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 

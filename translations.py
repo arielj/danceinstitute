@@ -102,7 +102,10 @@ ts = {
     }
   },
   'errors': {
-    'field_not_blank': ['Field "%(field)s" can\'t be blank.','El campo "%(field)s" no puede estar en blanco.']
+    'field_not_blank': ['Field "%(field)s" can\'t be blank.','El campo "%(field)s" no puede estar en blanco.'],
+    'field_not_number': ['Field "%(field)s" is not a number.', 'El campo "%(field)s" no es un número.'],
+    'field_not_greate_than': ['Field "%(field)s" must be greater than %(than)s.', 'El campo "%(field)s" debe ser mayor a %(than)s.'],
+    'field_not_less_than': ['Field "%(field)s" must be less than %(than)s.', 'El campo "%(field)s" debe ser menor a %(than)s']
   }
 }
 
