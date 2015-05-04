@@ -130,8 +130,10 @@ class Controller(gobject.GObject):
   def submit_klass(self, form):
     kls = form.object
     kls.set_attrs(form.get_values())
-    print kls.is_valid()
-    print kls.errors
+    if kls.is_valid():
+      print 'Clase creada.'
+    else:
+      ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
   def show_select_teacher_dialog(self, page):
     teachers = Teacher.all()

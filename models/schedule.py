@@ -4,6 +4,7 @@
 from model import Model
 from room import Room
 import datetime
+from translations import _t, ts
 
 schedules = {1: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 0},
              2: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 3},
@@ -11,9 +12,6 @@ schedules = {1: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day
              4: {'from_time': '19:00', 'to_time': '20:30', 'room': 'Aire', 'day': 3},}
 
 class Schedule(Model):
-  DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-  days = ['mon','tue','wed','thu','fri','sat','sun']
-
   def __init__(self, attrs = {}):
     Model.__init__(self)
     self.from_time = '00:00'
@@ -28,10 +26,10 @@ class Schedule(Model):
       vars(self)[key] = attrs[key]
 
   def get_day_name(self):
-    return Schedule.DAYS[self.day]
+    return _t('days')[self.day]
 
   def get_day_abbr(self):
-    return Schedule.days[self.day]
+    return _t('abbr_days','en')[self.day]
 
   # returns schedule intervals separated by 30 minutes:
   # if schedule goes from 20:00 to 21:30, it returns
@@ -57,7 +55,7 @@ class Schedule(Model):
 
   def _is_valid(self):
     if self.from_time >= self.to_time:
-      self.add_error('from_time', 'Horario inválidos.')
+      self.add_error('from_time', 'Desde debe ser anterior a Hasta.')
     self.validate_presence_of('room')
 
 
@@ -65,10 +63,6 @@ class Schedule(Model):
   @classmethod
   def possible_rooms(cls):
     return Room.all()
-
-  @classmethod
-  def get_days(cls):
-    return cls.DAYS
 
   @classmethod
   def find(cls, id):

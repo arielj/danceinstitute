@@ -37,22 +37,22 @@ class StudentForm(FormFor):
     self.fields.pack_start(label, False)
     
     full_name_box = gtk.HBox(True, 8)
-    self.add_field('Nombre', 'name', attrs=100, box=full_name_box)
-    self.add_field('Apellido', 'lastname', attrs=100, box=full_name_box)
+    self.add_field('name', attrs=100, box=full_name_box)
+    self.add_field('lastname', attrs=100, box=full_name_box)
     self.fields.pack_start(full_name_box, False)
     
     personal_info_box = gtk.HBox(True, 8)
-    self.add_field('D.N.I.', 'dni', attrs=10, box=personal_info_box)
-    self.add_field('Fecha de nacimiento', 'birthday', attrs=10, box=personal_info_box)
+    self.add_field('dni', attrs=10, box=personal_info_box)
+    self.add_field('birthday', attrs=10, box=personal_info_box)
     self.fields.pack_start(personal_info_box, False)
     
     contact_info_box = gtk.HBox(True, 8)
-    self.add_field('Celular', 'cellphone', attrs=16, box=contact_info_box)
-    self.add_field('Email', 'email', attrs=256, box=contact_info_box)
+    self.add_field('cellphone', attrs=16, box=contact_info_box)
+    self.add_field('email', attrs=256, box=contact_info_box)
     self.fields.pack_start(contact_info_box, False)
 
     hbox = gtk.HBox(True, 8)
-    self.add_field('Dirección', 'address', attrs=256, box=hbox)
+    self.add_field('address', attrs=256, box=hbox)
     self.gender_l = gtk.Label('Sexo')
     self.male_r = gtk.RadioButton(None, 'Hombre')
     self.male_r.set_active(True)
@@ -68,7 +68,7 @@ class StudentForm(FormFor):
     hbox.pack_start(gender_field, False)
     self.fields.pack_start(hbox, False)
 
-    f, l, e = self.add_field('Comentarios', 'comments', field_type = 'text')
+    f, l, e = self.add_field('comments', field_type = 'text')
     e.set_size_request(-1,200)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
     self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)

@@ -55,8 +55,8 @@ ts = {
       'Schedules': ['Schedules', 'Horarios']
     },
     'membership': {
-      'student': ['Student','Alumno'],
-      'klass': ['Class','Clase'],
+      'student_id': ['Student','Alumno'],
+      'klass_id': ['Class','Clase'],
       'installments': ['Installments','Cuotas'],
       'year': ['Year','Año'],
       'type': ['Type','Tipo'],
@@ -65,18 +65,60 @@ ts = {
       'final_month': ['Final month','Mes final'],
       'date': ['Date','Fecha'],
       'fee': ['Fee','Precio']
+    },
+    'schedule': {
+      'from_time': ['From','Desde'],
+      'to_time': ['To','Hasta'],
+      'day': ['Day','Día'],
+      'room': ['Room','Salón']
+    },
+    'student': {
+      'name': ['Name','Nombre'],
+      'lastname': ['Lastname','Apellido'],
+      'dni': ['Doc','DNI'],
+      'cellphone': ['Cellphone','Celular'],
+      'birthday': ['Birthday','Fecha de nacimiento'],
+      'address': ['Address','Dirección'],
+      'male': ['Male','Hombre'],
+      'female': ['Female','Mujer'],
+      'gender': ['Gender','Sexo'],
+      'email': ['Email', 'E-mail'],
+      'is_teacher': ['Is teacher','Es profesor'],
+      'comments': ['Comments','Comentarios']
+    },
+    'teacher': {
+      'name': ['Name','Nombre'],
+      'lastname': ['Lastname','Apellido'],
+      'dni': ['Doc','DNI'],
+      'cellphone': ['Cellphone','Celular'],
+      'birthday': ['Birthday','Fecha de nacimiento'],
+      'address': ['Address','Dirección'],
+      'male': ['Male','Hombre'],
+      'female': ['Female','Mujer'],
+      'gender': ['Gender','Sexo'],
+      'email': ['Email', 'E-mail'],
+      'is_teacher': ['Is teacher','Es profesor'],
+      'comments': ['Comments','Comentarios']
     }
+  },
+  'errors': {
+    'field_not_blank': ['Field "%(field)s" can\'t be blank.','El campo "%(field)s" no puede estar en blanco.']
   }
 }
 
-def lang_idx():
-  return langs.index(lang)
+def lang_idx(l):
+  if l is None:
+    l = lang
+  return langs.index(l)
 
-def _t(key):
-  return ts['common'][key][lang_idx()]
+def _t(key, l = None):
+  return ts['common'][key][lang_idx(l)]
 
-def _m(model):
-  return ts['models'][model][lang_idx()]
+def _m(model, l = None):
+  return ts['models'][model.lower()][lang_idx(l)]
 
-def _a(model, attr):
-  return ts['attrs'][model][attr][lang_idx()]
+def _a(model, attr, l = None):
+  return ts['attrs'][model.lower()][attr][lang_idx(l)]
+
+def _e(err, l = None):
+  return ts['errors'][err][lang_idx(l)]

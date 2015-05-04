@@ -4,6 +4,7 @@
 import gtk
 import gobject
 from forms import FormFor
+from translations import _t
 
 class MembershipsPanel(gtk.VBox):
   def __init__(self, student):
@@ -76,30 +77,29 @@ class MembershipForm(FormFor):
     
     self.fields = gtk.VBox()
     
-    self.add_field('Año', 'year', attrs=4)
+    self.add_field('year', attrs=4)
 
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
     for k in klasses:
       store.append((k.id,k.name,k))
-    self.add_field('Clase', 'klass_id', field_type = 'combo', list_store = store)
+    self.add_field('klass_id', field_type = 'combo', list_store = store)
     
     store = gtk.ListStore(str, str)
-    types = membership.__class__.get_types()
-    for t in types.keys():
-      store.append((t,types[t]))
-    self.add_field('Tipo de inscripción', 'type', field_type = 'combo', list_store = store)
+    for k,v in membership.__class__.get_types().iteritems():
+      store.append((k,v))
+    self.add_field('type', field_type = 'combo', list_store = store)
 
     store = gtk.ListStore(int, str)
-    for i,m in enumerate(membership.__class__.months()):
+    for i,m in enumerate(_t('months')):
       store.append((i,m))
-    self.add_field('Mes inicial', 'initial_month', field_type = 'combo', list_store = store)
+    self.add_field('initial_month', field_type = 'combo', list_store = store)
 
     store = gtk.ListStore(int, str)
-    for i,m in enumerate(membership.__class__.months()):
+    for i,m in enumerate(_t('months')):
       store.append((i,m))
-    self.add_field('Mes final', 'final_month', field_type = 'combo', list_store = store)
-    self.add_field('Fecha', 'date', attrs=10)
-    self.add_field('Precio', 'fee', attrs=10)
+    self.add_field('final_month', field_type = 'combo', list_store = store)
+    self.add_field('date', attrs=10)
+    self.add_field('fee', attrs=10)
     
     self.pack_start(self.fields, False)
 

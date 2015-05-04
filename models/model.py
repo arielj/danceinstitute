@@ -1,3 +1,5 @@
+from translations import _a, _e
+
 class Model(object):
   def __init__(self):
     self.id = None
@@ -29,7 +31,10 @@ class Model(object):
 
   def validate_presence_of(self, field):
     if not vars(self)[field]:
-      self.add_error(field, 'El campo ' + field + ' no puede estar en blanco')
+      self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
+
+  def cls_name(self):
+    return self.__class__.__name__
 
   @classmethod
   def find(cls, id):

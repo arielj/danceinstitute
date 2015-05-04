@@ -33,7 +33,7 @@ class Klass(Model):
     self.validate_presence_of('name')
 
     if not self.normal_fee:
-      self.add_error('normal_fee', 'No puede ser 0.')
+      self.add_error('normal_fee', 'El campo normal_fee no puede ser 0.')
     
     for t in self.get_teachers():
       if not t.is_valid():
