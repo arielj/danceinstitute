@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from model import Model
-
-installments = {1: {'month': 4, 'paid': True, 'amount': '300'},
-                2: {'month': 5, 'paid': False, 'amount': '300'}}
+from translations import _t
 
 class Installment(Model):
+  #borrar después
+  db = {1: {'month': 4, 'paid': True, 'amount': '300'},
+        2: {'month': 5, 'paid': False, 'amount': '300'}}
+  
   def __init__(self, data = {}):
     Model.__init__(self)
     self.month = 1
@@ -27,7 +29,7 @@ class Installment(Model):
     return self.amount*(1+recharge)
   
   def get_month(self):
-    return ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][self.month-1]
+    return _t('months')[self.month-1]
 
   def get_status(self):
     if self.paid:

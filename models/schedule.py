@@ -6,12 +6,13 @@ from room import Room
 import datetime
 from translations import _t, ts
 
-schedules = {1: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 0},
-             2: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 3},
-             3: {'from_time': '19:00', 'to_time': '20:00', 'room': 'Aire', 'day': 1},
-             4: {'from_time': '19:00', 'to_time': '20:30', 'room': 'Aire', 'day': 3},}
-
 class Schedule(Model):
+  #borrar después
+  db = {1: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 0},
+        2: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 3},
+        3: {'from_time': '19:00', 'to_time': '20:00', 'room': 'Aire', 'day': 1},
+        4: {'from_time': '19:00', 'to_time': '20:30', 'room': 'Aire', 'day': 3},}
+    
   def __init__(self, attrs = {}):
     Model.__init__(self)
     self.from_time = '00:00'
@@ -53,10 +54,14 @@ class Schedule(Model):
     return datetime.datetime(2000,1,1,int(t[0:2]),int(t[3:5]),0)
 
 
+
   def _is_valid(self):
     if self.from_time >= self.to_time:
       self.add_error('from_time', 'Desde debe ser anterior a Hasta.')
     self.validate_presence_of('room')
+
+  def to_db(self):
+    return {'from_time': self.from_time, 'to_time': self.to_time, 'day': self.day, 'room': self.room}
 
 
 
@@ -66,7 +71,7 @@ class Schedule(Model):
 
   @classmethod
   def find(cls, id):
-    schedule = cls(schedules[id])
+    schedule = cls(cls.db[id])
     schedule.id = id
     return schedule
 

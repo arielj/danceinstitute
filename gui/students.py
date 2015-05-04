@@ -101,7 +101,6 @@ class SearchStudent(gtk.VBox):
     self.results.update_table(students)
 
   def on_search(self, widget, data = None):
-    print 'on-searchhhhh'
     self.emit('search', self.form.get_value())
 
   def on_student_activated(self, widget, student):

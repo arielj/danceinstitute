@@ -6,6 +6,7 @@ import gobject
 from forms import FormFor
 from schedules import *
 from teachers import *
+from translations import _t
 
 class KlassForm(FormFor):
   def __init__(self, klass):
@@ -190,6 +191,11 @@ class KlassesList(gtk.ScrolledWindow):
         self.emit('klass-edit', klass)
       else:
         self.emit('klass-add', room, time, column.day_idx)
+
+  def refresh_tables(self,klasses):
+    self.klasses = klasses
+    for room in self.klasses:
+      self.room_table[room].refresh(self.klasses[room])
     
 gobject.type_register(KlassesList)
 gobject.signal_new('klass-edit', \
@@ -231,12 +237,16 @@ class RoomKlassesTable(gtk.TreeView):
     # hour, monday, tuesday, wednesday, thursday, friday, saturday, sunday
     self.store = gtk.ListStore(str,str,str,str,str,str,str,str)
     
+    self.refresh(klasses)
+
+  def refresh(self, klasses):
+    self.store.clear()
     keys = klasses.keys()
     keys.sort()
     for h in keys:
       k = klasses[h]
       insert = [h]
-      for d in ['mon','tue','wed','thu','fri','sat','sun']:
+      for d in _t('abbr_days','en'):
         insert.append(k[d].name if k[d] else '')
       self.store.append(insert)
 

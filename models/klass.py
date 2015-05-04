@@ -4,11 +4,13 @@
 from model import Model
 from teacher import Teacher
 from schedule import Schedule
-
-klasses = {1: {'name': 'Flamenco Adultos', 'normal_fee': 350, 'half_fee': 200, 'once_fee': 50, 'inscription_fee': 0, 'min_age': 15, 'max_age': 0, 'quota': 15, 'info': 'Traer zapatos con taco ancho y una pollera larga.', 'teacher_ids': [1], 'schedule_ids': [1,2]},
-           2: {'name': 'HipHop Adolescentes', 'normal_fee': 300, 'half_fee': 200, 'once_fee': 30, 'inscription_fee': 0, 'min_age': 13, 'max_age': 22, 'quota': 30, 'info': 'Zapatillas y ropa cómoda', 'teacher_ids': [2], 'schedule_ids': [3,4]}}
+from translations import _t
 
 class Klass(Model):
+  #borrar después
+  db = {1: {'name': 'Flamenco Adultos', 'normal_fee': 350, 'half_fee': 200, 'once_fee': 50, 'inscription_fee': 0, 'min_age': 15, 'max_age': 0, 'quota': 15, 'info': 'Traer zapatos con taco ancho y una pollera larga.', 'teacher_ids': [1], 'schedule_ids': [1,2]},
+        2: {'name': 'HipHop Adolescentes', 'normal_fee': 300, 'half_fee': 200, 'once_fee': 30, 'inscription_fee': 0, 'min_age': 13, 'max_age': 22, 'quota': 30, 'info': 'Zapatillas y ropa cómoda', 'teacher_ids': [2], 'schedule_ids': [3,4]}}
+
   def __init__(self, data = {}):
     Model.__init__(self)
     self.name = ''
@@ -29,23 +31,29 @@ class Klass(Model):
     
     self.set_attrs(data)
 
+  def to_db(self):
+    return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info, 'teacher_ids': self.teacher_ids, 'schedule_ids': self.schedule_ids}
+
   def _is_valid(self):
     self.validate_presence_of('name')
 
     if not self.normal_fee:
       self.add_error('normal_fee', 'El campo normal_fee no puede ser 0.')
-    
-    for t in self.get_teachers():
-      if not t.is_valid():
-        self.add_error('teachers', 'No es válido.')
-    
-    for s in self.get_schedules():
-      if not s.is_valid():
-        self.add_error('schedules', 'No es válido.')
+
+  def before_save(self):
+    new_ids = []
+    for sch in self.get_schedules():
+      if not sch.save():
+        return False
+      new_ids.append(sch.id)
+    self.schedule_ids = new_ids
+    return True
+
+
 
   @classmethod
   def find(cls, id):
-    klass = cls(klasses[id])
+    klass = cls(cls.db[id])
     klass.id = id
     return klass
 
@@ -56,8 +64,9 @@ class Klass(Model):
       klasses[r] = {}
       for h in range(from_time, to_time, 1):
         for h2 in [str(h) + ':00', str(h) + ':30']:
-          klasses[r][h2] = {'mon': None, 'tue': None, 'wed': None, 'thu': None,
-                            'fri': None, 'sat': None, 'sun': None}
+          klasses[r][h2] = {}
+          for d in _t('abbr_days','en'):
+            klasses[r][h2][d] = None
    
     for kls in cls.all():
       for sch in kls.get_schedules():
@@ -68,7 +77,10 @@ class Klass(Model):
 
   @classmethod
   def all(cls):
-    return [cls.find(1), cls.find(2)]
+    results = []
+    for i in cls.db:
+      results.append(cls.find(i))
+    return results
 
   def find_schedule(self, sch_id):
     for sch in self.schedules:

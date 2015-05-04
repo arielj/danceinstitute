@@ -1,10 +1,14 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 from model import Model
 from klass import Klass
 from installment import Installment
 
-memberships = {1: {'student_id': 1, 'klass_id': 1, 'installment_ids': [1,2], 'year': 2015}}
-
 class Membership(Model):
+  #borrar después
+  db = {1: {'student_id': 1, 'klass_id': 1, 'installment_ids': [1,2], 'year': 2015}}
+
   def __init__(self, data = {}):
     Model.__init__(self)
     self.student_id = None

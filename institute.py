@@ -126,12 +126,18 @@ class Controller(gobject.GObject):
     self.window.add_page(page)
     page.connect('klass-edit', self.edit_klass)
     page.connect('klass-add', self.add_klass)
+    self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+
+  def refresh_klasses(self, widget, kls, created, page):
+    klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
+    page.refresh_tables(klasses)
   
   def submit_klass(self, form):
     kls = form.object
+    new_record = kls.is_new_record()
     kls.set_attrs(form.get_values())
-    if kls.is_valid():
-      print 'Clase creada.'
+    if kls.save():
+      self.emit('klass-changed', kls, new_record)
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
@@ -270,6 +276,13 @@ gobject.signal_new('student-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #student object, creation(True value means the user just got created)
+
+gobject.signal_new('klass-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #klass object, creation(True value means the user just got created)
+
 
 if __name__ == "__main__":
   ctrlr = Controller()

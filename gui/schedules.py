@@ -3,6 +3,7 @@
 
 import gtk
 import gobject
+from translations import _t
 
 class ScheduleDialog(gtk.Dialog):
   def __init__(self, schedule):
@@ -64,7 +65,7 @@ class SchedulesForm(gtk.VBox):
 
     # create days radios
     self.days= {}
-    days = self.schedule.__class__.get_days()
+    days = _t('days')
     days_hbox = gtk.HBox()
     days_group = None
     for idx, day in enumerate(days):
