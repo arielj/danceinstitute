@@ -11,7 +11,7 @@ class Installment(Model):
   
   def __init__(self, data = {}):
     Model.__init__(self)
-    self.month = 1
+    self.month = 0
     self.membership_id = None
     self.paid = False
     self.amount = 0.00
@@ -29,7 +29,7 @@ class Installment(Model):
     return self.amount*(1+recharge)
   
   def get_month(self):
-    return _t('months')[self.month-1]
+    return _t('months')[self.month]
 
   def get_status(self):
     if self.paid:
@@ -41,4 +41,13 @@ class Installment(Model):
 
   @classmethod
   def find(cls, id):
-    return cls(installments[id])
+    i = cls(cls.db[id])
+    i.id = id
+    return i
+
+  def to_db(self):
+    return {'month': self.month, 'membership_id': self.membership_id, 'paid': self.paid, 'amount': self.amount, 'payment_id': self.payment_id}
+
+  def _is_valid(self):
+    self.validate_numericallity_of('month', great_than = -1, less_than = 12)
+

@@ -1,4 +1,8 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 from translations import _a, _e
+import re
 
 class Model(object):
   def __init__(self):
@@ -35,16 +39,16 @@ class Model(object):
     if not vars(self)[field]:
       self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
 
-  def validate_numericallity_of(self, field, greate_than = None, less_than = None):
+  def validate_numericallity_of(self, field, great_than = None, less_than = None):
     v = vars(self)[field]
     field_name = _a(self.cls_name(),field)
     err = False
     extra = False
     try:
       v = int(v)
-      if greate_than is not None and v <= greate_than:
+      if great_than is not None and v <= great_than:
         err = 'field_not_greate_than'
-        extra = {'than': greate_than}
+        extra = {'than': great_than}
       if less_than is not None and v >= less_than:
         err = 'field_not_less_than'
         extra = {'than': less_than}
@@ -57,6 +61,20 @@ class Model(object):
         args.update(extra)
       self.add_error(field, _e(err) % args)
 
+  def validate_format_of(self, field, frmt = None, expr = None, message = None):
+    field_name = _a(self.cls_name(),field)
+    if expr is None:
+      if frmt == 'name':
+        expr = '^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\'\s]+$'
+        if message is None:
+          message = _e('only_letters') % {'field': field_name}
+    
+    if expr is not None and not re.match(expr, vars(self)[field]):
+      if message is None:
+        message = _e('wrong_format') % {'field': field_name}
+      
+      self.add_error(field, message)
+
   def cls_name(self):
     return self.__class__.__name__
 
@@ -67,6 +85,8 @@ class Model(object):
 
   def save(self):
     if self.is_valid():
+      if self.is_new_record():
+        self.id = max(self.__class__.db.keys())+1
       if self.before_save():
         self.do_save()
         self.after_save()
@@ -78,9 +98,6 @@ class Model(object):
 
   def do_save(self):
     # meter en DB real
-    if self.id is None:
-      i = max(self.__class__.db.keys())+1
-      self.id = i
     self.__class__.db[self.id] = self.to_db()
 
   def before_save(self):

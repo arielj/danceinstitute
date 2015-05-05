@@ -10,7 +10,7 @@ class User(Model):
             'is_teacher': True, 'membership_ids': [1]},
         2: {'name': 'Tincho', 'lastname': 'Arce', 'dni': 'nose', 'cellphone': 'niidea',
             'birthday': '12/02/1980', 'address': 'barrio mercantil', 'male': True, 'email': 'tincho@sharife.com',
-            'is_teacher': True, 'membership_ids': [1]}
+            'is_teacher': True, 'membership_ids': []}
         }
 
   def __init__(self, data = {}):
@@ -34,11 +34,20 @@ class User(Model):
     user.id = uid
     return user
 
-  def save(self):
-    if not self.id:
-      self.id = 3
-    users[self.id] = {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone,
-                      'birthday': self.birthday, 'address': self.address, 'male': self.male,
-                      'email': self.email, 'is_teacher': self.is_teacher}
-    return True
+  @classmethod
+  def all(cls):
+    results = []
+    for i in cls.db:
+      results.append(cls.find(i))
+    return results
+
+  def to_db(self):
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone,
+            'birthday': self.birthday, 'address': self.address, 'male': self.male,
+            'email': self.email, 'is_teacher': self.is_teacher}
+
+  def _is_valid(self):
+    self.validate_format_of('name', frmt = 'name')
+    self.validate_format_of('lastname', frmt = 'name')
+    self.validate_format_of('dni', expr = '^\d\d\.?\d\d\d\.?\d\d\d$')
 

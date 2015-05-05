@@ -15,15 +15,14 @@ class FormFor(gtk.HBox):
 
     if field_type == 'entry':
       e = gtk.Entry(attrs)
-      v = vars(self.object)[method]
-      if v is None:
-        v = ''
+      v = getattr(self.object,method)
+      v = v if v is not None else ''
       e.set_text(str(v))
       vars(self)[method + "_e"] = e
     elif field_type == 'text':
       entry = gtk.TextView()
       entry.set_editable(True)
-      entry.get_buffer().set_text(vars(self.object)[method])
+      entry.get_buffer().set_text(getattr(self.object,method))
       entry.set_wrap_mode(gtk.WRAP_WORD)
       e = gtk.ScrolledWindow()
       e.add(entry)
@@ -52,7 +51,7 @@ class FormFor(gtk.HBox):
 
   def set_active_item_on_combo(self, model, path, itr, data):
     method, e = data
-    if model.get_value(itr,0) == vars(self.object)[method]:
+    if model.get_value(itr,0) == getattr(self.object, method):
       e.set_active_iter(itr)
       return True
     else:

@@ -76,7 +76,11 @@ class StudentForm(FormFor):
   def get_values(self):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
 
+  def enable_memberships(self):
+    self.memberships_panel.set_sensitive(True)
 
+  def update_memberships(self):
+    self.memberships_panel.update()
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):
@@ -100,11 +104,11 @@ class SearchStudent(gtk.VBox):
   def update_results(self, students = None):
     self.results.update_table(students)
 
-  def on_search(self, widget, data = None):
+  def on_search(self, widget, student = None, new_record = None):
     self.emit('search', self.form.get_value())
 
   def on_student_activated(self, widget, student):
-    self.emit('student-edit', student)
+    self.emit('student-edit', student.id)
 
 gobject.type_register(SearchStudent)
 gobject.signal_new('search', \

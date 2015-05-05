@@ -19,20 +19,39 @@ class MembershipsPanel(gtk.VBox):
 
     self.notebook = gtk.Notebook()
     
-    for m in student.get_memberships():
-      self.notebook.append_page(MembershipTab(m),gtk.Label(m.get_klass().name))
+    self.add_tabs()
       
     self.pack_start(self.notebook, True)
+    
+  def add_tabs(self):
+    for m in self.student.get_memberships():
+      self.add_tab(m)
+
+  def add_tab(self,m):
+    self.notebook.append_page(MembershipTab(m),gtk.Label(m.get_klass().name))
+
+  def update(self):
+    children = self.notebook.get_children()
+    for m in self.student.get_memberships():
+      found = False
+      for tab in children:
+        if tab.membership == m:
+          tab.refresh()
+          found = True
+      if not found:
+        self.add_tab(m)
+    self.notebook.show_all()
 
 class MembershipTab(gtk.VBox):
   def __init__(self, membership):
     gtk.VBox.__init__(self)
     
+    self.membership = membership
+    
     #installment, year, month, base, recharges, status
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
     
-    for ins in membership.get_installments():
-      self.store.append((ins,membership.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
+    self.refresh()
     
     self.list = gtk.TreeView(self.store)
     
@@ -59,6 +78,12 @@ class MembershipTab(gtk.VBox):
     col.set_expand(True)
     self.list.append_column(col)
     return col
+
+  def refresh(self):
+    self.store.clear()
+    
+    for ins in self.membership.get_installments():
+      self.store.append((ins,self.membership.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
 
 class MembershipDialog(gtk.Dialog):
   def __init__(self, membership, klasses):
@@ -105,6 +130,25 @@ class MembershipForm(FormFor):
 
     self.type_e.connect('changed', self.on_type_changed)
     self.klass_id_e.connect('changed', self.on_klass_changed)
+
+  def get_selected_klass(self):
+    itr = self.klass_id_e.get_active_iter()
+    return self.klass_id_e.get_model().get_value(itr,2)
+
+  def get_selected_type(self):
+    itr = self.type_e.get_active_iter()
+    return self.type_e.get_model().get_value(itr,0)
+  
+  def get_selected_initial_month(self):
+    itr = self.initial_month_e.get_active_iter()
+    return self.initial_month_e.get_model().get_value(itr,0)
+  
+  def get_selected_final_month(self):
+    itr = self.final_month_e.get_active_iter()
+    return self.final_month_e.get_model().get_value(itr,0)
+
+  def get_values(self):
+    return {'year': self.year_e.get_text(), 'klass': self.get_selected_klass(), 'type': self.get_selected_type(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'date': self.date_e.get_text(), 'fee': self.fee_e.get_text()}
     
   def update_fee(self, data = None):
     klass = self.get_selected_klass()

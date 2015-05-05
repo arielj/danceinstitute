@@ -117,12 +117,12 @@ class Klass(Model):
     return self.schedules
 
   def add_schedule(self, schedule):
-    if not schedule.is_new_record:
+    if not schedule.is_new_record():
       self.schedule_ids.append(schedule.id)
     self.schedules.append(schedule)
 
   def add_teacher(self, teacher):
-    if not teacher.is_new_record:
+    if not teacher.is_new_record():
       self.teacher_ids.append(teacher.id)
     self.teachers.append(teacher)
 

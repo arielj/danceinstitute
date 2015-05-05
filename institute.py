@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 
 import pygtk
 pygtk.require('2.0')
@@ -224,7 +225,8 @@ class Controller(gobject.GObject):
     student = Student()
     page = self.student_form(student)
 
-  def edit_student(self, widget, student):
+  def edit_student(self, widget, student_id):
+    student = Student.find(student_id)
     page = self.student_form(student)
 
   def student_form(self, student):
@@ -235,12 +237,15 @@ class Controller(gobject.GObject):
     return page
 
   def submit_student(self, form):
-    new_record = form.object.is_new_record()
-    form.object.set_attrs(form.get_values())
-    saved = form.object.save()
-    self.window.remove_page(form)
-    if saved:
-      self.emit('student-changed', form.object, new_record)
+    student = form.object
+    new_record = student.is_new_record()
+    student.set_attrs(form.get_values())
+    if student.save():
+      self.emit('student-changed', student, new_record)
+      if new_record:
+        form.enable_memberships()
+    else:
+      ErrorMessage("No se puede guardar el alumno:", student.full_errors()).run()
 
   def search_student(self, widget):
     page = SearchStudent()
@@ -265,8 +270,16 @@ class Controller(gobject.GObject):
 
   def on_new_membership(self, dialog, response, page):
     destroy_dialog = True
-    if response == gtk.RESPONSE_OK:
-      page.update_memberships()
+    if response == gtk.RESPONSE_ACCEPT:
+      membership = dialog.form.object
+      membership.set_attrs(dialog.form.get_values())
+      if membership.is_valid():
+        membership.build_installments()
+        page.object.add_membership(membership)
+        page.update_memberships()
+      else:
+        ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
+        destroy_dialog = False
 
     if destroy_dialog:
       dialog.destroy()
