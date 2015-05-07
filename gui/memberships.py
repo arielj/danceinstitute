@@ -84,7 +84,7 @@ class MembershipTab(gtk.VBox):
     self.add_column('Año',1)
     self.add_column('Mes',2)
     self.add_column('Monto',3)
-    self.add_column('Con intereses',4)
+    self.add_column('Pagado',4)
     self.add_column('Estado',5)
 
     self.scrolled = gtk.ScrolledWindow()
@@ -115,7 +115,7 @@ class MembershipTab(gtk.VBox):
     self.store.clear()
     
     for ins in self.membership.get_installments():
-      self.store.append((ins,self.membership.year,ins.get_month(),ins.amount, ins.get_amount(), ins.get_status()))
+      self.store.append((ins,self.membership.year,ins.month_name(),ins.to_pay(), ins.paid(), ins.status()))
 
 class MembershipDialog(gtk.Dialog):
   def __init__(self, membership, klasses):
@@ -223,3 +223,17 @@ class MembershipForm(FormFor):
     if itr is not None:
       return m.get_value(itr,0)
 
+
+class AddInstallmentsDialog(gtk.Dialog):
+  def __init__(self,membership):
+    self.membership = membership
+    self.form = AddInstallmentsForm(membership)
+    gtk.Dialog.__init__(self, 'Agregar cuotas', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    self.vbox.pack_start(self.form, False)
+    self.vbox.show_all()
+
+class AddInstallmentsForm(FormFor):
+  def __init__(self, membership)

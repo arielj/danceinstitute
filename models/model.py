@@ -80,8 +80,9 @@ class Model(object):
 
   @classmethod
   def find(cls, id):
-    # implementar bien cuando tenga la db
-    return None
+    i = cls(cls.db[id])
+    i.id = id
+    return i
 
   def save(self):
     if self.is_valid():
