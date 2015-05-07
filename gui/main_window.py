@@ -1,6 +1,7 @@
 import gtk
 import gobject
 from main_menu import *
+from settings import Settings
 
 class MainWindow(gtk.Window):
   def __init__(self):
@@ -12,7 +13,9 @@ class MainWindow(gtk.Window):
     self.v_box.pack_start(self.menu, False)
     
     self.notebook = gtk.Notebook()
-    self.notebook.set_tab_pos(gtk.POS_LEFT)
+    settings = Settings.get_settings()
+    pos = gtk.POS_TOP if settings.tabs_position == 'top' else gtk.POS_LEFT
+    self.notebook.set_tab_pos(pos)
     self.v_box.pack_start(self.notebook, True)
     
     self.statusbar = gtk.Statusbar()

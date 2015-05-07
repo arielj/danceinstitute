@@ -66,6 +66,9 @@ class Controller(gobject.GObject):
   def on_help_dialog_response(self, dialog, reponse):
     dialog.destroy()
 
+  def show_status(self, status):
+    self.window.show_status(status)
+
 
 
   #config controls
@@ -153,7 +156,7 @@ class Controller(gobject.GObject):
     if kls.save():
       self.emit('klass-changed', kls, new_record)
       self.window.update_label(form)
-      self.window.show_status('Clase guardada')
+      self.show_status('Clase guardada')
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
@@ -233,6 +236,9 @@ class Controller(gobject.GObject):
     page = StudentForm(student)
     page.submit.connect_object('clicked', self.submit_student, page)
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
+    page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
+    page.memberships_panel.connect('add-installments', self.add_installments)
+    self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.window.add_page(page)
     return page
 
@@ -264,18 +270,29 @@ class Controller(gobject.GObject):
   def new_membership(self, page):
     membership = Membership()
     klasses = Klass.all()
-    dialog = MembershipDialog(membership, klasses)
-    dialog.connect('response', self.on_new_membership, page)
-    dialog.run()
+    for m in page.object.memberships:
+      for k in klasses:
+        if m.klass_id == k.id:
+          klasses.remove(k)
+
+    if klasses:
+      dialog = MembershipDialog(membership, klasses)
+      dialog.connect('response', self.on_new_membership, page)
+      dialog.run()
+    else:
+      ErrorMessage("No se puede inscribir:", 'El alumno se encuentra inscripto en todas las clases.').run()
 
   def on_new_membership(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       membership = dialog.form.object
       membership.set_attrs(dialog.form.get_values())
+      membership.student_id = page.object.id
       if membership.is_valid():
         membership.build_installments()
+        membership.save()
         page.object.add_membership(membership)
+        page.object.save()
         page.update_memberships()
       else:
         ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
@@ -283,6 +300,22 @@ class Controller(gobject.GObject):
 
     if destroy_dialog:
       dialog.destroy()
+
+  def ask_delete_membership(self, widget, membership):
+    dialog = ConfirmDialog('Vas a borrar la inscripción a la clase '+membership.klass.name+"\n¿Estás seguro?")
+    dialog.connect('response', self.delete_membership, membership)
+    dialog.run()
+
+  def delete_membership(self, dialog, response, membership):
+    if response == gtk.RESPONSE_ACCEPT:
+      membership.delete()
+      self.show_status('Inscripción eliminada.')
+      self.emit('membership-deleted', membership.id)
+
+    dialog.destroy()
+
+  def add_installments(self, widget, membership):
+    return True
 
 
 
@@ -311,6 +344,11 @@ gobject.signal_new('klass-changed', \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #klass object, creation(True value means the user just got created)
 
+gobject.signal_new('membership-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #klass object, creation(True value means the user just got created)
 
 if __name__ == "__main__":
   ctrlr = Controller()

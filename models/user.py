@@ -19,6 +19,7 @@ class User(Model):
     self.lastname = ''
     self.dni = ''
     self.cellphone = ''
+    self.alt_phone = ''
     self.birthday = ''
     self.address = ''
     self.male = True

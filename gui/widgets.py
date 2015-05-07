@@ -8,3 +8,15 @@ class ErrorMessage(gtk.MessageDialog):
 
   def close(self, widget, response):
     self.destroy()
+
+class ConfirmDialog(gtk.Dialog):
+  def __init__(self, message):
+    gtk.Dialog.__init__(self, '', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    
+    self.set_border_width(5)
+    
+    self.vbox.pack_start(gtk.Label(message), False)
+    self.vbox.show_all()

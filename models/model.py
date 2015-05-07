@@ -86,7 +86,10 @@ class Model(object):
   def save(self):
     if self.is_valid():
       if self.is_new_record():
-        self.id = max(self.__class__.db.keys())+1
+        if self.__class__.db.keys():
+          self.id = max(self.__class__.db.keys())+1
+        else:
+          self.id = 1
       if self.before_save():
         self.do_save()
         self.after_save()
@@ -111,3 +114,11 @@ class Model(object):
 
   def is_not_new_record(self):
     return not self.is_new_record()
+
+  def delete(self):
+    self.before_delete()
+    del self.__class__.db[self.id]
+
+  def before_delete(self):
+    return True
+

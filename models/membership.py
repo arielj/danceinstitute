@@ -3,6 +3,7 @@
 
 from model import Model
 from klass import Klass
+import student
 from installment import Installment
 from translations import _t
 import datetime
@@ -95,10 +96,11 @@ class Membership(Model):
       self.klass_id = klass.id
     self._klass = klass
 
-  def get_student(self, requery = False):
-    if requery or self.student is None:
-      self.student = Student.find(self.student_id)
-    return self.student
+  @property
+  def student(self, requery = False):
+    if requery or self._student is None:
+      self._student = student.Student.find(self.student_id)
+    return self._student
 
   def get_klass(self, requery = False):
     if requery or self.klass is None:
@@ -152,3 +154,9 @@ class Membership(Model):
         if i.id not in self.installment_ids:
           self.installment_ids.append(i.id)
     return True
+
+  def before_delete(self):
+    for i in self.get_installments():
+      i.delete()
+    self.student.remove_membership(self.id)
+    self.student.save()

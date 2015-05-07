@@ -48,11 +48,15 @@ class StudentForm(FormFor):
     
     contact_info_box = gtk.HBox(True, 8)
     self.add_field('cellphone', attrs=16, box=contact_info_box)
-    self.add_field('email', attrs=256, box=contact_info_box)
+    self.add_field('alt_phone', attrs=16, box=contact_info_box)
     self.fields.pack_start(contact_info_box, False)
+    
+    addresses_box = gtk.HBox(True, 8)
+    self.add_field('email', attrs=256, box=addresses_box)
+    self.add_field('address', attrs=256, box=addresses_box)
+    self.fields.pack_start(addresses_box, False)
 
     hbox = gtk.HBox(True, 8)
-    self.add_field('address', attrs=256, box=hbox)
     self.gender_l = gtk.Label('Sexo')
     self.male_r = gtk.RadioButton(None, 'Hombre')
     self.male_r.set_active(True)
@@ -66,6 +70,7 @@ class StudentForm(FormFor):
     gender_field.pack_start(self.gender_l, False)
     gender_field.pack_start(radios_hbox, False)
     hbox.pack_start(gender_field, False)
+    hbox.pack_start(gtk.VBox(), False)
     self.fields.pack_start(hbox, False)
 
     f, l, e = self.add_field('comments', field_type = 'text')
@@ -81,6 +86,9 @@ class StudentForm(FormFor):
 
   def update_memberships(self):
     self.memberships_panel.update()
+
+  def on_membership_deleted(self, emmiter, m_id):
+    self.memberships_panel.on_membership_deleted(m_id)
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):

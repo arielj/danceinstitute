@@ -24,15 +24,18 @@ class MembershipsPanel(gtk.VBox):
     self.pack_start(self.notebook, True)
     
   def add_tabs(self):
-    for m in self.student.get_memberships():
+    for m in self.student.memberships:
       self.add_tab(m)
 
   def add_tab(self,m):
-    self.notebook.append_page(MembershipTab(m),gtk.Label(m.get_klass().name))
+    t = MembershipTab(m)
+    self.notebook.append_page(t,gtk.Label(m.get_klass().name))
+    t.delete_b.connect('clicked', self.on_delete_clicked, m)
+    t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
 
   def update(self):
     children = self.notebook.get_children()
-    for m in self.student.get_memberships():
+    for m in self.student.memberships:
       found = False
       for tab in children:
         if tab.membership == m:
@@ -41,6 +44,29 @@ class MembershipsPanel(gtk.VBox):
       if not found:
         self.add_tab(m)
     self.notebook.show_all()
+
+  def on_membership_deleted(self, m_id):
+    self.student.remove_membership(m_id)
+    for tab in self.notebook.get_children():
+      if tab.membership.id == m_id:
+        self.notebook.remove_page(self.notebook.page_num(tab))
+    self.update()
+
+  def on_delete_clicked(self, widget, membership):
+    self.emit('ask-delete-membership', membership)
+
+  def on_add_ins_clicked(self, widget, membership):
+    self.emit('add-installments', membership)
+
+gobject.type_register(MembershipsPanel)
+gobject.signal_new('ask-delete-membership', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-installments', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class MembershipTab(gtk.VBox):
   def __init__(self, membership):
@@ -69,9 +95,15 @@ class MembershipTab(gtk.VBox):
     
     self.pack_start(self.scrolled, True)
     
+    self.actions = gtk.HBox(True, 5)
+    
+    self.add_installments_b = gtk.Button('Agregar Cuotas')
     self.delete_b = gtk.Button('Eliminar inscripción')
     
-    self.pack_start(self.delete_b, False)
+    self.actions.pack_start(self.add_installments_b, False)
+    self.actions.pack_start(self.delete_b, False)
+    
+    self.pack_start(self.actions, False)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)

@@ -15,7 +15,7 @@ class Installment(Model):
     self.membership_id = None
     self.paid = False
     self.amount = 0.00
-    self.payment_id = None
+    self.payment_ids = []
     
     self.set_attrs(data)
 
@@ -46,7 +46,7 @@ class Installment(Model):
     return i
 
   def to_db(self):
-    return {'month': self.month, 'membership_id': self.membership_id, 'paid': self.paid, 'amount': self.amount, 'payment_id': self.payment_id}
+    return {'month': self.month, 'membership_id': self.membership_id, 'paid': self.paid, 'amount': self.amount, 'payment_ids': self.payment_ids}
 
   def _is_valid(self):
     self.validate_numericallity_of('month', great_than = -1, less_than = 12)
