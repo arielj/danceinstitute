@@ -11,7 +11,7 @@ import package
 
 class Membership(Model):
   #borrar después
-  db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Klass', 'installment_ids': [1,2]}}
+  db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Klass', 'installment_ids': [1,2], 'info': 'Clase normal lalala'}}
 
   def __init__(self, data = {}):
     Model.__init__(self)
@@ -22,6 +22,7 @@ class Membership(Model):
     self._for = None
     self.installment_ids = []
     self._installments = None
+    self.info = ''
     
     self.set_attrs(data)
 
@@ -36,8 +37,8 @@ class Membership(Model):
   
   @klass_or_package.setter
   def klass_or_package(self, klass_or_package):
-    if klass_or_package.id is not None:
-      self.for_id = klass_or_package.id
+    self.for_id = klass_or_package.id
+    self.for_type = klass_or_package.__class__.__name__
     self._for = klass_or_package
 
   @property
@@ -54,38 +55,14 @@ class Membership(Model):
         self._installments.append(installment.Installment.find(i))
     return self._installments
 
-  def build_installments(self, year, initial_month, final_month, fee):
-    self.get_installments()
-    for m in range(initial_month,final_month+1):
-      self.installments.append(Installment({'package': self.package, 'year': year, 'amount': fee, 'month': m}))
-
-  @classmethod
-  def find(cls, id):
-    m = cls(cls.db[id])
-    m.id = id
-    return m
-
   @classmethod
   def get_types(cls):
     return {'normal': 'Normal', 'half': 'Mitad de clases', 'once': 'Una sola clase'}
 
-  def _is_valid(self):
-    valid_installments = True
-    for i in self.get_installments():
-      if not i.is_valid():
-        valid_installments = False
-    if not valid_installments:
-      self.add_error('installments', 'Una o más cuotas son inválidas.')
-
   def to_db(self):
-    return {'student_id': self.student_id, 'package_id': self.package_id, 'type': self.type, 'info': self.info, 'installment_ids': self.installment_ids}
+    return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info, 'installment_ids': self.installment_ids}
 
-  def before_save(self):
-    for i in self.get_installments():
-      i.membership_id = self.id
-      if i.save():
-        if i.id not in self.installment_ids:
-          self.installment_ids.append(i.id)
+  def _is_valid(self):
     return True
 
   def before_delete(self):
@@ -93,3 +70,4 @@ class Membership(Model):
       i.delete()
     self.student.remove_membership(self.id)
     self.student.save()
+

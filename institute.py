@@ -302,7 +302,6 @@ class Controller(gobject.GObject):
       membership.set_attrs(dialog.form.get_values())
       membership.student_id = page.object.id
       if membership.is_valid():
-        membership.build_installments()
         membership.save()
         page.object.add_membership(membership)
         page.object.save()

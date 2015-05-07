@@ -80,9 +80,9 @@ class Model(object):
 
   @classmethod
   def find(cls, id):
-    i = cls(cls.db[id])
-    i.id = id
-    return i
+    obj = cls(cls.db[id])
+    obj.id = id
+    return obj
 
   def save(self):
     if self.is_valid():

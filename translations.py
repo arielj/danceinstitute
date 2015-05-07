@@ -56,8 +56,9 @@ ts = {
     },
     'membership': {
       'student_id': ['Student','Alumno'],
-      'for_id': ['Class or Package','Clase o Paquete'],
-      'installments': ['Installments','Cuotas']
+      'klass_or_package': ['Class or Package','Clase o Paquete'],
+      'installments': ['Installments','Cuotas'],
+      'info': ['Information','Información']
     },
     'schedule': {
       'from_time': ['From','Desde'],

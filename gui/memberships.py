@@ -136,7 +136,9 @@ class MembershipForm(FormFor):
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
     for o in options:
       store.append((o.id,o.name,o))
-    self.add_field('for_id', field_type = 'combo', list_store = store)
+    self.add_field('klass_or_package', field_type = 'combo', list_store = store)
+    
+    self.add_field('info', attrs = 250)
     
     self.pack_start(self.fields, False)
 
@@ -150,8 +152,8 @@ class MembershipForm(FormFor):
       return 'Agregar nueva inscripción'
 
   def get_selected_klass_or_package(self):
-    m = self.for_id_e.get_model()
-    itr = self.for_id_e.get_active_iter()
+    m = self.klass_or_package_e.get_model()
+    itr = self.klass_or_package_e.get_active_iter()
     if itr is not None:
       return m.get_value(itr,2)
 
