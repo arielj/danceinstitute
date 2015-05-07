@@ -6,10 +6,12 @@ import student
 import installment
 from translations import _t
 import datetime
+import klass
+import package
 
 class Membership(Model):
   #borrar después
-  db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Package', 'installment_ids': [1,2]}}
+  db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Klass', 'installment_ids': [1,2]}}
 
   def __init__(self, data = {}):
     Model.__init__(self)
@@ -26,16 +28,16 @@ class Membership(Model):
   @property
   def klass_or_package(self, requery = False):
     if self.for_id and (requery or self._for is None):
-      if self.for_type = 'Package':
+      if self.for_type == 'Package':
         self._for = package.Package.find(self.for_id)
-      elif self.for_type = 'Klass'
+      elif self.for_type == 'Klass':
         self._for = klass.Klass.find(self.for_id)
     return self._for
   
   @klass_or_package.setter
   def klass_or_package(self, klass_or_package):
     if klass_or_package.id is not None:
-      self.for_id = for.id
+      self.for_id = klass_or_package.id
     self._for = klass_or_package
 
   @property

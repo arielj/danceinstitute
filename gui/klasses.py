@@ -370,7 +370,7 @@ class KlassesTable(gtk.TreeView):
     return col
   
   def create_store(self, klasses):
-    # teacher, name, lastname, dni, email, address, cellphone
+    # klass, name
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
     self.update(klasses)
 

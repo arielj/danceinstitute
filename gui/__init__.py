@@ -7,3 +7,4 @@ from config import *
 from help import *
 from memberships import *
 from widgets import *
+from packages import *

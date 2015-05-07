@@ -53,6 +53,7 @@ class Controller(gobject.GObject):
     self.window.menu.add_klass.connect('activate', self.add_klass)
     self.window.menu.list_klasses.connect('activate', self.list_klasses)
     self.window.menu.show_schedules.connect('activate', self.show_schedules)
+    self.window.menu.show_packages.connect('activate', self.show_packages)
     self.window.menu.add_student.connect('activate', self.add_student)
     self.window.menu.search_student.connect('activate', self.search_student)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
@@ -222,6 +223,14 @@ class Controller(gobject.GObject):
       dialog.destroy()
 
 
+  #packages controls
+  def show_packages(self, widget):
+    page = PackagesList(Package.all())
+    self.window.add_page(page)
+    return page
+
+
+
 
   #students controls
   def add_student(self, widget):
@@ -270,13 +279,17 @@ class Controller(gobject.GObject):
   def new_membership(self, page):
     membership = Membership()
     klasses = Klass.all()
-    for m in page.object.memberships:
-      for k in klasses:
-        if m.klass_id == k.id:
-          klasses.remove(k)
+    packages = Package.all()
+    
+    options = klasses + packages
 
-    if klasses:
-      dialog = MembershipDialog(membership, klasses)
+    for m in page.object.memberships:
+      for o in options:
+        if m.for_id == o.id and m.for_type == o.__class__.__name__:
+          options.remove(o)
+
+    if options:
+      dialog = MembershipDialog(membership, options)
       dialog.connect('response', self.on_new_membership, page)
       dialog.run()
     else:

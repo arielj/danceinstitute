@@ -29,7 +29,7 @@ class MembershipsPanel(gtk.VBox):
 
   def add_tab(self,m):
     t = MembershipTab(m)
-    self.notebook.append_page(t,gtk.Label(m.get_klass().name))
+    self.notebook.append_page(t,gtk.Label(m.klass_or_package.name))
     t.delete_b.connect('clicked', self.on_delete_clicked, m)
     t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
 
@@ -114,114 +114,46 @@ class MembershipTab(gtk.VBox):
   def refresh(self):
     self.store.clear()
     
-    for ins in self.membership.get_installments():
-      self.store.append((ins,self.membership.year,ins.month_name(),ins.to_pay(), ins.paid(), ins.status()))
+    for ins in self.membership.installments:
+      self.store.append((ins,ins.year,ins.month_name(),ins.to_pay(), ins.paid(), ins.status()))
 
 class MembershipDialog(gtk.Dialog):
-  def __init__(self, membership, klasses):
-    self.form = MembershipForm(membership, klasses)
+  def __init__(self, membership, options):
+    self.form = MembershipForm(membership, options)
     gtk.Dialog.__init__(self, self.form.get_tab_label(), None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
     self.vbox.pack_start(self.form, False)
     self.vbox.show_all()
-    self.form.on_type_changed(None)
     
 class MembershipForm(FormFor):
-  def __init__(self, membership, klasses):
+  def __init__(self, membership, options):
     FormFor.__init__(self, membership)
     
     self.fields = gtk.VBox()
     
-    self.add_field('year', attrs=4)
-
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
-    for k in klasses:
-      store.append((k.id,k.name,k))
-    self.add_field('klass_id', field_type = 'combo', list_store = store)
-    
-    store = gtk.ListStore(str, str)
-    for k,v in membership.__class__.get_types().iteritems():
-      store.append((k,v))
-    self.add_field('type', field_type = 'combo', list_store = store)
-
-    store = gtk.ListStore(int, str)
-    for i,m in enumerate(_t('months')):
-      store.append((i,m))
-    self.add_field('initial_month', field_type = 'combo', list_store = store)
-
-    store = gtk.ListStore(int, str)
-    for i,m in enumerate(_t('months')):
-      store.append((i,m))
-    self.add_field('final_month', field_type = 'combo', list_store = store)
-    self.add_field('date', attrs=10)
-    self.add_field('fee', attrs=10)
+    for o in options:
+      store.append((o.id,o.name,o))
+    self.add_field('for_id', field_type = 'combo', list_store = store)
     
     self.pack_start(self.fields, False)
 
-    self.type_e.connect('changed', self.on_type_changed)
-    self.klass_id_e.connect('changed', self.on_klass_changed)
-
-  def get_selected_klass(self):
-    itr = self.klass_id_e.get_active_iter()
-    return self.klass_id_e.get_model().get_value(itr,2)
-
-  def get_selected_type(self):
-    itr = self.type_e.get_active_iter()
-    return self.type_e.get_model().get_value(itr,0)
-  
-  def get_selected_initial_month(self):
-    itr = self.initial_month_e.get_active_iter()
-    return self.initial_month_e.get_model().get_value(itr,0)
-  
-  def get_selected_final_month(self):
-    itr = self.final_month_e.get_active_iter()
-    return self.final_month_e.get_model().get_value(itr,0)
-
   def get_values(self):
-    return {'year': self.year_e.get_text(), 'klass': self.get_selected_klass(), 'type': self.get_selected_type(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'date': self.date_e.get_text(), 'fee': self.fee_e.get_text()}
-    
-  def update_fee(self, data = None):
-    klass = self.get_selected_klass()
-    t = self.get_selected_type()
-    if t is not None and klass is not None:
-      self.fee_e.set_text(str(klass.get_fee_for(t) or ''))
-      self.fee_e.grab_focus()
-
-  def on_type_changed(self, entry):
-    t = self.get_selected_type()
-    if t == 'once':
-      self.date_field.show()
-      self.initial_month_field.hide()
-      self.final_month_field.hide()
-    else:
-      self.date_field.hide()
-      self.initial_month_field.show()
-      self.final_month_field.show()
-  
-    self.update_fee()
-  
-  def on_klass_changed(self, entry):
-    self.update_fee()
+    return {'klass_or_package': self.get_selected_klass_or_package()}
 
   def get_tab_label(self):
     if self.object.id:
-      return "Editar inscripción:\n" + self.object.klass.name + ' ' + self.object.year
+      return "Editar inscripción:\n" + self.object.klass_or_package.name
     else:
       return 'Agregar nueva inscripción'
 
-  def get_selected_klass(self):
-    m = self.klass_id_e.get_model()
-    itr = self.klass_id_e.get_active_iter()
+  def get_selected_klass_or_package(self):
+    m = self.for_id_e.get_model()
+    itr = self.for_id_e.get_active_iter()
     if itr is not None:
       return m.get_value(itr,2)
-    
-  def get_selected_type(self):
-    m = self.type_e.get_model()
-    itr = self.type_e.get_active_iter()
-    if itr is not None:
-      return m.get_value(itr,0)
 
 
 class AddInstallmentsDialog(gtk.Dialog):
@@ -236,4 +168,5 @@ class AddInstallmentsDialog(gtk.Dialog):
     self.vbox.show_all()
 
 class AddInstallmentsForm(FormFor):
-  def __init__(self, membership)
+  """hola"""
+

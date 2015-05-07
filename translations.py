@@ -56,15 +56,8 @@ ts = {
     },
     'membership': {
       'student_id': ['Student','Alumno'],
-      'klass_id': ['Class','Clase'],
-      'installments': ['Installments','Cuotas'],
-      'year': ['Year','Año'],
-      'type': ['Type','Tipo'],
-      'info': ['Information','Información'],
-      'initial_month': ['Initial month','Mes inicial'],
-      'final_month': ['Final month','Mes final'],
-      'date': ['Date','Fecha'],
-      'fee': ['Fee','Precio']
+      'for_id': ['Class or Package','Clase o Paquete'],
+      'installments': ['Installments','Cuotas']
     },
     'schedule': {
       'from_time': ['From','Desde'],

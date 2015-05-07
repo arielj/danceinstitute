@@ -5,3 +5,4 @@ from membership import Membership
 from student import Student
 from installment import Installment
 from schedule import Schedule
+from package import Package
