@@ -74,6 +74,12 @@ class MembershipTab(gtk.VBox):
     
     self.membership = membership
     
+    self.info_vbox =gtk.VBox()
+    self.info_vbox.pack_start(gtk.Label('Información:'), False)
+    self.info_vbox.pack_start(gtk.Label(membership.info, False)   
+
+    self.pack_start(self.info_vbox, False)
+
     #installment, year, month, base, recharges, status
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
     
@@ -143,7 +149,7 @@ class MembershipForm(FormFor):
     self.pack_start(self.fields, False)
 
   def get_values(self):
-    return {'klass_or_package': self.get_selected_klass_or_package()}
+    return {'klass_or_package': self.get_selected_klass_or_package(),'info': self.info_e.get_text()}
 
   def get_tab_label(self):
     if self.object.id:
