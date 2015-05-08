@@ -366,16 +366,20 @@ class Controller(gobject.GObject):
     dialog.run()
   
   def on_add_installments(self, dialog, response, page):
-    destroy_dialog = False
+    destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       membership = dialog.membership
       data = dialog.form.get_values()
       created = membership.create_installments(data['year'],data['initial_month'],data['final_month'],data['fee'])
-      page.update_memberships()
-      destroy_dialog = True
+      if created is True:
+        page.update_memberships()
+      else:
+        ErrorMessage('No se pudieron agrega las cuotas:', created).run()
+        destroy_dialog = False
 
     if destroy_dialog:
       dialog.destroy()
+
 
 
   #save a reference of signals connected
