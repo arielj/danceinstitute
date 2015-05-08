@@ -5,6 +5,7 @@ import gtk
 import gobject
 from forms import FormFor
 from translations import _t
+import datetime
 
 class MembershipsPanel(gtk.VBox):
   def __init__(self, student):
@@ -169,7 +170,8 @@ class MembershipForm(FormFor):
 class AddInstallmentsDialog(gtk.Dialog):
   def __init__(self,membership):
     self.membership = membership
-    self.form = AddInstallmentsForm(membership)
+    self.form = AddInstallmentsForm()
+    self.form.fee_e.set_text(str(membership.get_fee()))
     gtk.Dialog.__init__(self, 'Agregar cuotas', None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
@@ -177,6 +179,62 @@ class AddInstallmentsDialog(gtk.Dialog):
     self.vbox.pack_start(self.form, False)
     self.vbox.show_all()
 
-class AddInstallmentsForm(FormFor):
-  """hola"""
+class AddInstallmentsForm(gtk.VBox):
+  def __init__(self):
+    gtk.VBox.__init__(self, True, 8)
+    self.set_border_width(4)
+    
+    field = gtk.VBox()
+    self.year_l = gtk.Label('Año')
+    self.year_e = gtk.Entry(4)
+    self.year_e.set_text(str(datetime.datetime.today().year))
+    field.pack_start(self.year_l, False)
+    field.pack_start(self.year_e, False)
+    self.pack_start(field, False)
+    
+    field = gtk.VBox()
+    self.initial_month_l = gtk.Label('Mes inicial')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.initial_month_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.initial_month_e.pack_start(cell, True)
+    self.initial_month_e.add_attribute(cell, 'text', 1)
+    self.initial_month_e.set_active(0)
+    field.pack_start(self.initial_month_l, False)
+    field.pack_start(self.initial_month_e, False)
+    self.pack_start(field, False)
+
+    field = gtk.VBox()
+    self.final_month_l = gtk.Label('Mes final')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.final_month_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.final_month_e.pack_start(cell, True)
+    self.final_month_e.add_attribute(cell, 'text', 1)
+    self.final_month_e.set_active(11)
+    field.pack_start(self.final_month_l, False)
+    field.pack_start(self.final_month_e, False)
+    self.pack_start(field, False)
+
+    field = gtk.VBox()
+    self.fee_l = gtk.Label('Precio')
+    self.fee_e = gtk.Entry(4)
+    field.pack_start(self.fee_l, False)
+    field.pack_start(self.fee_e, False)
+    self.pack_start(field, False)
+
+  def get_selected_initial_month(self):
+    itr = self.initial_month_e.get_active_iter()
+    return self.initial_month_e.get_model().get_value(itr,0)
+  
+  def get_selected_final_month(self):
+    itr = self.final_month_e.get_active_iter()
+    return self.final_month_e.get_model().get_value(itr,0)
+
+  def get_values(self):
+    return {'year': self.year_e.get_text(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'fee': self.fee_e.get_text()}
 

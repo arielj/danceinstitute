@@ -280,7 +280,7 @@ class Controller(gobject.GObject):
     page.submit.connect_object('clicked', self.submit_student, page)
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
-    page.memberships_panel.connect('add-installments', self.add_installments)
+    page.memberships_panel.connect('add-installments', self.add_installments, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.window.add_page(page)
     return page
@@ -360,9 +360,22 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
-  def add_installments(self, widget, membership):
-    return True
+  def add_installments(self, widget, membership, page):
+    dialog = AddInstallmentsDialog(membership)
+    dialog.connect('response', self.on_add_installments, page)
+    dialog.run()
+  
+  def on_add_installments(self, dialog, response, page):
+    destroy_dialog = False
+    if response == gtk.RESPONSE_ACCEPT:
+      membership = dialog.membership
+      data = dialog.form.get_values()
+      created = membership.create_installments(data['year'],data['initial_month'],data['final_month'],data['fee'])
+      page.update_memberships()
+      destroy_dialog = True
 
+    if destroy_dialog:
+      dialog.destroy()
 
 
   #save a reference of signals connected
