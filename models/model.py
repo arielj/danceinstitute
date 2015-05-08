@@ -75,6 +75,20 @@ class Model(object):
       
       self.add_error(field, message)
 
+  def validate_quantity_of(self, field, great_than = None, less_than = None, message = None):
+    field_name = _a(self.cls_name(),field)
+    q = len(getattr(self,field))
+    err = False
+    if great_than is not None and q <= great_than:
+      err = 'wrong_quantity'
+    if less_than is not None and q >= less_than:
+      err = 'wrong_quantity'
+    
+    if err:
+      if message is None:
+        message = _e(err) % {'field': field_name}
+      self.add_error(field,message)
+
   def cls_name(self):
     return self.__class__.__name__
 

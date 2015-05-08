@@ -12,8 +12,8 @@ class Package(Model):
     self.name = ''
     self.klass_ids = []
     self._klasses = None
-    self.amount = 0.00
-    self.alt_amount = 0.00
+    self.fee = 0.00
+    self.alt_fee = 0.00
     
     self.set_attrs(attrs)
 
@@ -34,3 +34,11 @@ class Package(Model):
     for p in cls.db:
       packages.append(cls.find(p))
     return packages
+
+  def to_db(self):
+    return {'name': self.name, 'klass_ids': self.klass_ids, 'fee': self.fee, 'alt_fee': self.alt_fee}
+
+  def _is_valid(self):
+    self.validate_presence_of('name')
+    self.validate_numericallity_of('fee', great_than = 0)
+    self.validate_quantity_of('klass_ids', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')

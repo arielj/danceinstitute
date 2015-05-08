@@ -55,8 +55,8 @@ class PackagesList(gtk.ScrolledWindow):
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
     itr = model.get_iter(path)
-    klass = model.get_value(itr, 0)
-    self.emit('klass-edit', klass)
+    package = model.get_value(itr, 0)
+    self.emit('package-edit', package.id)
 
   def on_selection_changed(self, selection):
     if self.with_actions:
@@ -129,4 +129,66 @@ class PackagesTable(gtk.TreeView):
   def set_model(self, packages):
     for p in packages:
       self.store.append((p,p.name,p.klasses_names()))
+
+class PackageForm(FormFor):
+  def __init__(self, package, klasses):
+    FormFor.__init__(self, package)
+
+    self.klasses= klasses
+
+    self.create_form_fields()
+    
+    self.submit = gtk.Button('Guardar')
+    self.fields.pack_start(self.submit,False)
+    
+    self.pack_start(self.fields, True)
+    
+    self.show_all()
+
+  def get_tab_label(self):
+    if self.object.id:
+      return "Editar paquete:\n" + self.object.name
+    else:
+      return 'Agregar paquete'
+  
+  def create_form_fields(self):
+    self.fields = gtk.VBox()
+    self.add_field('name', attrs=100)
+    self.add_field('fee', attrs=5)
+    self.add_field('alt_fee', attrs=5)
+    if self.object.is_new_record():
+      self.fields.pack_start(gtk.Label('Clases'), False)
+      columns = 5
+      rows = len(self.klasses)/columns
+      if len(self.klasses)%columns > 0:
+        rows += 1
+      table = gtk.Table(rows, columns)
+      self.klass_checks = []
+      for idx, k in enumerate(self.klasses):
+        check = CustomCheckButton(k)
+        self.klass_checks.append(check)
+        c = idx%columns
+        r = idx/columns
+        table.attach(check,c,c+1,r,r+1)
+      self.fields.pack_start(table, False)
+
+  def get_klasses_ids(self):
+    ids = []
+    if self.object.is_new_record():
+      for c in self.klass_checks:
+        if c.get_active():
+          ids.append(c.k_id)
+    return ids
+  
+  def get_values(self):
+    values = {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'alt_fee': self.alt_fee_e.get_text()}
+    ids = self.get_klasses_ids()
+    if ids:
+      values['klass_ids'] = ids
+    return values
+
+class CustomCheckButton(gtk.CheckButton):
+  def __init__(self,k):
+    gtk.CheckButton.__init__(self,k.name)
+    self.k_id = k.id
 

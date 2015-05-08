@@ -23,6 +23,7 @@ class Membership(Model):
     self.installment_ids = []
     self._installments = None
     self.info = ''
+    self.active = True
     
     self.set_attrs(data)
 

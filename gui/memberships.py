@@ -76,7 +76,7 @@ class MembershipTab(gtk.VBox):
     
     self.info_vbox =gtk.VBox()
     self.info_vbox.pack_start(gtk.Label('Información:'), False)
-    self.info_vbox.pack_start(gtk.Label(membership.info, False)   
+    self.info_vbox.pack_start(gtk.Label(membership.info), False)   
 
     self.pack_start(self.info_vbox, False)
 

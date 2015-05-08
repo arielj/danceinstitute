@@ -60,6 +60,12 @@ ts = {
       'installments': ['Installments','Cuotas'],
       'info': ['Information','Información']
     },
+    'package': {
+      'name': ['Name','Nombre'],
+      'fee': ['Fee','Precio'],
+      'alt_fee': ['Alternative Fee','Precio Alternativo'],
+      'klass_ids': ['Classes','Clases']
+    },
     'schedule': {
       'from_time': ['From','Desde'],
       'to_time': ['To','Hasta'],
@@ -103,7 +109,8 @@ ts = {
     'field_not_greate_than': ['Field "%(field)s" must be greater than %(than)s.', 'El campo "%(field)s" debe ser mayor a %(than)s.'],
     'field_not_less_than': ['Field "%(field)s" must be less than %(than)s.', 'El campo "%(field)s" debe ser menor a %(than)s'],
     'wrong_format': ['Field "%(field)s"\'s format is not valid.', 'El formato del campo "%(field)s" no es válido.'],
-    'only_letters': ['Field "%(field)s" must be only letters.', 'El campo "%(field)s" debe ser sólo letras.']
+    'only_letters': ['Field "%(field)s" must be only letters.', 'El campo "%(field)s" debe ser sólo letras.'],
+    'wrong_quantity': ['Quantity of %(field)s is wrong.', 'La cantidad de %(field)s es inválida.']
   }
 }
 

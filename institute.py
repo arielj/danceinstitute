@@ -227,9 +227,43 @@ class Controller(gobject.GObject):
   def show_packages(self, widget):
     page = PackagesList(Package.all())
     self.window.add_page(page)
+    page.connect('package-add',self.add_package)
+    page.connect('package-edit', self.edit_package)
+    page.connect('package-delete', self.delete_package)
+    self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
     return page
 
+  def add_package(self, widget):
+    package = Package()
+    klasses = Klass.all()
+    return self.package_form(package, klasses)
+  
+  def edit_package(self, widget, package_id):
+    package = Package.find(package_id)
+    return self.package_form(package)
 
+  def package_form(self, package, klasses = None):
+    page = PackageForm(package, klasses)
+    page.submit.connect_object('clicked', self.submit_package, page)
+    self.window.add_page(page)
+    return page
+
+  def submit_package(self, form):
+    package = form.object
+    new_record = package.is_new_record()
+    package.set_attrs(form.get_values())
+    if package.save():
+      self.close_tab(None, form)
+      self.emit('package-changed', package, new_record)
+    else:
+      ErrorMessage("No se puede guardar el paquete:", package.full_errors()).run()
+
+  def refresh_packages(self, widget, package, created, page):
+    packages = Package.all()
+    page.refresh_list(packages)
+
+  def delete_package(self, widget, package):
+    print 'delete package'
 
 
   #students controls
@@ -355,6 +389,12 @@ gobject.signal_new('klass-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #klass object, creation(True value means the user just got created)
+                   
+gobject.signal_new('package-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #package object, creation(True value means the user just got created)
 
 gobject.signal_new('membership-deleted', \
                    Controller, \
