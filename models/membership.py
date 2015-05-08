@@ -67,8 +67,10 @@ class Membership(Model):
     return True
 
   def before_delete(self):
-    for i in self.get_installments():
+    for i in self.installments:
       i.delete()
     self.student.remove_membership(self.id)
     self.student.save()
 
+  def is_package(self):
+    return self.for_type == 'Package'

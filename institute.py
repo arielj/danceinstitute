@@ -348,7 +348,7 @@ class Controller(gobject.GObject):
       dialog.destroy()
 
   def ask_delete_membership(self, widget, membership):
-    dialog = ConfirmDialog('Vas a borrar la inscripción a la clase '+membership.klass.name+"\n¿Estás seguro?")
+    dialog = ConfirmDialog('Vas a borrar la inscripción a '+membership.klass_or_package.name+"\n¿Estás seguro?")
     dialog.connect('response', self.delete_membership, membership)
     dialog.run()
 

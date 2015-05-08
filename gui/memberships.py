@@ -75,8 +75,10 @@ class MembershipTab(gtk.VBox):
     self.membership = membership
     
     self.info_vbox =gtk.VBox()
-    self.info_vbox.pack_start(gtk.Label('Información:'), False)
-    self.info_vbox.pack_start(gtk.Label(membership.info), False)   
+    if membership.info:
+      self.info_vbox.pack_start(gtk.Label(membership.info), False)
+    if membership.is_package():
+      self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases: "+membership.klass_or_package.klasses_names()), False)
 
     self.pack_start(self.info_vbox, False)
 
