@@ -127,4 +127,4 @@ class Klass(Model):
       self.teachers.remove(teacher)
 
   def get_fee_for(self, fee_type):
-    return vars(self)[fee_type+'_fee']
+    return getattr(self,fee_type+'_fee')

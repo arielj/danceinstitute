@@ -12,20 +12,20 @@ class Package(Model):
     self.name = ''
     self.klass_ids = []
     self._klasses = None
-    self.fee = 0.00
+    self._fee = 0.00
     self.alt_fee = 0.00
     Model.__init__(self,attrs)
 
   @property
   def fee(self):
-    return self.fee
+    return self._fee
   
   @fee.setter
   def fee(self,value):
     try:
-      self.fee = Decimal(value)
+      self._fee = Decimal(value)
     except:
-      self.fee = 0.00
+      self._fee = 0.00
 
   @property
   def klasses(self, requery = False):
@@ -45,3 +45,4 @@ class Package(Model):
     self.validate_presence_of('name')
     self.validate_numericallity_of('fee', great_than = 0)
     self.validate_quantity_of('klass_ids', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
+

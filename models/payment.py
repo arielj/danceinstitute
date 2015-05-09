@@ -9,8 +9,9 @@ class Payment(Model):
         3: {'amount': 100, 'installment_id': 2, 'student_id': 1}}
 
   def __init__(self, attrs = {}):
-    self.amount = 0.00
+    self._amount = 0.00
     self.installment_id = None
+    self._installment = None
     self.student_id = None
     self._student = None
     self.date = None
@@ -18,14 +19,14 @@ class Payment(Model):
 
   @property
   def amount(self):
-    return self.amount
+    return self._amount
   
   @amount.setter
   def amount(self,value):
     try:
-      self.amount = Decimal(value)
+      self._amount = Decimal(value)
     except:
-      self.amount = 0.00
+      self._amount = 0.00
 
   @property
   def student(self, requery = False):

@@ -64,39 +64,36 @@ class Membership(Model):
     return self._installments
 
   def add_installment(self, i):
-    if i not in self.installment_ids:
+    if i.id not in self.installment_ids:
       self.installment_ids.append(i.id)
       self.installments.append(i)
 
   def create_installments(self, year, initial_month, final_month, fee):
-    try:
-      year = int(year)
-      initial_month = int(initial_month)
-      final_month = int(final_month)
-      fee = Decimal(fee)
-      if initial_month >= 0:
-        if final_month <= 11:
-          if initial_month <= final_month:
-            if fee > 0:
-              ins = []
-              for m in range(initial_month, final_month+1):
-                i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
-                if i.is_invalid():
-                  return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
-                else:
-                  i.save()
-                  self.add_installment(i)
-              return True
-            else:
-              return "El precio debe ser mayor a 0."
+    year = year
+    initial_month = initial_month
+    final_month = final_month
+    fee = Decimal(fee)
+    if initial_month >= 0:
+      if final_month <= 11:
+        if initial_month <= final_month:
+          if fee > 0:
+            ins = []
+            for m in range(initial_month, final_month+1):
+              i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
+              if not i.is_valid():
+                return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
+              else:
+                i.save()
+                self.add_installment(i)
+            return True
           else:
-            return "El mes inicial no puede ser mayor al mes final."
+            return "El precio debe ser mayor a 0."
         else:
-          return "El mes final no puede ser mayor a 11."
+          return "El mes inicial no puede ser mayor al mes final."
       else:
-        return "El mes inicial no puede ser menor a 0."
-    except:
-      return "No se pueden crear las cuotas, revisá los valores cargados."
+        return "El mes final no puede ser mayor a 11."
+    else:
+      return "El mes inicial no puede ser menor a 0."
 
   @classmethod
   def get_types(cls):

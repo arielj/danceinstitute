@@ -33,11 +33,11 @@ class Model(object):
     return not self.errors
 
   def validate_presence_of(self, field):
-    if not vars(self)[field]:
+    if not getattr(self,field):
       self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
 
   def validate_numericallity_of(self, field, great_than = None, less_than = None):
-    v = vars(self)[field]
+    v = getattr(self,field)
     field_name = _a(self.cls_name(),field)
     err = False
     extra = False
@@ -66,7 +66,7 @@ class Model(object):
         if message is None:
           message = _e('only_letters') % {'field': field_name}
     
-    if expr is not None and not re.match(expr, vars(self)[field]):
+    if expr is not None and not re.match(expr, getattr(self,field)):
       if message is None:
         message = _e('wrong_format') % {'field': field_name}
       

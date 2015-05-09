@@ -21,10 +21,6 @@ class Schedule(Model):
 
     Model.__init__(self, attrs)
   
-  def set_attrs(self, attrs):
-    for key in attrs.iterkeys():
-      vars(self)[key] = attrs[key]
-
   def day_name(self):
     return _t('days')[self.day]
 

@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
 from decimal import Decimal
 from translations import _t
 from model import Model
@@ -13,6 +14,7 @@ class Installment(Model):
         2: {'year': 2015, 'month': 5, 'amount': 300, 'payment_ids': [3], 'membership_id': 1}}
   
   def __init__(self, data = {}):
+    self._year = datetime.today().year
     self.month = 0
     self.membership_id = None
     self._membership = None
@@ -21,6 +23,17 @@ class Installment(Model):
     self._payments = None
     
     Model.__init__(self, data)
+
+  @property
+  def year(self):
+    return self._year
+
+  @year.setter
+  def year(self, value):
+    try:
+      self._year = int(value)
+    except:
+      self._year = 0
 
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
