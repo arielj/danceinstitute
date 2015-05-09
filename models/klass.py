@@ -35,10 +35,10 @@ class Klass(Model):
 
   def _is_valid(self):
     self.validate_presence_of('name')
-    self.validate_numericallity_of('normal_fee', great_than = 0)
-    self.validate_numericallity_of('half_fee', great_than_or_equal = 0)
-    self.validate_numericallity_of('once_fee', great_than_or_equal = 0)
-    self.validate_numericallity_of('inscription_fee', great_than_or_equal = 0)
+    self.validate_numericallity_of('normal_fee', great_than = 0, only_integer = False)
+    self.validate_numericallity_of('half_fee', great_than_or_equal = 0, only_integer = False)
+    self.validate_numericallity_of('once_fee', great_than_or_equal = 0, only_integer = False)
+    self.validate_numericallity_of('inscription_fee', great_than_or_equal = 0, only_integer = False)
     self.validate_numericallity_of('min_age', great_than_or_equal = 0)
     self.validate_numericallity_of('max_age', great_than_or_equal = 0)
     self.validate_numericallity_of('quota', great_than_or_equal = 0)

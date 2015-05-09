@@ -30,9 +30,9 @@ class Student(User):
     return self._memberships
 
   def add_membership(self, membership):
+    self.memberships.append(membership)
     if not membership.is_new_record():
       self.membership_ids.append(membership.id)
-    self.memberships.append(membership)
   
   def remove_membership(self, membership_id):
     if membership_id in self.membership_ids:
@@ -50,10 +50,7 @@ class Student(User):
 
   def _is_valid(self):
     User._is_valid(self)
-    
-    valid_memberships = all(map(lambda m: m.is_valid(), self.memberships))
-    if not valid_memberships:
-      self.add_error('memberships', 'Una o más inscripciones son inválidas.')
+    self.validate_has_many('memberships')
 
   def to_db(self):
     h = User.to_db(self)

@@ -65,8 +65,8 @@ class Membership(Model):
 
   def add_installment(self, i):
     if i.id not in self.installment_ids:
-      self.installment_ids.append(i.id)
       self.installments.append(i)
+      self.installment_ids.append(i.id)
 
   def create_installments(self, year, initial_month, final_month, fee):
     year = year
@@ -80,11 +80,10 @@ class Membership(Model):
             ins = []
             for m in range(initial_month, final_month+1):
               i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
-              if not i.is_valid():
-                return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
-              else:
-                i.save()
+              if i.save():
                 self.add_installment(i)
+              else:
+                return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
             return True
           else:
             return "El precio debe ser mayor a 0."

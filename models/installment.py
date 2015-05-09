@@ -74,16 +74,16 @@ class Installment(Model):
     return {'month': self.month, 'membership_id': self.membership_id, 'amount': self.amount, 'payment_ids': self.payment_ids}
 
   def _is_valid(self):
-    self.validate_numericallity_of('month', great_than = -1, less_than = 12)
+    self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
+    self.validate_numericallity_of('amount', great_than_or_equal = 0, only_integer = False)
 
   def add_payment(self, date, amount):
     amount = Decimal(amount)
     if amount <= self.to_pay():
-      p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id, 'student_id': self.membership.student_id})
-      if p.is_valid():
-        p.save()
-        self.payment_ids.append(p.id)
+      p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id, 'student_id': self.get_student_id()})
+      if p.save():
         self.payments.append(p)
+        self.payment_ids.append(p.id)
         return True
       else:
         return p.full_errors()
@@ -93,4 +93,6 @@ class Installment(Model):
   def get_student_id(self):
     s = self.membership.student
     return s.id if s else None
-    
+
+  def payments_details(self):
+    return "\n".join(map(lambda p: p.to_s(), self.payments))

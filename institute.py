@@ -38,6 +38,7 @@ class Controller(gobject.GObject):
     else:
       self.window.maximize()
     
+    self.bind_status_signals()
     self.connected_signals = {}
 
   def close_tab(self, window, page):
@@ -59,6 +60,11 @@ class Controller(gobject.GObject):
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
+  def bind_status_signals(self):
+    self.connect_object('membership-deleted', self.show_status, 'Inscripción eliminada.')
+    self.connect_object('klass-changed', self.show_status, 'Clase guardada.')
+    self.connect_object('student-changed', self.show_status, 'Alumno guardado.')
+
   def show_help_dialog(self, widget, dialog_class):
     dialog = eval(dialog_class)()
     dialog.connect('response', self.on_help_dialog_response)
@@ -67,7 +73,7 @@ class Controller(gobject.GObject):
   def on_help_dialog_response(self, dialog, reponse):
     dialog.destroy()
 
-  def show_status(self, status):
+  def show_status(self, status, *data):
     self.window.show_status(status)
 
 
@@ -172,9 +178,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       teacher = dialog.get_selected_teacher()
       if teacher is not None:
-        print page.object.teachers
         page.object.add_teacher(teacher)
-        print page.object.teachers
         page.update_teachers()
 
     if destroy_dialog:
@@ -357,7 +361,6 @@ class Controller(gobject.GObject):
   def delete_membership(self, dialog, response, membership):
     if response == gtk.RESPONSE_ACCEPT:
       membership.delete()
-      self.show_status('Inscripción eliminada.')
       self.emit('membership-deleted', membership.id)
 
     dialog.destroy()

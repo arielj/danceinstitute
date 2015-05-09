@@ -19,6 +19,7 @@ class MainWindow(gtk.Window):
     self.v_box.pack_start(self.notebook, True)
     
     self.statusbar = gtk.Statusbar()
+    self.statusbar_timer = None
     self.v_box.pack_end(self.statusbar, False)
 
     self.show_all()
@@ -43,7 +44,15 @@ class MainWindow(gtk.Window):
     label.close.connect('clicked', self.on_close_tab, page)
 
   def show_status(self, status):
+    if self.statusbar_timer is not None:
+      gobject.source_remove(self.statusbar_timer)
+    self.clear_status()
     self.statusbar.push(1, status)
+    self.statusbar_timer = gobject.timeout_add(10000, self.clear_status)
+
+  def clear_status(self):
+    self.statusbar.remove_all(1)
+    self.statusbar_timer = None
 
 gobject.type_register(MainWindow)
 gobject.signal_new('close-tab', \

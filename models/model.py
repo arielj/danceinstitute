@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from translations import _a, _e
+from decimal import Decimal
 import re
 
 class Model(object):
@@ -36,13 +37,16 @@ class Model(object):
     if not getattr(self,field):
       self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
 
-  def validate_numericallity_of(self, field, great_than = None, less_than = None, great_than_or_equal = None, less_than_or_equal = None):
+  def validate_numericallity_of(self, field, great_than = None, less_than = None, great_than_or_equal = None, less_than_or_equal = None, only_integer = True):
     v = getattr(self,field)
     field_name = _a(self.cls_name(),field)
     err = False
     extra = False
     try:
-      v = int(v)
+      if only_integer:
+        v = int(v)
+      else:
+        v = Decimal(v)
       if great_than is not None and v <= great_than:
         err = 'field_not_greate_than'
         extra = {'than': great_than}

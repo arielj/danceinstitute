@@ -89,7 +89,8 @@ ts = {
       'gender': ['Gender','Sexo'],
       'email': ['Email', 'E-mail'],
       'is_teacher': ['Is teacher','Es profesor'],
-      'comments': ['Comments','Comentarios']
+      'comments': ['Comments','Comentarios'],
+      'memberships': ['Memberships','Inscripciones']
     },
     'teacher': {
       'name': ['Name','Nombre'],

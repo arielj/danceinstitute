@@ -91,20 +91,21 @@ class MembershipTab(gtk.VBox):
 
     self.pack_start(self.info_vbox, False)
 
-    #installment, year, month, base, recharges, status
+    #installment, year, month, base, status, payments
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
     
     self.refresh()
     
     self.list = gtk.TreeView(self.store)
+    self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
     self.selection = self.list.get_selection()
     self.selection.connect('changed', self.on_selection_changed)
     
     self.add_column('Año',1)
     self.add_column('Mes',2)
     self.add_column('Monto',3)
-    self.add_column('Pagado',4)
-    self.add_column('Estado',5)
+    self.add_column('Estado',4)
+    self.add_column('Pagos',5)
 
     self.scrolled = gtk.ScrolledWindow()
     viewport = gtk.Viewport()
@@ -137,7 +138,7 @@ class MembershipTab(gtk.VBox):
     self.store.clear()
     
     for ins in self.membership.installments:
-      self.store.append((ins,ins.year,ins.month_name(),ins.total(), ins.paid(), ins.status()))
+      self.store.append((ins,ins.year,ins.month_name(),"$"+str(ins.total()), ins.status(), ins.payments_details()))
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()

@@ -4,9 +4,9 @@ import installment
 import student
 
 class Payment(Model):
-  db = {1: {'amount': 200, 'installment_id': 1, 'student_id': 1},
-        2: {'amount': 100, 'installment_id': 1, 'student_id': 1},
-        3: {'amount': 100, 'installment_id': 2, 'student_id': 1}}
+  db = {1: {'date': '2015/03/03', 'amount': 200, 'installment_id': 1, 'student_id': 1},
+        2: {'date': '2015/03/05', 'amount': 100, 'installment_id': 1, 'student_id': 1},
+        3: {'date': '2015/03/07', 'amount': 100, 'installment_id': 2, 'student_id': 1}}
 
   def __init__(self, attrs = {}):
     self._amount = 0.00
@@ -57,7 +57,10 @@ class Payment(Model):
     self._installment = ins
 
   def _is_valid(self):
-    self.validate_numericallity_of('amount', great_than = 0)
+    self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
 
   def to_db(self):
     return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'student_id': self.student_id}
+
+  def to_s(self):
+    return str(self.date) + ": $" + str(self.amount)
