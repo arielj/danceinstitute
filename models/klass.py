@@ -36,19 +36,13 @@ class Klass(Model):
   def _is_valid(self):
     self.validate_presence_of('name')
     self.validate_numericallity_of('normal_fee', great_than = 0)
-    self.validate_numericallity_of('half_fee')
-    self.validate_numericallity_of('once_fee')
-    self.validate_numericallity_of('inscription_fee')
-    self.validate_numericallity_of('min_age')
-    self.validate_numericallity_of('max_age')
-    self.validate_numericallity_of('quota')
-    
-    valid_schedules = True
-    for s in self.schedules:
-      if not s.is_valid():
-        valid_schedules = False
-    if not valid_schedules:
-      self.add_error('schedules', 'Uno o más horarios no son válidos')
+    self.validate_numericallity_of('half_fee', great_than_or_equal = 0)
+    self.validate_numericallity_of('once_fee', great_than_or_equal = 0)
+    self.validate_numericallity_of('inscription_fee', great_than_or_equal = 0)
+    self.validate_numericallity_of('min_age', great_than_or_equal = 0)
+    self.validate_numericallity_of('max_age', great_than_or_equal = 0)
+    self.validate_numericallity_of('quota', great_than_or_equal = 0)
+    self.validate_has_many('schedules')
 
   def before_save(self):
     new_ids = []
@@ -84,7 +78,7 @@ class Klass(Model):
     return None
 
   def build_schedule(self, data):
-    sch = Schedule(data)
+    sch = schedule.Schedule(data)
     self.schedules.append(sch)
     return sch
 
@@ -105,14 +99,15 @@ class Klass(Model):
     return self._schedules
 
   def add_schedule(self, schedule):
+    self.schedules.append(schedule)
     if not schedule.is_new_record():
       self.schedule_ids.append(schedule.id)
-    self.schedules.append(schedule)
 
   def add_teacher(self, teacher):
-    if not teacher.is_new_record():
-      self.teacher_ids.append(teacher.id)
     self.teachers.append(teacher)
+    if not teacher.is_new_record():
+      if teacher.id not in self.teacher_ids:
+        self.teacher_ids.append(teacher.id)
 
   def remove_schedule(self, schedule):
     if schedule in self.schedules:

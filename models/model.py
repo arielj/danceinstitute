@@ -36,7 +36,7 @@ class Model(object):
     if not getattr(self,field):
       self.add_error(field, _e('field_not_blank') % {'field': _a(self.cls_name(),field)})
 
-  def validate_numericallity_of(self, field, great_than = None, less_than = None):
+  def validate_numericallity_of(self, field, great_than = None, less_than = None, great_than_or_equal = None, less_than_or_equal = None):
     v = getattr(self,field)
     field_name = _a(self.cls_name(),field)
     err = False
@@ -49,6 +49,12 @@ class Model(object):
       if less_than is not None and v >= less_than:
         err = 'field_not_less_than'
         extra = {'than': less_than}
+      if great_than_or_equal is not None and v < great_than_or_equal:
+        err = 'field_not_great_than_or_equal'
+        extra = {'than': great_than_or_equal}
+      if less_than_or_equal is not None and v > less_than_or_equal:
+        err = 'field_not_less_than_or_equal'
+        extra = {'than': less_than_or_equal}
     except:
       err = 'field_not_number'
     
@@ -85,6 +91,12 @@ class Model(object):
       if message is None:
         message = _e(err) % {'field': field_name}
       self.add_error(field,message)
+
+  def validate_has_many(self, relationship):
+    are_valid = all(map(lambda o: o.is_valid(),getattr(self,relationship)))
+    if not are_valid:
+      self.add_error(relationship, _e('has_many_invalid') % {'relationship': _a(self.cls_name(),relationship)})
+
 
   def cls_name(self):
     return self.__class__.__name__

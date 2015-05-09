@@ -172,9 +172,10 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       teacher = dialog.get_selected_teacher()
       if teacher is not None:
-        if teacher.id not in map(lambda t: t.id, page.object.teachers):
-          page.object.add_teacher(teacher)
-          page.update_teachers()
+        print page.object.teachers
+        page.object.add_teacher(teacher)
+        print page.object.teachers
+        page.update_teachers()
 
     if destroy_dialog:
       dialog.destroy()
