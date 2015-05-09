@@ -1,21 +1,20 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from decimal import Decimal
+import datetime
+from translations import _t
 from model import Model
 import student
 import installment
-from translations import _t
-import datetime
 import klass
 import package
-from decimal import Decimal
 
 class Membership(Model):
   #borrar después
   db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Klass', 'installment_ids': [1,2], 'info': 'Clase normal lalala'}}
 
   def __init__(self, data = {}):
-    Model.__init__(self)
     self.student_id = None
     self._student = None
     self.for_id = None
@@ -26,7 +25,7 @@ class Membership(Model):
     self.info = ''
     self.active = True
     
-    self.set_attrs(data)
+    Model.__init__(self, data)
 
   @property
   def klass_or_package(self, requery = False):
@@ -79,10 +78,15 @@ class Membership(Model):
         if final_month <= 11:
           if initial_month <= final_month:
             if fee > 0:
+              ins = []
               for m in range(initial_month, final_month+1):
                 i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
-                i.save()
-                self.add_installment(i)
+                if i.is_invalid():
+                  return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
+                else:
+                  i.save()
+                  self.add_installment(i)
+              return True
             else:
               return "El precio debe ser mayor a 0."
           else:

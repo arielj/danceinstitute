@@ -5,14 +5,16 @@ from translations import _a, _e
 import re
 
 class Model(object):
-  def __init__(self):
+  def __init__(self, attrs = {}):
     self.id = None
     self.errors = {}
+    
+    self.set_attrs(attrs)
     
   def set_attrs(self, data = {}):
     if data:
       for attr in data.keys():
-        self.__setattr__(attr,data[attr])
+        setattr(self,attr,data[attr])
 
   def add_error(self, field, error):
     if field not in self.errors:
@@ -23,12 +25,7 @@ class Model(object):
     self.errors = {}
 
   def full_errors(self):
-    errs = []
-    for k in self.errors.keys():
-      for e in self.errors[k]:
-        errs.append(e) 
-    
-    return "\n".join(errs)
+    return "\n".join(sum(self.errors.values(),[]))
   
   def is_valid(self):
     self.clear_errors()
@@ -98,6 +95,13 @@ class Model(object):
     obj.id = id
     return obj
 
+  @classmethod
+  def all(cls):
+    results = []
+    for i in cls.db:
+      results.append(cls.find(i))
+    return results
+
   def save(self):
     if self.is_valid():
       if self.is_new_record():
@@ -133,7 +137,10 @@ class Model(object):
   def delete(self):
     self.before_delete()
     del self.__class__.db[self.id]
+    self.after_delete()
 
   def before_delete(self):
     return True
 
+  def after_delete(self):
+    return True

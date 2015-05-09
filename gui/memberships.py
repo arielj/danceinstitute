@@ -33,6 +33,7 @@ class MembershipsPanel(gtk.VBox):
     self.notebook.append_page(t,gtk.Label(m.klass_or_package.name))
     t.delete_b.connect('clicked', self.on_delete_clicked, m)
     t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
+    t.add_payment_b.connect('clicked', self.on_add_payment_clicked, t)
 
   def update(self):
     children = self.notebook.get_children()
@@ -59,12 +60,19 @@ class MembershipsPanel(gtk.VBox):
   def on_add_ins_clicked(self, widget, membership):
     self.emit('add-installments', membership)
 
+  def on_add_payment_clicked(self, widget, tab):
+    self.emit('add-payment', tab.get_selected_installment())
+
 gobject.type_register(MembershipsPanel)
 gobject.signal_new('ask-delete-membership', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('add-installments', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-payment', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
@@ -89,6 +97,8 @@ class MembershipTab(gtk.VBox):
     self.refresh()
     
     self.list = gtk.TreeView(self.store)
+    self.selection = self.list.get_selection()
+    self.selection.connect('changed', self.on_selection_changed)
     
     self.add_column('Año',1)
     self.add_column('Mes',2)
@@ -107,9 +117,12 @@ class MembershipTab(gtk.VBox):
     self.actions = gtk.HBox(True, 5)
     
     self.add_installments_b = gtk.Button('Agregar Cuotas')
+    self.add_payment_b = gtk.Button('Agregar Pago')
+    self.add_payment_b.set_sensitive(False)
     self.delete_b = gtk.Button('Eliminar inscripción')
     
     self.actions.pack_start(self.add_installments_b, False)
+    self.actions.pack_start(self.add_payment_b, False)
     self.actions.pack_start(self.delete_b, False)
     
     self.pack_start(self.actions, False)
@@ -124,7 +137,19 @@ class MembershipTab(gtk.VBox):
     self.store.clear()
     
     for ins in self.membership.installments:
-      self.store.append((ins,ins.year,ins.month_name(),ins.to_pay(), ins.paid(), ins.status()))
+      self.store.append((ins,ins.year,ins.month_name(),ins.total(), ins.paid(), ins.status()))
+
+  def on_selection_changed(self, selection):
+    model, iter = selection.get_selected()
+    self.add_payment_b.set_sensitive(iter is not None)
+    #self.emit('selection-changed', selection)
+
+  def get_selected_installment(self):
+    model, iter = self.selection.get_selected()
+    if iter is None:
+      return None
+    else:
+      return model.get_value(iter,0)
 
 class MembershipDialog(gtk.Dialog):
   def __init__(self, membership, options):
@@ -237,4 +262,40 @@ class AddInstallmentsForm(gtk.VBox):
 
   def get_values(self):
     return {'year': self.year_e.get_text(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'fee': self.fee_e.get_text()}
+
+
+class AddPaymentDialog(gtk.Dialog):
+  def __init__(self,installment):
+    self.installment = installment
+    self.form = AddPaymentForm()
+    self.form.amount_e.set_text(str(installment.to_pay()))
+    gtk.Dialog.__init__(self, 'Agregar pago', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    self.vbox.pack_start(self.form, False)
+    self.vbox.show_all()
+
+class AddPaymentForm(gtk.VBox):
+  def __init__(self):
+    gtk.VBox.__init__(self, True, 8)
+    self.set_border_width(4)
+    
+    field = gtk.VBox()
+    self.date_l = gtk.Label('Fecha')
+    self.date_e = gtk.Entry(10)
+    self.date_e.set_text(datetime.datetime.today().strftime('%Y/%m/%d'))
+    field.pack_start(self.date_l, False)
+    field.pack_start(self.date_e, False)
+    self.pack_start(field, False)
+    
+    field = gtk.VBox()
+    self.amount_l = gtk.Label('Monto')
+    self.amount_e = gtk.Entry(4)
+    field.pack_start(self.amount_l, False)
+    field.pack_start(self.amount_e, False)
+    self.pack_start(field, False)
+
+  def get_values(self):
+    return {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text()}
 

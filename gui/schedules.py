@@ -91,7 +91,7 @@ class SchedulesForm(gtk.VBox):
     for r in rooms:
       self.rooms[r].set_active(self.schedule.room == r)
     for d in days:
-      self.days[d]['btn'].set_active(self.schedule.get_day_name() == d)
+      self.days[d]['btn'].set_active(self.schedule.day_name() == d)
 
   def get_tab_label(self):
     return 'Editar Horario' if self.schedule.id else 'Agregar Horario'
@@ -220,5 +220,5 @@ class SchedulesTable(gtk.TreeView):
   def set_model(self, schedules):
     self.schedules = schedules
     for sch in self.schedules:
-      self.store.append([sch, sch.get_day_name(), sch.room, sch.from_time, sch.to_time])
+      self.store.append([sch, sch.day_name(), sch.room, sch.from_time, sch.to_time])
 

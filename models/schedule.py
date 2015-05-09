@@ -14,22 +14,21 @@ class Schedule(Model):
         4: {'from_time': '19:00', 'to_time': '20:30', 'room': 'Aire', 'day': 3},}
     
   def __init__(self, attrs = {}):
-    Model.__init__(self)
     self.from_time = '00:00'
     self.to_time = '00:00'
     self.day = 0
     self.room = ''
 
-    self.set_attrs(attrs)
+    Model.__init__(self, attrs)
   
   def set_attrs(self, attrs):
     for key in attrs.iterkeys():
       vars(self)[key] = attrs[key]
 
-  def get_day_name(self):
+  def day_name(self):
     return _t('days')[self.day]
 
-  def get_day_abbr(self):
+  def day_abbr(self):
     return _t('abbr_days','en')[self.day]
 
   # returns schedule intervals separated by 30 minutes:
@@ -53,8 +52,6 @@ class Schedule(Model):
   def _get_datetime(self,t):
     return datetime.datetime(2000,1,1,int(t[0:2]),int(t[3:5]),0)
 
-
-
   def _is_valid(self):
     if self.from_time >= self.to_time:
       self.add_error('from_time', 'Desde debe ser anterior a Hasta.')
@@ -63,15 +60,7 @@ class Schedule(Model):
   def to_db(self):
     return {'from_time': self.from_time, 'to_time': self.to_time, 'day': self.day, 'room': self.room}
 
-
-
   @classmethod
   def possible_rooms(cls):
     return Room.all()
-
-  @classmethod
-  def find(cls, id):
-    schedule = cls(cls.db[id])
-    schedule.id = id
-    return schedule
 

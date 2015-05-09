@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+import re
 from model import Model
 
 class User(Model):
@@ -14,9 +15,8 @@ class User(Model):
         }
 
   def __init__(self, data = {}):
-    Model.__init__(self)
-    self.name = ''
-    self.lastname = ''
+    self._name = ''
+    self._lastname = ''
     self.dni = ''
     self.cellphone = ''
     self.alt_phone = ''
@@ -27,20 +27,23 @@ class User(Model):
     self.is_teacher = False
     self.comments = ''
     
-    self.set_attrs(data)
+    Model.__init__(self,data)
 
-  @classmethod
-  def find(cls, uid):
-    user = cls(cls.db[uid])
-    user.id = uid
-    return user
+  @property
+  def name(self):
+    return self._name
+  
+  @name.setter
+  def name(self,value):
+    self._name = value.title()
 
-  @classmethod
-  def all(cls):
-    results = []
-    for i in cls.db:
-      results.append(cls.find(i))
-    return results
+  @property
+  def lastname(self):
+    return self._lastname
+
+  @lastname.setter
+  def lastname(self,value):
+    self._lastname = value.title()
 
   def to_db(self):
     return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone,

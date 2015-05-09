@@ -172,7 +172,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       teacher = dialog.get_selected_teacher()
       if teacher is not None:
-        if teacher.id not in map(lambda t: t.id, page.object.get_teachers()):
+        if teacher.id not in map(lambda t: t.id, page.object.teachers):
           page.object.add_teacher(teacher)
           page.update_teachers()
 
@@ -181,7 +181,7 @@ class Controller(gobject.GObject):
 
   def on_remove_teacher(self, page, teacher):
     if teacher is not None:
-      for t in page.object.get_teachers():
+      for t in page.object.teachers:
         if teacher.id == t.id:
           page.object.remove_teacher(t)
           page.update_teachers()
@@ -206,7 +206,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       schedule.set_attrs(dialog.get_values())
       if schedule.is_valid():
-        if schedule in page.object.get_schedules():
+        if schedule in page.object.schedules:
           page.update_schedules()
         else:
           page.add_schedule(schedule)
@@ -281,6 +281,7 @@ class Controller(gobject.GObject):
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
     page.memberships_panel.connect('add-installments', self.add_installments, page)
+    page.memberships_panel.connect('add-payment', self.add_payment, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.window.add_page(page)
     return page
@@ -375,6 +376,29 @@ class Controller(gobject.GObject):
         page.update_memberships()
       else:
         ErrorMessage('No se pudieron agrega las cuotas:', created).run()
+        destroy_dialog = False
+
+    if destroy_dialog:
+      dialog.destroy()
+
+
+
+  #payments controls
+  def add_payment(self, widget, installment, page):
+    dialog = AddPaymentDialog(installment)
+    dialog.connect('response', self.on_add_payment, page)
+    dialog.run()
+  
+  def on_add_payment(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      installment = dialog.installment
+      data = dialog.form.get_values()
+      created = installment.add_payment(date = data['date'], amount = data['amount'])
+      if created is True:
+        page.update_memberships()
+      else:
+        ErrorMessage('No se pudo cargar el pago:', created).run()
         destroy_dialog = False
 
     if destroy_dialog:

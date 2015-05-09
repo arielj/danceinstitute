@@ -66,6 +66,10 @@ ts = {
       'alt_fee': ['Alternative Fee','Precio Alternativo'],
       'klass_ids': ['Classes','Clases']
     },
+    'payment': {
+      'date': ['Date','Fecha'],
+      'amount': ['Amount','Monto']
+    },
     'schedule': {
       'from_time': ['From','Desde'],
       'to_time': ['To','Hasta'],

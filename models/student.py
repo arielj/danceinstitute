@@ -42,19 +42,16 @@ class Student(User):
         self.memberships.remove(m)
 
   def before_save(self):
+    self.membership_ids = []
     for m in self.memberships:
-      if m.save():
-        if m.id not in self.membership_ids:
-          self.membership_ids.append(m.id)
+      m.save()
+      self.membership_ids.append(m.id)
     return True
 
   def _is_valid(self):
     User._is_valid(self)
     
-    valid_memberships = True
-    for m in self.memberships:
-      if not m.is_valid():
-        valid_memberships = False
+    valid_memberships = all(map(lambda m: m.is_valid(), self.memberships))
     if not valid_memberships:
       self.add_error('memberships', 'Una o más inscripciones son inválidas.')
 
