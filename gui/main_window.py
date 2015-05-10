@@ -54,6 +54,16 @@ class MainWindow(gtk.Window):
     self.statusbar.remove_all(1)
     self.statusbar_timer = None
 
+  def get_page_by_label(self, label):
+    for page in self.notebook.get_children():
+      if page.get_tab_label() == label:
+        return page
+    return None
+  
+  def focus_page(self, page):
+    num = self.notebook.page_num(page)
+    self.notebook.set_current_page(num)
+
 gobject.type_register(MainWindow)
 gobject.signal_new('close-tab', \
                    MainWindow, \

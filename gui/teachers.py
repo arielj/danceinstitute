@@ -125,6 +125,9 @@ class TeachersList(gtk.ScrolledWindow):
     model, iter = self.t_selection.get_selected()
     return model.get_value(iter,0) if iter is not None else None
 
+  def refresh_list(self, teachers):
+    self.teachers_t.update(teachers)
+
 gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
                    TeachersList, \

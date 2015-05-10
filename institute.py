@@ -64,6 +64,7 @@ class Controller(gobject.GObject):
     self.connect_object('membership-deleted', self.show_status, 'Inscripción eliminada.')
     self.connect_object('klass-changed', self.show_status, 'Clase guardada.')
     self.connect_object('student-changed', self.show_status, 'Alumno guardado.')
+    self.connect_object('teacher-changed', self.show_status, 'Profesor guardado.')
 
   def show_help_dialog(self, widget, dialog_class):
     dialog = eval(dialog_class)()
@@ -81,7 +82,11 @@ class Controller(gobject.GObject):
   #config controls
   def show_config(self, widget):
     page = Config(self.settings)
-    self.window.add_page(page)
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+    else:
+      self.window.add_page(page)
 
 
 
@@ -95,13 +100,25 @@ class Controller(gobject.GObject):
 
   def teacher_form(self, widget, teacher = None):
     page = TeacherForm(teacher)
+    if teacher.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+      
     page.submit.connect_object('clicked',self.submit_teacher, page)
     self.window.add_page(page)
     return page
 
   def submit_teacher(self, form):
-    print form.object.id
-    print form.get_values()
+    teacher = form.object
+    new_record = teacher.is_new_record()
+    teacher.set_attrs(form.get_values())
+    if teacher.save():
+      self.emit('teacher-changed', teacher, new_record)
+      self.window.update_label(form)
+    else:
+      ErrorMessage("No se puede guardar el profesor:", teacher.full_errors()).run()
 
   def list_teachers(self, widget):
     teachers = Teacher.all()
@@ -109,7 +126,12 @@ class Controller(gobject.GObject):
     self.window.add_page(page)
     page.connect('teacher-edit', self.edit_teacher)
     page.connect('teacher-add', self.add_teacher)
+    self.save_signal(self.connect('teacher-changed', self.refresh_teachers, page), page)
+    return page
 
+  def refresh_teachers(self, widget, teacher, created, page):
+    teachers = Teacher.all()
+    page.refresh_list(teachers)
 
 
   #klasses controls
@@ -124,6 +146,12 @@ class Controller(gobject.GObject):
   
   def klass_form(self, widget, klass = None):
     page = KlassForm(klass)
+    if klass.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+      
     page.submit.connect_object('clicked',self.submit_klass, page)
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
@@ -163,7 +191,6 @@ class Controller(gobject.GObject):
     if kls.save():
       self.emit('klass-changed', kls, new_record)
       self.window.update_label(form)
-      self.show_status('Clase guardada')
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
@@ -249,6 +276,12 @@ class Controller(gobject.GObject):
 
   def package_form(self, package, klasses = None):
     page = PackageForm(package, klasses)
+    if package.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+
     page.submit.connect_object('clicked', self.submit_package, page)
     self.window.add_page(page)
     return page
@@ -282,6 +315,12 @@ class Controller(gobject.GObject):
 
   def student_form(self, student):
     page = StudentForm(student)
+    if student.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+      
     page.submit.connect_object('clicked', self.submit_student, page)
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
@@ -297,6 +336,7 @@ class Controller(gobject.GObject):
     student.set_attrs(form.get_values())
     if student.save():
       self.emit('student-changed', student, new_record)
+      self.window.update_label(form)
       if new_record:
         form.enable_memberships()
     else:
@@ -428,6 +468,12 @@ gobject.signal_new('student-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #student object, creation(True value means the user just got created)
+
+gobject.signal_new('teacher-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #teacher object, creation(True value means the user just got created)
 
 gobject.signal_new('klass-changed', \
                    Controller, \
