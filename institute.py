@@ -101,7 +101,7 @@ class Controller(gobject.GObject):
       self.emit('settings-changed')
 
   def on_settings_changed(self, *data):
-    translations.set_lang(self.settings.language)
+    translations.I18n.set_lang(self.settings.language)
     pos = gtk.POS_TOP if self.settings.tabs_position == 'top' else gtk.POS_LEFT
     if self.window.notebook.get_tab_pos() != pos:
       self.window.notebook.set_tab_pos(pos)

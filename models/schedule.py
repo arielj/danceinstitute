@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-from translations import _t, ts
+from translations import _t
 from model import Model
 from room import Room
 import klass
