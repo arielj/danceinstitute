@@ -28,11 +28,9 @@ class Package(Model):
       self._fee = 0.00
 
   @property
-  def klasses(self, requery = False):
-    if requery or self._klasses is None:
-      self._klasses = []
-      for k in self.klass_ids:
-        self._klasses.append(klass.Klass.find(k))
+  def klasses(self):
+    if self._klasses is None:
+      self._klasses = klass.Klass.for_package(self.id)
     return self._klasses
 
   def klasses_names(self):

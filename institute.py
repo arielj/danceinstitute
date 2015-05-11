@@ -132,11 +132,16 @@ class Controller(gobject.GObject):
   def list_teachers(self, widget):
     teachers = Teacher.all()
     page = TeachersList(teachers)
-    self.window.add_page(page)
-    page.connect('teacher-edit', self.edit_teacher)
-    page.connect('teacher-add', self.add_teacher)
-    self.save_signal(self.connect('teacher-changed', self.refresh_teachers, page), page)
-    return page
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      page.connect('teacher-edit', self.edit_teacher)
+      page.connect('teacher-add', self.add_teacher)
+      self.save_signal(self.connect('teacher-changed', self.refresh_teachers, page), page)
+      return page
 
   def refresh_teachers(self, widget, teacher, created, page):
     teachers = Teacher.all()
@@ -172,18 +177,30 @@ class Controller(gobject.GObject):
   def show_schedules(self, widget):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
     page = SchedulesTables(klasses)
-    self.window.add_page(page)
-    page.connect('klass-edit', self.edit_klass)
-    page.connect('klass-add', self.add_klass)
-    self.save_signal(self.connect('klass-changed', self.refresh_schedules, page), page)
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      page.connect('klass-edit', self.edit_klass)
+      page.connect('klass-add', self.add_klass)
+      self.save_signal(self.connect('klass-changed', self.refresh_schedules, page), page)
+      return page
 
   def list_klasses(self, widget):
     klasses = Klass.all()
     page = KlassesList(klasses)
-    self.window.add_page(page)
-    page.connect('klass-edit', self.edit_klass)
-    page.connect('klass-add', self.add_klass)
-    self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      page.connect('klass-edit', self.edit_klass)
+      page.connect('klass-add', self.add_klass)
+      self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+      return page
 
   def refresh_schedules(self, widget, kls, created, page):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
@@ -267,12 +284,17 @@ class Controller(gobject.GObject):
   #packages controls
   def show_packages(self, widget):
     page = PackagesList(Package.all())
-    self.window.add_page(page)
-    page.connect('package-add',self.add_package)
-    page.connect('package-edit', self.edit_package)
-    page.connect('package-delete', self.delete_package)
-    self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
-    return page
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      page.connect('package-add',self.add_package)
+      page.connect('package-edit', self.edit_package)
+      page.connect('package-delete', self.delete_package)
+      self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
+      return page
 
   def add_package(self, widget):
     package = Package()

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+import datetime
 
 class Conn(object):
   _conn = sqlite3.connect(":memory:")
@@ -13,7 +14,7 @@ class Conn(object):
             'rooms': '''CREATE TABLE rooms (name text)''',
             'memberships': '''CREATE TABLE memberships (id integer primary key, student_id integer, for_id integer, for_type text, info text)''',
             'schedules': '''CREATE TABLE schedules (id integer primary key, klass_id integer, from_time integer, to_time integer, room text, day integer)''',
-            'users': '''CREATE TABLE users (id integer primary key, name text, lastname text, dni integer, cellphone text, birthday date, address text, male integer, email text, is_teacher integer)''',
+            'users': '''CREATE TABLE users (id integer primary key, name text, lastname text, dni string, cellphone text, alt_phone text, birthday date, address text, male integer, email text, is_teacher integer, comments text default '')''',
             'klasses': '''CREATE TABLE klasses (id integer primary key, name text, normal_fee integer, half_fee integer, once_fee integer, inscription_fee integer, min_age integer, max_age integer, quota integer, info text)''',
             'klasses_teachers': '''CREATE TABLE klasses_teachers (klass_id integer, teacher_id integer)''',
             'packages': '''CREATE TABLE packages (id integer primary key, name text, fee integer, alt_fee integer)''',
@@ -47,17 +48,17 @@ class Conn(object):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id) VALUES (2015, 4, 300, 1)''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id) VALUES (2015, 5, 300, 1)''')
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (2015/03/03, 200, 1, 1)''')
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (2015/03/05, 100, 1, 1)''')
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (2015/03/07, 100, 2, 1)''')
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 200, 1, 1)''',(datetime.date(2015,3,3),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 1, 1)''',(datetime.date(2015,3,4),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 2, 1)''',(datetime.date(2015,3,1),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (1, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 0)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 3)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (2, 1900, 2030, 'Aire', 1)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (2, 1900, 2030, 'Aire', 3)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Lau', 'Gut', 35592392, '0299-15-453-4315', '1991/02/12', '9 de Julio 1140', 0, 'lali_gut@yahoo.com.ar', 1)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Tincho', 'Arce', 11111111, 'nose', '1981/02/12', 'Barrio mercantil', 1, 'tincho@sharife.com.ar', 1)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Ariel', 'Juod', 32496445, '0299-15-411-5106', '1986/07/18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0)''')
+    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Lau', 'Gut', 35592392, '0299-15-453-4315', '1991-02-12', '9 de Julio 1140', 0, 'lali_gut@yahoo.com.ar', 1)''')
+    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Tincho', 'Arce', 11111111, 'nose', '1981-02-12', 'Barrio mercantil', 1, 'tincho@sharife.com.ar', 1)''')
+    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Ariel', 'Juod', 32496445, '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0)''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('Flamenco Adultos', 350, 200, 50, 0, 15, 0, 15, 'Traer zapatos con taco ancho y una pollera larga.')''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('HipHop Adolescentes', 300, 200, 30, 0, 13, 22,30, 'Zapatillas y ropa cómoda')''')
     cls.execute('''INSERT INTO klasses_teachers (klass_id, teacher_id) VALUES (1,1)''')

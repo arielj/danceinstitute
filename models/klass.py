@@ -8,6 +8,8 @@ import schedule
 
 class Klass(Model):
   table = 'klasses'
+  fields_for_save = ['name', 'normal_fee', 'half_fee', 'once_fee',
+                     'inscription_fee', 'min_age', 'max_age', 'quota', 'info']
   
   def __init__(self, data = {}):
     self.name = ''
@@ -19,9 +21,6 @@ class Klass(Model):
     self.max_age = 0
     self.quota = 0
     self.info = ''
-    self.teacher_ids = []
-    self.schedule_ids = []
-    self.user_ids = []
     self._teachers = None
     self._schedules = None
     self._users = None
@@ -29,7 +28,7 @@ class Klass(Model):
     Model.__init__(self, data)
 
   def to_db(self):
-    return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info, 'teacher_ids': self.teacher_ids, 'schedule_ids': self.schedule_ids}
+    return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info}
 
   def _is_valid(self):
     self.validate_presence_of('name')
@@ -42,14 +41,13 @@ class Klass(Model):
     self.validate_numericallity_of('quota', great_than_or_equal = 0)
     self.validate_has_many('schedules')
 
-  def before_save(self):
-    new_ids = []
+  def after_save(self):
     for sch in self.schedules:
-      if not sch.save():
-        return False
-      new_ids.append(sch.id)
-    self.schedule_ids = new_ids
-    return True
+      sch.save(validate = False)
+
+  def update_id_on_associations(self):
+    for sch in self.schedules:
+      sch.klass_id = self.id
 
   @classmethod
   def by_room_and_time(cls, from_time, to_time):
@@ -118,3 +116,11 @@ class Klass(Model):
 
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')
+
+  @classmethod
+  def for_package(cls,package_id):
+    results = []
+    rs = cls.get_conn().execute('''SELECT klasses.* FROM klasses_packages LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id WHERE klasses_packages.package_id = ?''', (package_id,)).fetchall()
+    for r in rs:
+      results.append(cls(r))
+    return results

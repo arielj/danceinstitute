@@ -10,14 +10,14 @@ import membership
 
 class Installment(Model):
   table = 'installments'
+  fields_for_save = ['year','month','membership_id','amount']
 
   def __init__(self, data = {}):
     self._year = datetime.today().year
     self.month = 0
     self.membership_id = None
     self._membership = None
-    self.amount = 0.00
-    self.payment_ids = []
+    self._amount = 0
     self._payments = None
     
     Model.__init__(self, data)
@@ -32,6 +32,18 @@ class Installment(Model):
       self._year = int(value)
     except:
       self._year = 0
+
+  @property
+  def amount(self):
+    return self._amount/100
+
+  @amount.setter
+  def amount(self,value):
+    try:
+      v = int(Decimal(value)*100)
+    except:
+      v = 0
+    self._amount = v
 
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
@@ -55,21 +67,19 @@ class Installment(Model):
     return 'Pagado' if self.to_pay() == 0 else 'A pagar'
 
   @property
-  def membership(self, requery = False):
-    if self.membership_id and (requery or self._membership is None):
+  def membership(self):
+    if self.membership_id and self._membership is None:
       self._membership = membership.Membership.find(self.membership_id)
     return self._membership
 
   @property
-  def payments(self, requery = False):
-    if requery or self._payments is None:
-      self._payments = []
-      for i in self.payment_ids:
-        self._payments.append(payment.Payment.find(i))
+  def payments(self):
+    if self._payments is None:
+      self._payments = payment.Payment.for_installment(self.id)
     return self._payments
 
   def to_db(self):
-    return {'month': self.month, 'membership_id': self.membership_id, 'amount': self.amount, 'payment_ids': self.payment_ids}
+    return {'year': self.year, 'month': self.month, 'membership_id': self.membership_id, 'amount': self.amount}
 
   def _is_valid(self):
     self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
@@ -81,7 +91,6 @@ class Installment(Model):
       p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id, 'student_id': self.get_student_id()})
       if p.save():
         self.payments.append(p)
-        self.payment_ids.append(p.id)
         return True
       else:
         return p.full_errors()
@@ -94,3 +103,7 @@ class Installment(Model):
 
   def payments_details(self):
     return "\n".join(map(lambda p: p.to_s(), self.payments))
+
+  @classmethod
+  def for_membership(cls,membership_id):
+    return cls.get_where('membership_id',membership_id)

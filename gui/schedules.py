@@ -86,8 +86,8 @@ class SchedulesForm(gtk.VBox):
     self.pack_start(self.to_time_l,False)
     self.pack_start(self.to_time_e,False)
         
-    self.from_time_e.set_text(self.schedule.from_time)
-    self.to_time_e.set_text(self.schedule.to_time)
+    self.from_time_e.set_text(self.schedule.str_from_time())
+    self.to_time_e.set_text(self.schedule.str_to_time())
     for r in rooms:
       self.rooms[r].set_active(self.schedule.room == r)
     for d in days:
@@ -220,5 +220,5 @@ class SchedulesTable(gtk.TreeView):
   def set_model(self, schedules):
     self.schedules = schedules
     for sch in self.schedules:
-      self.store.append([sch, sch.day_name(), sch.room, sch.from_time, sch.to_time])
+      self.store.append([sch, sch.day_name(), sch.room, sch.str_from_time(), sch.str_to_time()])
 

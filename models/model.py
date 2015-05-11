@@ -128,13 +128,8 @@ class Model(object):
       results.append(cls(r))
     return results
 
-  def save(self):
-    if self.is_valid():
-      if self.is_new_record():
-        if self.__class__.db.keys():
-          self.id = max(self.__class__.db.keys())+1
-        else:
-          self.id = 1
+  def save(self, validate = True):
+    if not validate or self.is_valid():
       if self.before_save():
         self.do_save()
         self.after_save()
@@ -145,8 +140,13 @@ class Model(object):
       return False
 
   def do_save(self):
-    # meter en DB real
-    self.__class__.db[self.id] = self.to_db()
+    if self.id is None:
+      self.id = Conn.execute('INSERT INTO ' + self.table + '(' + ', '.join(self.fields_for_save) + ') VALUES (' + ', '.join(map(lambda f: ':'+f, self.fields_for_save)) + ')', self.to_db()).lastrowid
+      self.update_id_on_associations()
+    else:
+      values = self.to_db()
+      values['id'] = self.id
+      Conn.execute('UPDATE ' + self.table + ' SET ' + ', '.join(map(lambda k: k+'=:'+k, self.fields_for_save)) + ' WHERE id = :id', values )
 
   def before_save(self):
     return True
@@ -174,3 +174,6 @@ class Model(object):
   @classmethod
   def get_conn(cls):
     return Conn
+
+  def update_id_on_associations(self):
+    return True

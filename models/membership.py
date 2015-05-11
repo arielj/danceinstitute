@@ -12,6 +12,7 @@ import package
 
 class Membership(Model):
   table = 'memberships'
+  fields_for_save = ['student_id','for_id','for_type','info']
 
   def __init__(self, data = {}):
     self.student_id = None
@@ -19,7 +20,6 @@ class Membership(Model):
     self.for_id = None
     self.for_type = ''
     self._for = None
-    self.installment_ids = []
     self._installments = None
     self.info = ''
     self.active = True
@@ -27,8 +27,8 @@ class Membership(Model):
     Model.__init__(self, data)
 
   @property
-  def klass_or_package(self, requery = False):
-    if self.for_id and (requery or self._for is None):
+  def klass_or_package(self):
+    if self.for_id and self._for is None:
       if self.for_type == 'Package':
         self._for = package.Package.find(self.for_id)
       elif self.for_type == 'Klass':
@@ -49,23 +49,20 @@ class Membership(Model):
       return obj.fee
 
   @property
-  def student(self, requery = False):
-    if requery or self._student is None:
+  def student(self):
+    if self.student_id and self._student is None:
       self._student = student.Student.find(self.student_id)
     return self._student
 
   @property
-  def installments(self, requery = False):
-    if requery or self._installments is None:
-      self._installments = []
-      for i in self.installment_ids:
-        self._installments.append(installment.Installment.find(i))
+  def installments(self):
+    if self._installments is None:
+      self._installments = installment.Installment.for_membership(self.id)
     return self._installments
 
   def add_installment(self, i):
-    if i.id not in self.installment_ids:
+    if i.id not in map(lambda i: i.id, self.installments):
       self.installments.append(i)
-      self.installment_ids.append(i.id)
 
   def create_installments(self, year, initial_month, final_month, fee):
     year = year
@@ -98,7 +95,7 @@ class Membership(Model):
     return {'normal': 'Normal', 'half': 'Mitad de clases', 'once': 'Una sola clase'}
 
   def to_db(self):
-    return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info, 'installment_ids': self.installment_ids}
+    return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info}
 
   def _is_valid(self):
     return True
@@ -111,3 +108,7 @@ class Membership(Model):
 
   def is_package(self):
     return self.for_type == 'Package'
+
+  @classmethod
+  def for_student(cls,st_id):
+    return cls.get_where('student_id',st_id)
