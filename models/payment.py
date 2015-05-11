@@ -4,9 +4,7 @@ import installment
 import student
 
 class Payment(Model):
-  db = {1: {'date': '2015/03/03', 'amount': 200, 'installment_id': 1, 'student_id': 1},
-        2: {'date': '2015/03/05', 'amount': 100, 'installment_id': 1, 'student_id': 1},
-        3: {'date': '2015/03/07', 'amount': 100, 'installment_id': 2, 'student_id': 1}}
+  table = 'payments'
 
   def __init__(self, attrs = {}):
     self._amount = 0.00

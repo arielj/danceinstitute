@@ -6,7 +6,7 @@ from model import Model
 import klass
 
 class Package(Model):
-  db = {1: {'name': 'Paquete A', 'klass_ids': [1,2], 'fee': 500, 'alt_fee': 350}}
+  table = 'packages'
   
   def __init__(self, attrs = {}):
     self.name = ''

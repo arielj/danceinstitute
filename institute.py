@@ -5,6 +5,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gobject
+from database import Conn
 from gui import *
 from settings import Settings
 from models import *
@@ -22,6 +23,7 @@ class Controller(gobject.GObject):
     gtk.main_quit()
 
   def __init__(self):
+    Conn.create_tables()
     gobject.GObject.__init__(self)
     self.settings = Settings.get_settings()
 
@@ -65,6 +67,7 @@ class Controller(gobject.GObject):
     self.connect_object('klass-changed', self.show_status, 'Clase guardada.')
     self.connect_object('student-changed', self.show_status, 'Alumno guardado.')
     self.connect_object('teacher-changed', self.show_status, 'Profesor guardado.')
+    self.connect_object('settings-changed', self.show_status, 'Configuración guardada.')
 
   def show_help_dialog(self, widget, dialog_class):
     dialog = eval(dialog_class)()
@@ -86,7 +89,13 @@ class Controller(gobject.GObject):
     if current:
       self.window.focus_page(current)
     else:
+      page.submit.connect('clicked', self.save_config, page)
       self.window.add_page(page)
+
+  def save_config(self, button, page):
+    self.settings.set_values(page.get_values())
+    if self.settings.save():
+      self.emit('settings-changed')
 
 
 
@@ -491,7 +500,12 @@ gobject.signal_new('membership-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (int,))
-                   #klass object, creation(True value means the user just got created)
+                   #membership id
+
+gobject.signal_new('settings-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 if __name__ == "__main__":
   ctrlr = Controller()

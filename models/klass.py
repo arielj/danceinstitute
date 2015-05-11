@@ -7,10 +7,8 @@ import teacher
 import schedule
 
 class Klass(Model):
-  #borrar después
-  db = {1: {'name': 'Flamenco Adultos', 'normal_fee': 350, 'half_fee': 200, 'once_fee': 50, 'inscription_fee': 0, 'min_age': 15, 'max_age': 0, 'quota': 15, 'info': 'Traer zapatos con taco ancho y una pollera larga.', 'teacher_ids': [1], 'schedule_ids': [1,2]},
-        2: {'name': 'HipHop Adolescentes', 'normal_fee': 300, 'half_fee': 200, 'once_fee': 30, 'inscription_fee': 0, 'min_age': 13, 'max_age': 22, 'quota': 30, 'info': 'Zapatillas y ropa cómoda', 'teacher_ids': [2], 'schedule_ids': [3,4]}}
-
+  table = 'klasses'
+  
   def __init__(self, data = {}):
     self.name = ''
     self.normal_fee = 0
@@ -24,9 +22,9 @@ class Klass(Model):
     self.teacher_ids = []
     self.schedule_ids = []
     self.user_ids = []
-    self._teachers = []
-    self._schedules = []
-    self._users = []
+    self._teachers = None
+    self._schedules = None
+    self._users = None
     
     Model.__init__(self, data)
 
@@ -84,22 +82,19 @@ class Klass(Model):
 
   @property
   def teachers(self, requery = False):
-    if requery or not self._teachers:
-      self._teachers = []
-      for id in self.teacher_ids:
-        self._teachers.append(teacher.Teacher.find(id))
+    if requery or self._teachers is None:
+      self._teachers = teacher.Teacher.for_klass(self)
     return self._teachers
 
   @property
   def schedules(self, requery = False):
-    if requery or not self._schedules:
-      self._teachers = []
-      for id in self.schedule_ids:
-        self._schedules.append(schedule.Schedule.find(id))
+    if requery or self._schedules is None:
+      self._schedules = schedule.Schedule.for_klass(self)
     return self._schedules
 
   def add_schedule(self, schedule):
     self.schedules.append(schedule)
+    schedule.klass_id = self.id
     if not schedule.is_new_record():
       self.schedule_ids.append(schedule.id)
 

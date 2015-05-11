@@ -11,8 +11,7 @@ import klass
 import package
 
 class Membership(Model):
-  #borrar después
-  db = {1: {'student_id': 1, 'for_id': 1, 'for_type': 'Klass', 'installment_ids': [1,2], 'info': 'Clase normal lalala'}}
+  table = 'memberships'
 
   def __init__(self, data = {}):
     self.student_id = None

@@ -1,11 +1,11 @@
-class Settings():
+class Settings(object):
   db = {'language': 'es', 'startup_size': '', 'opening': '18:00', 'closing': '24:00', 'name': 'Instituto Superior de Danzas Sharife', 'tab_position': 'top', 'recharge_after': 10, 'recharge_value': '50'}
   _settings = None
 
   def __init__(self):
     self.language = 'en'
     self.startup_size = ''
-    self.opening = '00:00'
+    self.opening = '09:00'
     self.closing = '24:00'
     self.name = ''
     self.tabs_position = 'top'
@@ -29,3 +29,11 @@ class Settings():
       setattr(cls._settings,k,cls.db[k])
     return cls._settings
 
+  def set_values(self, data):
+    for k in data:
+      setattr(self,k,data[k])
+
+  def save(self):
+    for k in vars(self):
+      db[k] = getattr(self,k)
+    return True

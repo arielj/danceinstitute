@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from database import Conn
 from translations import _a, _e
 from decimal import Decimal
 import re
@@ -107,15 +108,24 @@ class Model(object):
 
   @classmethod
   def find(cls, id):
-    obj = cls(cls.db[id])
-    obj.id = id
-    return obj
+    return cls.find_by('id',id)
+
+  @classmethod
+  def find_by(cls, field, value):
+    return cls(Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone())
 
   @classmethod
   def all(cls):
     results = []
-    for i in cls.db:
-      results.append(cls.find(i))
+    for r in Conn.execute('SELECT * FROM '+cls.table).fetchall():
+      results.append(cls(r))
+    return results
+
+  @classmethod
+  def get_where(cls,field,value):
+    results = []
+    for r in Conn.execute('SELECT * FROM '+cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchall():
+      results.append(cls(r))
     return results
 
   def save(self):
@@ -160,3 +170,7 @@ class Model(object):
 
   def after_delete(self):
     return True
+
+  @classmethod
+  def get_conn(cls):
+    return Conn

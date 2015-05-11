@@ -9,10 +9,8 @@ import payment
 import membership
 
 class Installment(Model):
-  #borrar después
-  db = {1: {'year': 2015, 'month': 4, 'amount': 300, 'payment_ids': [1,2], 'membership_id': 1},
-        2: {'year': 2015, 'month': 5, 'amount': 300, 'payment_ids': [3], 'membership_id': 1}}
-  
+  table = 'installments'
+
   def __init__(self, data = {}):
     self._year = datetime.today().year
     self.month = 0

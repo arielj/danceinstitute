@@ -7,13 +7,10 @@ import datetime
 from translations import _t, ts
 
 class Schedule(Model):
-  #borrar después
-  db = {1: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 0},
-        2: {'from_time': '20:00', 'to_time': '21:30', 'room': 'Fuego', 'day': 3},
-        3: {'from_time': '19:00', 'to_time': '20:00', 'room': 'Aire', 'day': 1},
-        4: {'from_time': '19:00', 'to_time': '20:30', 'room': 'Aire', 'day': 3},}
-    
+  table = 'schedules'
+
   def __init__(self, attrs = {}):
+    self.klass_id = None
     self.from_time = '00:00'
     self.to_time = '00:00'
     self.day = 0
@@ -58,5 +55,8 @@ class Schedule(Model):
 
   @classmethod
   def possible_rooms(cls):
-    return Room.all()
+    return map(lambda r: r.name, Room.all())
 
+  @classmethod
+  def for_klass(cls,kls):
+    return cls.get_where('klass_id',kls.id)
