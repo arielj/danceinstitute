@@ -4,6 +4,10 @@
 langs = ['en','es']
 lang = 'es'
 
+def set_lang(l):
+  if l in langs:
+    lang = l
+
 ts = {
   'common': {
     'months': [

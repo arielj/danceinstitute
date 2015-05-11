@@ -11,14 +11,11 @@ class Student(User):
 
   @classmethod
   def search(cls, value):
-    if value == 'Lau':
-      return [cls.find(1)]
-    elif value == 'Tincho':
-      return [cls.find(2)]
-    elif value == 'Prof':
-      return [cls.find(1),cls.find(2)]
-    else:
-      return cls.all()
+    results = []
+    rs = cls.get_conn().execute("SELECT * FROM users WHERE is_teacher = 0 AND (name LIKE :value OR lastname LIKE :value OR dni LIKE :value)", {'value': "%"+value+"%"}).fetchall()
+    for r in rs:
+      results.append(cls(r))
+    return results
 
   @property
   def memberships(self):

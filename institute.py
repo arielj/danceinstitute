@@ -9,6 +9,7 @@ from database import Conn
 from gui import *
 from settings import Settings
 from models import *
+import translations
 
 class Controller(gobject.GObject):
   def main(self):
@@ -42,6 +43,8 @@ class Controller(gobject.GObject):
     
     self.bind_status_signals()
     self.connected_signals = {}
+    
+    self.connect('settings-changed', self.on_settings_changed)
 
   def close_tab(self, window, page):
     self.window.remove_page(page)
@@ -97,6 +100,12 @@ class Controller(gobject.GObject):
     if self.settings.save():
       self.emit('settings-changed')
 
+  def on_settings_changed(self, *data):
+    translations.set_lang(self.settings.language)
+    pos = gtk.POS_TOP if self.settings.tabs_position == 'top' else gtk.POS_LEFT
+    if self.window.notebook.get_tab_pos() != pos:
+      self.window.notebook.set_tab_pos(pos)
+    
 
 
   #teachers controls

@@ -51,7 +51,7 @@ class Conn(object):
     cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 200, 1, 1)''',(datetime.date(2015,3,3),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 1, 1)''',(datetime.date(2015,3,4),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 2, 1)''',(datetime.date(2015,3,1),))
-    cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (1, 1, 'Klass', 'Clase normal lalala')''')
+    cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 0)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 3)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (2, 1900, 2030, 'Aire', 1)''')
@@ -66,6 +66,14 @@ class Conn(object):
     cls.execute('''INSERT INTO packages (name, fee, alt_fee) VALUES ('Paquete A', 500, 350)''')
     cls.execute('''INSERT INTO klasses_packages (klass_id, package_id) VALUES (1,1)''')
     cls.execute('''INSERT INTO klasses_packages (klass_id, package_id) VALUES (2,1)''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('name','Instituto Superior de Danzas Sharife')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('opening','18:00')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('closing','24:00')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_after','10')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_value','50')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('startup_size','')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
     cls.commit()
 
   @classmethod

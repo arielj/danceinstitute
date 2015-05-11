@@ -1,5 +1,6 @@
+from database import Conn
+
 class Settings(object):
-  db = {'language': 'es', 'startup_size': '', 'opening': '18:00', 'closing': '24:00', 'name': 'Instituto Superior de Danzas Sharife', 'tab_position': 'top', 'recharge_after': 10, 'recharge_value': '50'}
   _settings = None
 
   def __init__(self):
@@ -25,8 +26,8 @@ class Settings(object):
   @classmethod
   def load_settings(cls):
     cls._settings = cls()
-    for k in cls.db:
-      setattr(cls._settings,k,cls.db[k])
+    for r in Conn.execute('SELECT * FROM settings').fetchall():
+      setattr(cls._settings,r['key'],r['value'])
     return cls._settings
 
   def set_values(self, data):
@@ -35,5 +36,5 @@ class Settings(object):
 
   def save(self):
     for k in vars(self):
-      db[k] = getattr(self,k)
+      Conn.execute('UPDATE settings SET value=:value WHERE key=:key', {'key': k, 'value': getattr(self,k)})
     return True

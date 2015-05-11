@@ -24,17 +24,28 @@ class Config(gtk.ScrolledWindow):
     self.show_all()
 
   def create_form(self):
-    self.add_field('Nombre del instituto/academia', attrs=100).set_text(str(getattr(self.settings,'name')))
-    self.add_field('Horario de apertura', attrs=5).set_text(str(getattr(self.settings,'opening')))
-    self.add_field('Horario de cierre', attrs=5).set_text(str(getattr(self.settings,'closing')))
-    self.add_field('Recargo luego del día', attrs=2).set_text(str(getattr(self.settings,'recharge_after')))
-    self.add_field('Valor del recargo (formato: 10 o 10%)', attrs=10).set_text(str(getattr(self.settings,'recharge_value')))
-    self.add_field('Idioma', attrs=2).set_text(str(getattr(self.settings,'language')))
+    self.name_e = self.add_field('Nombre del instituto/academia', attrs=100)
+    self.name_e.set_text(str(getattr(self.settings,'name')))
+    
+    self.opening_e = self.add_field('Horario de apertura', attrs=5)
+    self.opening_e.set_text(str(getattr(self.settings,'opening')))
+    self.closing_e = self.add_field('Horario de cierre', attrs=5)
+    self.closing_e.set_text(str(getattr(self.settings,'closing')))
+    self.recharge_after_e = self.add_field('Recargo luego del día', attrs=2)
+    self.recharge_after_e.set_text(str(getattr(self.settings,'recharge_after')))
+    self.recharge_value_e = self.add_field('Valor del recargo (formato: 10 o 10%)', attrs=10)
+    self.recharge_value_e.set_text(str(getattr(self.settings,'recharge_value')))
+    self.language_e = self.add_field('Idioma', attrs=2)
+    self.language_e.set_text(str(getattr(self.settings,'language')))
 
-    self.add_field('Posición de las pestañas', attrs=4).set_text(str(getattr(self.settings,'tab_position')))
-    self.add_field('Tamaño inicial (formato: 1024x768)', attrs=15).set_text(str(getattr(self.settings,'startup_size')))
+    self.tabs_position_e = self.add_field('Posición de las pestañas', attrs=4)
+    self.tabs_position_e.set_text(str(getattr(self.settings,'tabs_position')))
+    self.startup_size_e = self.add_field('Tamaño inicial (formato: 1024x768)', attrs=15)
+    self.startup_size_e.set_text(str(getattr(self.settings,'startup_size')))
     
     self.submit = gtk.Button('Guardar')
+    
+    self.vbox.pack_start(self.submit, False)
 
   def add_field(self, label, attrs=None, box=None):
     field = gtk.VBox()
@@ -50,3 +61,6 @@ class Config(gtk.ScrolledWindow):
 
   def get_tab_label(self):
     return "Configuración"
+
+  def get_values(self):
+    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tab_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text()}
