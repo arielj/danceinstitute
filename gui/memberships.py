@@ -285,7 +285,7 @@ class AddPaymentForm(gtk.VBox):
     field = gtk.VBox()
     self.date_l = gtk.Label('Fecha')
     self.date_e = gtk.Entry(10)
-    self.date_e.set_text(datetime.datetime.today().strftime('%Y/%m/%d'))
+    self.date_e.set_text(datetime.datetime.today().strftime('%Y-%m-%d'))
     field.pack_start(self.date_l, False)
     field.pack_start(self.date_e, False)
     self.pack_start(field, False)

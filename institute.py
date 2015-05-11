@@ -412,10 +412,8 @@ class Controller(gobject.GObject):
       membership = dialog.form.object
       membership.set_attrs(dialog.form.get_values())
       membership.student_id = page.object.id
-      if membership.is_valid():
-        membership.save()
+      if membership.save():
         page.object.add_membership(membership)
-        page.object.save()
         page.update_memberships()
       else:
         ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
@@ -431,6 +429,7 @@ class Controller(gobject.GObject):
 
   def delete_membership(self, dialog, response, membership):
     if response == gtk.RESPONSE_ACCEPT:
+      membership.student.remove_membership(membership)
       membership.delete()
       self.emit('membership-deleted', membership.id)
 

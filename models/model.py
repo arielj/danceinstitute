@@ -161,9 +161,11 @@ class Model(object):
     return not self.is_new_record()
 
   def delete(self):
-    self.before_delete()
-    del self.__class__.db[self.id]
-    self.after_delete()
+    if self.before_delete():
+      self.do_delete()
+      self.after_delete()
+      return True
+    return False
 
   def before_delete(self):
     return True
@@ -177,3 +179,6 @@ class Model(object):
 
   def update_id_on_associations(self):
     return True
+
+  def do_delete(self):
+    Conn.execute('DELETE from ' + self.table + ' WHERE id = ?', (self.id, ))

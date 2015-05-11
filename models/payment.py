@@ -1,5 +1,6 @@
 from decimal import Decimal
 from model import Model
+import datetime
 import installment
 import student
 
@@ -13,7 +14,7 @@ class Payment(Model):
     self._installment = None
     self.student_id = None
     self._student = None
-    self._date = None
+    self._date = datetime.datetime.now().date()
     Model.__init__(self, attrs)
 
   @property
@@ -60,27 +61,30 @@ class Payment(Model):
   def date(self):
     return self._date
 
-  @property
+  @date.setter
   def date(self,value):
-    try:
-      self._date = datetime.datetime.strptime(value,'%Y/%m/%d').date()
-    except:
+    if isinstance(value,datetime.date):
+      self._date = value
+    else:
       try:
-        self._date = datetime.datetime.strptime(value,'%Y/%d/%m').date()
+        self._date = datetime.datetime.strptime(value,'%Y/%m/%d').date()
       except:
         try:
-          self._date = datetime.datetime.strptime(value,'%Y-%m-%d').date()
+          self._date = datetime.datetime.strptime(value,'%Y/%d/%m').date()
         except:
           try:
-            self._date = datetime.datetime.strptime(value,'%Y-%d-%m').date()
+            self._date = datetime.datetime.strptime(value,'%Y-%m-%d').date()
           except:
             try:
-              self._date = datetime.datetime.strptime(value,'%d-%m-%Y').date()
+              self._date = datetime.datetime.strptime(value,'%Y-%d-%m').date()
             except:
               try:
-                self._date = datetime.datetime.strptime(value,'%d/%m/%Y').date()
+                self._date = datetime.datetime.strptime(value,'%d-%m-%Y').date()
               except:
-                self._date = ''
+                try:
+                  self._date = datetime.datetime.strptime(value,'%d/%m/%Y').date()
+                except:
+                  self._date = ''
 
   def _is_valid(self):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
