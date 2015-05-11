@@ -29,11 +29,13 @@ class License(gtk.Dialog):
     except:
       return 'No se pudo leer el archivo de licensia'
 
-class About(gtk.Dialog):
+class About(gtk.AboutDialog):
   def __init__(self):
-    gtk.Dialog.__init__(self, self.get_tab_label(), None,
-                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
-                       ())
-
-  def get_tab_label(self):
-    return 'Acerca de'
+    name = 'Dancing'
+    gtk.AboutDialog.__init__(self)
+    self.set_program_name(name)
+    self.set_comments('Software to manage a dance institute/academy')
+    self.set_version('0.1')
+    self.set_website('https://github.com/arielj/danceinstitute')
+    self.set_authors(['Ariel Juodziukynas'])
+    self.set_title('Acerca de')

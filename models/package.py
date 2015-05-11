@@ -7,25 +7,38 @@ import klass
 
 class Package(Model):
   table = 'packages'
+  fields_for_save = ['name','fee','alt_fee']
   
   def __init__(self, attrs = {}):
     self.name = ''
     self.klass_ids = []
     self._klasses = None
-    self._fee = 0.00
-    self.alt_fee = 0.00
+    self._fee = 0
+    self._alt_fee = 0
     Model.__init__(self,attrs)
 
   @property
   def fee(self):
-    return self._fee
+    print self._fee/100
+    return self._fee/100
   
   @fee.setter
   def fee(self,value):
     try:
-      self._fee = Decimal(value)
+      self._fee = int(Decimal(value)*100)
     except:
-      self._fee = 0.00
+      self._fee = 0
+
+  @property
+  def alt_fee(self):
+    return self._alt_fee/100
+  
+  @alt_fee.setter
+  def alt_fee(self,value):
+    try:
+      self._alt_fee = int(Decimal(value)*100)
+    except:
+      self._alt_fee = 0
 
   @property
   def klasses(self):
@@ -37,10 +50,18 @@ class Package(Model):
     return ', '.join(map(lambda x: x.name, self.klasses))
 
   def to_db(self):
-    return {'name': self.name, 'klass_ids': self.klass_ids, 'fee': self.fee, 'alt_fee': self.alt_fee}
+    return {'name': self.name, 'fee': self._fee, 'alt_fee': self._alt_fee}
+
+  def after_save(self):
+    c = self.__class__.get_conn()
+    for k in self.klasses:
+      args = {'klass_id': k.id, 'package_id': self.id}
+      if c.execute('SELECT COUNT(*) FROM klasses_packages WHERE klass_id = :klass_id AND package_id = :package_id', args).fetchone()[0] == 0:
+        self.__class__.get_conn().execute('INSERT INTO klasses_packages (klass_id,package_id) VALUES (:klass_id,:package_id)', args)
 
   def _is_valid(self):
     self.validate_presence_of('name')
     self.validate_numericallity_of('fee', great_than = 0)
-    self.validate_quantity_of('klass_ids', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
+    if self.is_new_record():
+      self.validate_quantity_of('klass_ids', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
 
