@@ -119,8 +119,5 @@ class Klass(Model):
 
   @classmethod
   def for_package(cls,package_id):
-    results = []
-    rs = cls.get_conn().execute('''SELECT klasses.* FROM klasses_packages LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id WHERE klasses_packages.package_id = ?''', (package_id,)).fetchall()
-    for r in rs:
-      results.append(cls(r))
-    return results
+    return cls.get_many('SELECT klasses.* FROM klasses_packages LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id WHERE klasses_packages.package_id = ?',(package_id,))
+

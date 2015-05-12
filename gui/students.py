@@ -90,6 +90,9 @@ class StudentForm(FormFor):
   def on_membership_deleted(self, emmiter, m_id):
     self.memberships_panel.on_membership_deleted(m_id)
 
+  def on_payment_deleted(self, emmiter, p_id):
+    self.memberships_panel.on_payment_deleted(p_id)
+
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):
     return "Buscar alumno/a"

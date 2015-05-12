@@ -7,10 +7,11 @@ import datetime
 class Conn(object):
   _conn = sqlite3.connect(":memory:")
   _conn.row_factory = sqlite3.Row
+  _conn.text_factory = str
 
   CREATE = {'settings': '''CREATE TABLE settings (key text, value text)''',
             'installments': '''CREATE TABLE installments (id integer primary key, year integer, month integer, membership_id integer, amount integer)''',
-            'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, student_id integer)''',
+            'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, student_id integer, description text default '')''',
             'rooms': '''CREATE TABLE rooms (name text)''',
             'memberships': '''CREATE TABLE memberships (id integer primary key, student_id integer, for_id integer, for_type text, info text)''',
             'schedules': '''CREATE TABLE schedules (id integer primary key, klass_id integer, from_time integer, to_time integer, room text, day integer)''',
@@ -48,9 +49,10 @@ class Conn(object):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id) VALUES (2015, 4, 300, 1)''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id) VALUES (2015, 5, 300, 1)''')
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 200, 1, 1)''',(datetime.date(2015,3,3),))
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 1, 1)''',(datetime.date(2015,3,4),))
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 2, 1)''',(datetime.date(2015,3,1),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 200, 1, 3)''',(datetime.date(2015,3,3),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 1, 3)''',(datetime.date(2015,3,4),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, student_id) VALUES (?, 100, 2, 3)''',(datetime.date(2015,3,1),))
+    cls.execute('''INSERT INTO payments (date, amount, description, student_id) VALUES (?, 100, 'Inscripción', 3)''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 0)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room, day) VALUES (1, 2000, 2130, 'Fuego', 3)''')

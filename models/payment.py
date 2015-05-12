@@ -1,3 +1,6 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 from decimal import Decimal
 from model import Model
 import datetime
@@ -6,7 +9,7 @@ import student
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount','installment_id','student_id','date']
+  fields_for_save = ['amount','installment_id','student_id','date','description']
 
   def __init__(self, attrs = {}):
     self._amount = 0
@@ -15,6 +18,7 @@ class Payment(Model):
     self.student_id = None
     self._student = None
     self._date = datetime.datetime.now().date()
+    self._description = ''
     Model.__init__(self, attrs)
 
   @property
@@ -28,6 +32,22 @@ class Payment(Model):
     except:
       v = 0
     self._amount = v
+
+  @property
+  def description(self):
+    descs = []
+    if self._description:
+      descs.append(self._description)
+    
+    ins = self.installment
+    if ins:
+      descs.append(ins.membership.klass.name + ' ' + ins.month_name() + ' ' + str(ins.year))
+    return ' '.join(descs)
+
+  @description.setter
+  def description(self, value):
+    value = value or ''
+    self._description = value
 
   @property
   def student(self):
@@ -90,7 +110,7 @@ class Payment(Model):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'student_id': self.student_id}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'student_id': self.student_id, 'description': self._description}
 
   def to_s(self):
     return str(self.date) + ": $" + str(self.amount)
@@ -98,3 +118,12 @@ class Payment(Model):
   @classmethod
   def for_installment(cls,ins_id):
     return cls.get_where('installment_id',ins_id)
+
+  @classmethod
+  def for_student(cls,st_id,include_installments = True):
+    q = 'SELECT * FROM payments WHERE student_id = :st_id'
+    args = {'st_id': st_id}
+    if include_installments:
+      return cls.get_many(q,args)
+    else:
+      return cls.get_many(q + ' AND installment_id IS NULL',args)

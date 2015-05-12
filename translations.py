@@ -74,7 +74,8 @@ class I18n():
       },
       'payment': {
         'date': ['Date','Fecha'],
-        'amount': ['Amount','Monto']
+        'amount': ['Amount','Monto'],
+        'description': ['Description','Descripción']
       },
       'schedule': {
         'from_time': ['From','Desde'],

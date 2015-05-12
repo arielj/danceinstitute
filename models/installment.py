@@ -104,6 +104,11 @@ class Installment(Model):
   def payments_details(self):
     return "\n".join(map(lambda p: p.to_s(), self.payments))
 
+  def build_payment(self, data = {}):
+    p = payment.Payment(data)
+    p.installment_id = self.id
+    return p
+
   @classmethod
   def for_membership(cls,membership_id):
     return cls.get_where('membership_id',membership_id)

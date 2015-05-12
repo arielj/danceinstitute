@@ -182,3 +182,10 @@ class Model(object):
 
   def do_delete(self):
     Conn.execute('DELETE from ' + self.table + ' WHERE id = ?', (self.id, ))
+
+  @classmethod
+  def get_many(cls,query, params = ()):
+    results = []
+    for r in Conn.execute(query,params).fetchall():
+      results.append(cls(r))
+    return results

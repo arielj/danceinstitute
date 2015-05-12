@@ -71,6 +71,7 @@ class Controller(gobject.GObject):
     self.connect_object('student-changed', self.show_status, 'Alumno guardado.')
     self.connect_object('teacher-changed', self.show_status, 'Profesor guardado.')
     self.connect_object('settings-changed', self.show_status, 'Configuración guardada.')
+    self.connect_object('payment-deleted', self.show_status, 'Pago eliminado.')
 
   def show_help_dialog(self, widget, dialog_class):
     dialog = eval(dialog_class)()
@@ -366,7 +367,9 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
     page.memberships_panel.connect('add-installments', self.add_installments, page)
     page.memberships_panel.connect('add-payment', self.add_payment, page)
+    page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
+    self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
     self.window.add_page(page)
     return page
 
@@ -468,24 +471,41 @@ class Controller(gobject.GObject):
 
   #payments controls
   def add_payment(self, widget, installment, page):
-    dialog = AddPaymentDialog(installment)
+    if installment:
+      payment = installment.build_payment({'student_id': page.object.id})
+    else:
+      payment = Payment({'student_id': page.object.id})
+      
+    dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page)
     dialog.run()
   
   def on_add_payment(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
-      installment = dialog.installment
+      payment = dialog.payment
       data = dialog.form.get_values()
-      created = installment.add_payment(date = data['date'], amount = data['amount'])
-      if created is True:
+      payment.set_attrs(data)
+      if payment.save():
         page.update_memberships()
       else:
-        ErrorMessage('No se pudo cargar el pago:', created).run()
+        ErrorMessage('No se pudo cargar el pago:', payment.full_errors()).run()
         destroy_dialog = False
 
     if destroy_dialog:
       dialog.destroy()
+
+  def ask_delete_payment(self, widget, payment, page):
+    dialog = ConfirmDialog('Vas a borrar el pago: '+payment.description+"\n¿Estás seguro?")
+    dialog.connect('response', self.delete_payment, payment)
+    dialog.run()
+
+  def delete_payment(self, dialog, response, payment):
+    if response == gtk.RESPONSE_ACCEPT:
+      payment.delete()
+      self.emit('payment-deleted', payment.id)
+
+    dialog.destroy()
 
 
 
@@ -531,6 +551,13 @@ gobject.signal_new('membership-deleted', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (int,))
                    #membership id
+
+gobject.signal_new('payment-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #payment id
+
 
 gobject.signal_new('settings-changed', \
                    Controller, \

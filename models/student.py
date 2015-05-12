@@ -3,6 +3,7 @@
 
 from user import User
 import membership
+import payment
 
 class Student(User):
   def __init__(self, data = {}):
@@ -11,11 +12,7 @@ class Student(User):
 
   @classmethod
   def search(cls, value):
-    results = []
-    rs = cls.get_conn().execute("SELECT * FROM users WHERE is_teacher = 0 AND (name LIKE :value OR lastname LIKE :value OR dni LIKE :value)", {'value': "%"+value+"%"}).fetchall()
-    for r in rs:
-      results.append(cls(r))
-    return results
+    return cls.get_many("SELECT * FROM users WHERE is_teacher = 0 AND (name LIKE :value OR lastname LIKE :value OR dni LIKE :value)", {'value': "%"+value+"%"})
 
   @property
   def memberships(self):
@@ -43,3 +40,6 @@ class Student(User):
   def update_id_on_associations(self):
     for m in self.memberships:
       m.student_id = self.id
+
+  def get_payments(self, include_installments = True):
+    return payment.Payment.for_student(self.id, include_installments)
