@@ -5,22 +5,22 @@ import gtk
 import gobject
 from forms import FormFor
 
-class PackagesList(gtk.ScrolledWindow):
-  def __init__(self, packages, with_actions = True):
+class RoomsList(gtk.ScrolledWindow):
+  def __init__(self, rooms, with_actions = True):
     gtk.ScrolledWindow.__init__(self)
     self.set_border_width(4)
     self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    self.packages = packages
+    self.rooms = rooms
     self.with_actions = with_actions
     
     self.vbox = gtk.VBox()
     
-    self.packages_t = PackagesTable(packages)
-    self.packages_t.connect('row-activated', self.on_row_activated)
-    self.t_selection = self.packages_t.get_selection()
+    self.rooms_t = RoomsTable(rooms)
+    self.rooms_t.connect('row-activated', self.on_row_activated)
+    self.t_selection = self.rooms_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
     
-    self.vbox.pack_start(self.packages_t, True)
+    self.vbox.pack_start(self.rooms_t, True)
     
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
@@ -47,16 +47,16 @@ class PackagesList(gtk.ScrolledWindow):
     self.show_all()
 
   def get_tab_label(self):
-    return 'Paquetes'
+    return 'Salas'
 
-  def refresh_list(self, packages):
-    self.packages_t.update(packages)
+  def refresh_list(self, rooms):
+    self.rooms_t.update(rooms)
 
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
     itr = model.get_iter(path)
-    package = model.get_value(itr, 0)
-    self.emit('package-edit', package.id)
+    room = model.get_value(itr, 0)
+    self.emit('room-edit', room.id)
 
   def on_selection_changed(self, selection):
     if self.with_actions:
@@ -66,50 +66,49 @@ class PackagesList(gtk.ScrolledWindow):
     self.emit('selection-changed', selection)
 
   def on_add_clicked(self, btn):
-    self.emit('package-add')
+    self.emit('room-add')
 
   def on_edit_clicked(self, btn):
-    package = self.get_selected()
-    if package is not None:
-      self.emit('package-edit', package)
+    room = self.get_selected()
+    if room is not None:
+      self.emit('room-edit', room)
 
   def on_delete_clicked(self, btn):
-    package = self.get_selected()
-    if package is not None:
-      self.emit('package-delete', package)
+    room = self.get_selected()
+    if room is not None:
+      self.emit('room-delete', room)
 
   def get_selected(self):
     model, iter = self.t_selection.get_selected()
     return model.get_value(iter,0) if iter is not None else None
 
-gobject.type_register(PackagesList)
-gobject.signal_new('package-edit', \
-                   PackagesList, \
+gobject.type_register(RoomsList)
+gobject.signal_new('room-edit', \
+                   RoomsList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('package-delete', \
-                   PackagesList, \
+gobject.signal_new('room-delete', \
+                   RoomsList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('package-add', \
-                   PackagesList, \
+gobject.signal_new('room-add', \
+                   RoomsList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 gobject.signal_new('selection-changed', \
-                   PackagesList, \
+                   RoomsList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
-class PackagesTable(gtk.TreeView):
-  def __init__(self, packages):
-    self.create_store(packages)
+class RoomsTable(gtk.TreeView):
+  def __init__(self, rooms):
+    self.create_store(rooms)
     
     gtk.TreeView.__init__(self,self.store)
     
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
     self.add_column('Nombre', 1)
-    self.add_column('Clases', 2)
 
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
@@ -117,24 +116,24 @@ class PackagesTable(gtk.TreeView):
     self.append_column(col)
     return col
   
-  def create_store(self, packages):
-    # package, name, klasses names
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str)
-    self.update(packages)
+  def create_store(self, rooms):
+    # room, name, klasses names
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    self.update(rooms)
 
-  def update(self, packages):
+  def update(self, rooms):
     self.store.clear()
-    self.set_model(packages)
+    self.set_model(rooms)
   
-  def set_model(self, packages):
-    for p in packages:
-      self.store.append((p,p.name,p.klasses_names()))
+  def set_model(self, rooms):
+    for r in rooms:
+      self.store.append((r,r.name))
 
-class PackageForm(FormFor):
-  def __init__(self, package, klasses):
-    FormFor.__init__(self, package)
+class RoomForm(FormFor):
+  def __init__(self, room):
+    FormFor.__init__(self, room)
 
-    self.klasses= klasses
+    self.room = room
 
     self.create_form_fields()
     
@@ -147,48 +146,14 @@ class PackageForm(FormFor):
 
   def get_tab_label(self):
     if self.object.id:
-      return "Editar paquete:\n" + self.object.name
+      return "Editar sala:\n" + self.object.name
     else:
-      return 'Agregar paquete'
+      return 'Agregar sala'
   
   def create_form_fields(self):
     self.fields = gtk.VBox()
-    self.add_field('name', attrs=100)
-    self.add_field('fee', attrs=5)
-    self.add_field('alt_fee', attrs=5)
-    if self.object.is_new_record():
-      self.fields.pack_start(gtk.Label('Clases'), False)
-      columns = 5
-      rows = len(self.klasses)/columns
-      if len(self.klasses)%columns > 0:
-        rows += 1
-      table = gtk.Table(rows, columns)
-      self.klass_checks = []
-      for idx, k in enumerate(self.klasses):
-        check = CustomCheckButton(k)
-        self.klass_checks.append(check)
-        c = idx%columns
-        r = idx/columns
-        table.attach(check,c,c+1,r,r+1)
-      self.fields.pack_start(table, False)
-
-  def get_klasses_ids(self):
-    ids = []
-    if self.object.is_new_record():
-      for c in self.klass_checks:
-        if c.get_active():
-          ids.append(c.k_id)
-    return ids
+    self.add_field('name', attrs=20)
   
   def get_values(self):
-    values = {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'alt_fee': self.alt_fee_e.get_text()}
-    ids = self.get_klasses_ids()
-    if ids:
-      values['klass_ids'] = ids
-    return values
-
-class CustomCheckButton(gtk.CheckButton):
-  def __init__(self,k):
-    gtk.CheckButton.__init__(self,k.name)
-    self.k_id = k.id
+    return {'name': self.name_e.get_text()}
 

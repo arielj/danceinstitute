@@ -9,3 +9,4 @@ from memberships import *
 from widgets import *
 from packages import *
 from home import *
+from rooms import *

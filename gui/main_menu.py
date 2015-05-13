@@ -22,6 +22,16 @@ class MainMenu(gtk.MenuBar):
     
     self.home.set_submenu(self.home_menu)
     
+    #rooms menu
+    self.rooms = gtk.MenuItem('Salas')
+    self.append(self.rooms)
+    
+    self.rooms_menu = gtk.Menu()
+    self.list_rooms = gtk.MenuItem('Salas')
+    
+    self.rooms_menu.append(self.list_rooms)
+    self.rooms.set_submenu(self.rooms_menu)
+    
     #classes menu
     self.klasses = gtk.MenuItem('Clases')
     self.append(self.klasses)

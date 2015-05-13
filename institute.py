@@ -55,6 +55,7 @@ class Controller(gobject.GObject):
     self.window.menu.show_home.connect('activate', self.home)
     self.window.menu.config.connect('activate', self.show_config)
     self.window.menu.quit.connect('activate',self.quit)
+    self.window.menu.list_rooms.connect('activate',self.list_rooms)
     self.window.menu.add_teacher.connect('activate', self.add_teacher)
     self.window.menu.list_teachers.connect('activate', self.list_teachers)
     self.window.menu.add_klass.connect('activate', self.add_klass)
@@ -117,6 +118,55 @@ class Controller(gobject.GObject):
     pos = gtk.POS_TOP if self.settings.tabs_position == 'top' else gtk.POS_LEFT
     if self.window.notebook.get_tab_pos() != pos:
       self.window.notebook.set_tab_pos(pos)
+
+
+
+  #rooms controls
+  def list_rooms(self, widget):
+    rooms = Room.all()
+    page = RoomsList(rooms)
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      page.connect('room-edit', self.edit_room)
+      page.connect('room-add', self.add_room)
+      self.save_signal(self.connect('room-changed', self.refresh_rooms, page), page)
+      return page
+
+  def add_room(self, widget):
+    room = Room()
+    page = self.room_form(widget, room)
+
+  def edit_room(self, widget, room):
+    page = self.room_form(widget, room)
+
+  def room_form(self, widget, room = None):
+    page = RoomForm(room)
+    if room.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+      
+    page.submit.connect_object('clicked',self.submit_room, page)
+    self.window.add_page(page)
+    return page
+
+  def submit_room(self, form):
+    room = form.object
+    new_record = room.is_new_record()
+    room.set_attrs(form.get_values())
+    if room.save():
+      self.emit('room-changed', room, new_record)
+      self.window.update_label(form)
+    else:
+      ErrorMessage("No se puede guardar la clase:", room.full_errors()).run()
+
+
+
     
 
 
@@ -151,7 +201,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar el profesor:", teacher.full_errors()).run()
 
   def list_teachers(self, widget):
-    teachers = Teacher.all()
+    teachers = Teacher.get()
     page = TeachersList(teachers)
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:
@@ -165,7 +215,7 @@ class Controller(gobject.GObject):
       return page
 
   def refresh_teachers(self, widget, teacher, created, page):
-    teachers = Teacher.all()
+    teachers = Teacher.get()
     page.refresh_list(teachers)
 
 
@@ -242,7 +292,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
   def show_select_teacher_dialog(self, page):
-    teachers = Teacher.all(exclude = page.object.teacher_ids())
+    teachers = Teacher.get(exclude = page.object.teacher_ids())
     dialog = SelectTeacherDialog(teachers)
     dialog.connect('response', self.select_teacher_dialog_response, page)
     dialog.run()

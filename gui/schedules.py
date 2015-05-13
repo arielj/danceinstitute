@@ -139,7 +139,10 @@ class SchedulesList(gtk.ScrolledWindow):
       self.actions.pack_start(self.delete_b, False)
       self.vbox.pack_start(self.actions, False)
     
-    self.add_with_viewport(self.vbox)
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.vbox)
+    self.add(viewport)
 
   def update_table(self, schedules):
     self.table.update(schedules)
@@ -192,7 +195,6 @@ class SchedulesTable(gtk.TreeView):
   def __init__(self, schedules):
     #day, room, from_time, to_time
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
-    
     self.set_model(schedules)
     
     gtk.TreeView.__init__(self,self.store)

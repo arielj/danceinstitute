@@ -10,7 +10,7 @@ class Teacher(User):
     return cls.get_many('SELECT users.* FROM klasses_teachers LEFT JOIN users ON klasses_teachers.teacher_id = users.id WHERE klasses_teachers.klass_id = ?',(kls.id,))
 
   @classmethod
-  def all(cls, where = '', args = {}, exclude = None):
+  def get(cls, where = '', args = {}, exclude = None):
     w = 'is_teacher = 1'
     if exclude:
       w = w + ' AND id NOT IN (:ids)'
@@ -18,4 +18,4 @@ class Teacher(User):
 
     where = where + ' AND ' + w if where else w
 
-    return User.all(where=where,args=args)
+    return cls.all(where=where,args=args)

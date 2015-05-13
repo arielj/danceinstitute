@@ -77,6 +77,9 @@ class I18n():
         'amount': ['Amount','Monto'],
         'description': ['Description','Descripción']
       },
+      'room': {
+        'name': ['Name','Nombre']
+      },
       'schedule': {
         'from_time': ['From','Desde'],
         'to_time': ['To','Hasta'],

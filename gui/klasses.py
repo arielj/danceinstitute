@@ -71,6 +71,7 @@ class KlassForm(FormFor):
   def add_teachers_table(self):
     self.teachers_l = gtk.Label('Profesores/as')
     self.teachers_ls = TeachersList(self.object.teachers, with_actions=False)
+    self.teachers_ls.set_border_width(0)
     self.teachers_ls.connect('selection-changed', self.on_selection_changed)
     
     actions = gtk.HBox()
@@ -85,12 +86,10 @@ class KlassForm(FormFor):
     
     self.teachers_ls.vbox.pack_start(actions, False)
 
-    frame = gtk.Frame()
     field = gtk.VBox()
     field.set_size_request(650,-1)
     field.pack_start(self.teachers_l, False)
-    frame.add(self.teachers_ls)
-    field.pack_start(frame, True)
+    field.pack_start(self.teachers_ls, True)
     self.relationships_hbox.pack_start(field, True)
   
   def add_schedule(self, schedule):

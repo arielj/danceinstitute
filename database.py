@@ -44,7 +44,7 @@ class Conn(object):
 
   @classmethod
   def seed(cls):
-    cls.execute('''INSERT INTO rooms (name) VALUES ('Agua')''')
+    cls.execute('''INSERT INTO rooms (name) VALUES ('Tierra')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Aire')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id) VALUES (2015, 4, 300, 1)''')

@@ -45,7 +45,7 @@ class KlassesTable(gtk.TreeView):
     col = self.add_column('Horario', 0)
     col.set_expand(False)
 
-    for idx, room in enumerate(klasses.keys(),1):
+    for idx, room in enumerate(klasses[klasses.keys()[0]].keys(),1):
       self.add_column(room, idx)
   
   def add_column(self, label, idx):
@@ -69,12 +69,11 @@ class KlassesTable(gtk.TreeView):
     keys.sort()
 
     for h in keys:
-      for r in klasses[h]:
-        k = klasses[h]
-        insert = [h]
-        for r in k.keys():
-          insert.append(k[r].name if k[r] else '')
-        self.store.append(insert)
+      insert = [h]
+      k = klasses[h]
+      for r in k.keys():
+        insert.append(k[r].name if k[r] else '')
+      self.store.append(insert)
 
 
 
@@ -87,3 +86,5 @@ class OverdueInstallments(gtk.VBox):
   def __init__(self,installments):
     gtk.VBox.__init__(self)
     self.pack_start(gtk.Label('Cuotas atrasadas'), False)
+    
+    
