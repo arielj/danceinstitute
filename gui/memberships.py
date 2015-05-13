@@ -45,22 +45,19 @@ class MembershipsPanel(gtk.VBox):
 
   def update(self):
     children = self.notebook.get_children()
+    for tab in children:
+      tab.refresh()
     for m in self.student.memberships:
-      found = False
-      for tab in children:
-        if isinstance(tab,PaymentsTab):
-          tab.refresh()
-        if tab.membership == m:
-          tab.refresh()
-          found = True
-      if not found:
+      if m not in map(lambda t: t.membership, children):
         self.add_tab(m)
     self.notebook.show_all()
 
   def on_membership_deleted(self, m_id):
     self.student.remove_membership(m_id)
     for tab in self.notebook.get_children():
-      if tab.membership.id == m_id:
+      if isinstance(tab,PaymentsTab):
+        tab.refresh()
+      elif tab.membership is None or tab.membership.id == m_id:
         self.notebook.remove_page(self.notebook.page_num(tab))
     self.update()
 

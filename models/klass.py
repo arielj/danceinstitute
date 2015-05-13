@@ -24,6 +24,8 @@ class Klass(Model):
     self._teachers = None
     self._schedules = None
     self._users = None
+    self._teachers_remove = []
+    self._schedules_remove = []
     
     Model.__init__(self, data)
 
@@ -45,6 +47,20 @@ class Klass(Model):
     for sch in self.schedules:
       sch.save(validate = False)
 
+    c = self.__class__.get_conn()
+    for t in self.teachers:
+      args = {'klass_id': self.id, 'teacher_id': t.id}
+      if c.execute('SELECT COUNT(*) FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', args).fetchone()[0] == 0:
+        self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
+
+    for t in self._teachers_remove:
+      if t.is_not_new_record():
+        c.execute('DELETE FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', {'klass_id': self.id, 'teacher_id': t.id})
+    self._teachers_remove = []
+    
+    for s in self._schedules_remove:
+      s.delete()
+
   def update_id_on_associations(self):
     for sch in self.schedules:
       sch.klass_id = self.id
@@ -64,6 +80,23 @@ class Klass(Model):
       for sch in kls.schedules:
         for interval in sch.get_intervals():
           klasses[sch.room][interval][sch.day_abbr()] = kls
+    
+    return klasses
+
+  @classmethod
+  def for_day(cls, from_time, to_time, day):
+    klasses = {}
+    for h in range(from_time, to_time, 1):
+      for h2 in [str(h) + ':00', str(h) + ':30']:
+        klasses[h2] = {}
+        for r in schedule.Schedule.possible_rooms():
+          klasses[h2][r] = None
+   
+    for kls in cls.all():
+      for sch in kls.schedules:
+        if sch.day_abbr() == _t('abbr_days','en')[day]:
+          for interval in sch.get_intervals():
+            klasses[interval][sch.room] = kls
     
     return klasses
 
@@ -97,25 +130,24 @@ class Klass(Model):
       self.schedule_ids.append(schedule.id)
 
   def add_teacher(self, teacher):
-    self.teachers.append(teacher)
-    if not teacher.is_new_record():
-      if teacher.id not in self.teacher_ids:
-        self.teacher_ids.append(teacher.id)
+    if teacher.id not in map(lambda t: t.id, self.teachers):
+      self.teachers.append(teacher)
 
   def remove_schedule(self, schedule):
     if schedule in self.schedules:
-      if schedule.id in self.schedule_ids:
-        self.schedule_ids.remove(schedule.id)
       self.schedules.remove(schedule)
+      self._schedules_remove.append(schedule)
 
   def remove_teacher(self, teacher):
     if teacher in self.teachers:
-      if teacher.id in self.teacher_ids:
-        self.teacher_ids.remove(teacher.id)
       self.teachers.remove(teacher)
+      self._teachers_remove.append(teacher)
 
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')
+
+  def teacher_ids(self):
+    return map(lambda t: t.id,self.teachers)
 
   @classmethod
   def for_package(cls,package_id):

@@ -115,9 +115,12 @@ class Model(object):
     return cls(Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone())
 
   @classmethod
-  def all(cls):
+  def all(cls, where = '', args = ()):
     results = []
-    for r in Conn.execute('SELECT * FROM '+cls.table).fetchall():
+    if where:
+      where = ' WHERE ' + where
+
+    for r in Conn.execute('SELECT * FROM '+cls.table + where, args).fetchall():
       results.append(cls(r))
     return results
 

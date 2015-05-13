@@ -6,17 +6,19 @@ from model import Model
 import datetime
 import installment
 import student
+import teacher
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount','installment_id','student_id','date','description']
+  fields_for_save = ['amount','installment_id','user_id','user_type','date','description']
 
   def __init__(self, attrs = {}):
     self._amount = 0
     self.installment_id = None
     self._installment = None
-    self.student_id = None
-    self._student = None
+    self.user_id = None
+    self.user_type = ''
+    self._user = None
     self._date = datetime.datetime.now().date()
     self._description = ''
     Model.__init__(self, attrs)
@@ -41,7 +43,7 @@ class Payment(Model):
     
     ins = self.installment
     if ins:
-      descs.append(ins.membership.klass.name + ' ' + ins.month_name() + ' ' + str(ins.year))
+      descs.append(ins.membership.klass_or_package.name + ' ' + ins.month_name() + ' ' + str(ins.year))
     return ' '.join(descs)
 
   @description.setter
@@ -50,18 +52,23 @@ class Payment(Model):
     self._description = value
 
   @property
-  def student(self):
-    if self.student_id and self._student is None:
-      self._student = student.Student.find(self.student_id)
-    return self._student
+  def user(self):
+    if self.user_id and self._user is None:
+      if self.user_type == 'Student':
+        self._user = student.Student.find(self.user_id)
+      else:
+        self._user = teacher.Teacher.find(self.user_id)
+    return self._user
     
-  @student.setter
-  def student(self, st):
-    if st is None:
-      self.student_id = None
+  @user.setter
+  def user(self, u):
+    if u is None:
+      self.user_id = None
+      self.user_type = ''
     else:
-      self.student_id = st.id
-    self._student = st
+      self.user_id = u.id
+      self.user_type = u.__class__.__name__
+    self._user = u
 
   @property
   def installment(self):
@@ -110,7 +117,7 @@ class Payment(Model):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'student_id': self.student_id, 'description': self._description}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description}
 
   def to_s(self):
     return str(self.date) + ": $" + str(self.amount)
@@ -120,9 +127,9 @@ class Payment(Model):
     return cls.get_where('installment_id',ins_id)
 
   @classmethod
-  def for_student(cls,st_id,include_installments = True):
-    q = 'SELECT * FROM payments WHERE student_id = :st_id'
-    args = {'st_id': st_id}
+  def for_user(cls,u_id,include_installments = True):
+    q = 'SELECT * FROM payments WHERE user_id = :u_id'
+    args = {'u_id': u_id}
     if include_installments:
       return cls.get_many(q,args)
     else:

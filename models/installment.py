@@ -88,7 +88,8 @@ class Installment(Model):
   def add_payment(self, date, amount):
     amount = Decimal(amount)
     if amount <= self.to_pay():
-      p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id, 'student_id': self.get_student_id()})
+      p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id})
+      p.user = self.get_student()
       if p.save():
         self.payments.append(p)
         return True
@@ -98,17 +99,28 @@ class Installment(Model):
       return "No se puede agregar un pago con mayor valor que resto a pagar."
 
   def get_student_id(self):
-    s = self.membership.student
+    s = self.get_student()
     return s.id if s else None
+
+  def get_student(self):
+    return self.membership.student
 
   def payments_details(self):
     return "\n".join(map(lambda p: p.to_s(), self.payments))
 
   def build_payment(self, data = {}):
     p = payment.Payment(data)
-    p.installment_id = self.id
+    p.installment = self
+    self.payments.append(p)
     return p
 
   @classmethod
   def for_membership(cls,membership_id):
     return cls.get_where('membership_id',membership_id)
+
+  def before_delete(self):
+    for p in self.payments:
+      p.description = p.description
+      p.installment = None
+      p.save(validate=False)
+    return True

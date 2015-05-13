@@ -52,6 +52,7 @@ class Controller(gobject.GObject):
     page.destroy()
 
   def bind_main_menu(self):
+    self.window.menu.show_home.connect('activate', self.home)
     self.window.menu.config.connect('activate', self.show_config)
     self.window.menu.quit.connect('activate',self.quit)
     self.window.menu.add_teacher.connect('activate', self.add_teacher)
@@ -84,7 +85,15 @@ class Controller(gobject.GObject):
   def show_status(self, status, *data):
     self.window.show_status(status)
 
-
+  def home(self, widget):
+    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()))
+    current = self.window.get_page_by_label(page.get_tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+    else:
+      self.window.add_page(page)
+      return page
 
   #config controls
   def show_config(self, widget):
@@ -92,9 +101,11 @@ class Controller(gobject.GObject):
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:
       self.window.focus_page(current)
+      return current
     else:
       page.submit.connect('clicked', self.save_config, page)
       self.window.add_page(page)
+      return page
 
   def save_config(self, button, page):
     self.settings.set_values(page.get_values())
@@ -231,7 +242,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
   def show_select_teacher_dialog(self, page):
-    teachers = Teacher.all()
+    teachers = Teacher.all(exclude = page.object.teacher_ids())
     dialog = SelectTeacherDialog(teachers)
     dialog.connect('response', self.select_teacher_dialog_response, page)
     dialog.run()
@@ -472,10 +483,12 @@ class Controller(gobject.GObject):
   #payments controls
   def add_payment(self, widget, installment, page):
     if installment:
-      payment = installment.build_payment({'student_id': page.object.id})
+      payment = installment.build_payment()
+      payment.amount = installment.to_pay()
     else:
-      payment = Payment({'student_id': page.object.id})
-      
+      payment = Payment()
+    payment.user = page.object
+
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page)
     dialog.run()

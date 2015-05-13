@@ -42,4 +42,4 @@ class Student(User):
       m.student_id = self.id
 
   def get_payments(self, include_installments = True):
-    return payment.Payment.for_student(self.id, include_installments)
+    return payment.Payment.for_user(self.id, include_installments)
