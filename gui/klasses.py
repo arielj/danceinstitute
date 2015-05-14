@@ -24,10 +24,15 @@ class KlassForm(FormFor):
     
     self.pack_start(self.fields, True)
     
+    self.students = gtk.Button('Ver Alumnos')
+    self.students.set_sensitive(self.object.is_not_new_record())
+    self.students.connect('clicked',self.on_show_students_clicked)
+    self.students_hbox.pack_start(self.students,False)
+    
     self.show_all()
 
   def get_tab_label(self):
-    return 'Editar Clase:\n' + self.object.name if self.object.id else 'Agregar Clase'
+    return 'Editar Clase:\n' + self.object.name if self.object.is_not_new_record() else 'Agregar Clase'
   
   def create_form_fields(self):
     self.fields = gtk.VBox(False, 5)
@@ -39,11 +44,13 @@ class KlassForm(FormFor):
     self.add_field('inscription_fee', attrs=5, box=prices_hbox)
     self.fields.pack_start(prices_hbox, False)
 
-    students_hbox = gtk.HBox(True, 8)
-    self.add_field('min_age', attrs=2, box=students_hbox)
-    self.add_field('max_age', attrs=2, box=students_hbox)
-    self.add_field('quota', attrs=2, box=students_hbox)
-    self.fields.pack_start(students_hbox, False)
+    self.students_hbox = gtk.HBox(False, 8)
+    students_hbox_inner = gtk.HBox(True, 8)
+    self.add_field('min_age', attrs=2, box=students_hbox_inner)
+    self.add_field('max_age', attrs=2, box=students_hbox_inner)
+    self.add_field('quota', attrs=2, box=students_hbox_inner)
+    self.students_hbox.pack_end(students_hbox_inner, True)
+    self.fields.pack_start(self.students_hbox, False)
     
     f, l, e = self.add_field('info', field_type = 'text')
     e.set_size_request(-1,200)
@@ -121,6 +128,9 @@ class KlassForm(FormFor):
     model, iter = selection.get_selected()
     self.remove_b.set_sensitive(iter is not None)
 
+  def on_show_students_clicked(self, widget):
+    self.emit('list-students')
+
 gobject.type_register(KlassForm)
 gobject.signal_new('schedule-edit', \
                    KlassForm, \
@@ -138,6 +148,10 @@ gobject.signal_new('teacher-remove', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('list-students', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 class SchedulesTables(gtk.ScrolledWindow):
   def __init__(self, klasses):

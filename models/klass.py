@@ -5,6 +5,8 @@ from translations import _t
 from model import Model
 import teacher
 import schedule
+import package
+import membership
 
 class Klass(Model):
   table = 'klasses'
@@ -23,7 +25,6 @@ class Klass(Model):
     self.info = ''
     self._teachers = None
     self._schedules = None
-    self._users = None
     self._teachers_remove = []
     self._schedules_remove = []
     
@@ -44,22 +45,22 @@ class Klass(Model):
     self.validate_has_many('schedules')
 
   def after_save(self):
-    for sch in self.schedules:
-      sch.save(validate = False)
-
     c = self.__class__.get_conn()
-    for t in self.teachers:
-      args = {'klass_id': self.id, 'teacher_id': t.id}
-      if c.execute('SELECT COUNT(*) FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', args).fetchone()[0] == 0:
-        self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
-
     for t in self._teachers_remove:
       if t.is_not_new_record():
         c.execute('DELETE FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', {'klass_id': self.id, 'teacher_id': t.id})
     self._teachers_remove = []
+
+    for t in self.teachers:
+      args = {'klass_id': self.id, 'teacher_id': t.id}
+      if c.execute('SELECT COUNT(*) FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', args).fetchone()[0] == 0:
+        self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
     
     for s in self._schedules_remove:
       s.delete()
+
+    for sch in self.schedules:
+      sch.save(validate = False)
 
   def update_id_on_associations(self):
     for sch in self.schedules:
@@ -153,3 +154,11 @@ class Klass(Model):
   def for_package(cls,package_id):
     return cls.get_many('SELECT klasses.* FROM klasses_packages LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id WHERE klasses_packages.package_id = ?',(package_id,))
 
+  def get_students(self):
+    ms = membership.Membership.for_klass_or_package(self)
+    
+    for p in package.Package.with_klass(self):
+      ms = ms + membership.Membership.for_klass_or_package(p)
+    
+    return map(lambda m: m.student, ms)
+      

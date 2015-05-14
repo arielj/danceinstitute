@@ -67,3 +67,6 @@ class Package(Model):
     if self.is_new_record():
       self.validate_quantity_of('klasses', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
 
+  @classmethod
+  def with_klass(cls,klass):
+    return cls.get_many('SELECT packages.* FROM klasses_packages LEFT JOIN packages ON klasses_packages.package_id = packages.id WHERE klasses_packages.klass_id = :k_id', {'k_id': klass.id})

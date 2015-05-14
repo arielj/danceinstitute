@@ -252,6 +252,7 @@ class Controller(gobject.GObject):
     page.connect('schedule-add', self.add_schedule)
     page.connect('teacher-search', self.show_select_teacher_dialog)
     page.connect('teacher-remove', self.on_remove_teacher)
+    page.connect('list-students', self.on_list_students)
     self.window.add_page(page)
     return page
 
@@ -324,6 +325,20 @@ class Controller(gobject.GObject):
         if teacher.id == t.id:
           page.object.remove_teacher(t)
           page.update_teachers()
+
+  def on_list_students(self, page):
+    dialog = StudentsListDialog(page.object)
+    dialog.list.connect_object('student-activated', self.on_student_activated,dialog)
+    dialog.connect('response', self.students_list_dialog_response)
+    dialog.run()
+
+  def students_list_dialog_response(self, dialog, response):
+    dialog.destroy()
+
+  def on_student_activated(self,dialog,student):
+    dialog.destroy()
+    self.edit_student(dialog,student.id)
+
 
 
 

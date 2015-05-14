@@ -225,3 +225,13 @@ class StudentsTable(gtk.TreeView):
     for t in self.students:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 
+class StudentsListDialog(gtk.Dialog):
+  def __init__(self, klass):
+    gtk.Dialog.__init__(self, 'Alumnos de la clase '+klass.name, None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        ())
+    self.set_size_request(700,400)
+    self.list = StudentsList(klass.get_students())
+    self.vbox.pack_start(self.list,True)
+    
+    self.show_all()

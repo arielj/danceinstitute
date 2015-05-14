@@ -33,7 +33,7 @@ class Student(user.User):
     return True
 
   def _is_valid(self):
-    User._is_valid(self)
+    user.User._is_valid(self)
     self.validate_has_many('memberships')
 
   def update_id_on_associations(self):
