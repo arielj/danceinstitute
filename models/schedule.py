@@ -4,12 +4,12 @@
 import datetime
 from translations import _t
 from model import Model
-from room import Room
+import room
 import klass
 
 class Schedule(Model):
   table = 'schedules'
-  fields_for_save = ['klass_id','from_time','to_time','day','room']
+  fields_for_save = ['klass_id','from_time','to_time','day','room_id']
 
   def __init__(self, attrs = {}):
     self._klass = None
@@ -17,15 +17,15 @@ class Schedule(Model):
     self._from_time = 0000
     self._to_time = 0000
     self.day = 0
-    self.room = ''
+    self.room_id = ''
+    self._room = None
 
     Model.__init__(self, attrs)
 
   @property
-  def klass(self,requery = False):
-    if requery or self._klass is None:
-      if self.klass_id is not None:
-        self._klass = klass.Klass.find(self.klass_id)
+  def klass(self):
+    if self.klass_id is not None and self._klass is None:
+      self._klass = klass.Klass.find(self.klass_id)
     return self._klass
 
   @klass.setter
@@ -61,6 +61,21 @@ class Schedule(Model):
       self._to_time = int(value.replace(':',''))
     else:
       self._to_time = value
+
+  @property
+  def room(self):
+    if self.room_id is not None and self._room is None:
+      self._room = room.Room.find(self.room_id)
+    return self._room
+
+  @room.setter
+  def room(self,r):
+    self._room = r
+    if r is None:
+      self.room_id = None
+    else:
+      self.room_id = r.id
+
 
   def str_to_time(self):
     st = str(self.to_time).zfill(4)
@@ -103,7 +118,7 @@ class Schedule(Model):
 
   @classmethod
   def possible_rooms(cls):
-    return map(lambda r: r.name, Room.all())
+    return map(lambda r: r.name, room.Room.all())
 
   @classmethod
   def for_klass(cls,kls):

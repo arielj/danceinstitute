@@ -56,7 +56,7 @@ class RoomsList(gtk.ScrolledWindow):
     model = tree.get_model()
     itr = model.get_iter(path)
     room = model.get_value(itr, 0)
-    self.emit('room-edit', room.id)
+    self.emit('room-edit', room)
 
   def on_selection_changed(self, selection):
     if self.with_actions:

@@ -165,8 +165,9 @@ class Controller(gobject.GObject):
     else:
       ErrorMessage("No se puede guardar la clase:", room.full_errors()).run()
 
-
-
+  def refresh_rooms(self, widget, room, created, page):
+    rooms = Rooms.all()
+    page.refresh_list(rooms)
     
 
 
@@ -608,6 +609,12 @@ gobject.signal_new('package-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #package object, creation(True value means the user just got created)
+
+gobject.signal_new('room-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #room object, creation(True value means the user just got created)
 
 gobject.signal_new('membership-deleted', \
                    Controller, \

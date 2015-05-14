@@ -79,7 +79,7 @@ class Klass(Model):
     for kls in cls.all():
       for sch in kls.schedules:
         for interval in sch.get_intervals():
-          klasses[sch.room][interval][sch.day_abbr()] = kls
+          klasses[sch.room.name][interval][sch.day_abbr()] = kls
     
     return klasses
 
@@ -96,7 +96,7 @@ class Klass(Model):
       for sch in kls.schedules:
         if sch.day_abbr() == _t('abbr_days','en')[day]:
           for interval in sch.get_intervals():
-            klasses[interval][sch.room] = kls
+            klasses[interval][sch.room.name] = kls
     
     return klasses
 
