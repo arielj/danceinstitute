@@ -166,7 +166,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar la clase:", room.full_errors()).run()
 
   def refresh_rooms(self, widget, room, created, page):
-    rooms = Rooms.all()
+    rooms = Room.all()
     page.refresh_list(rooms)
     
 
@@ -188,6 +188,7 @@ class Controller(gobject.GObject):
         return current
       
     page.submit.connect_object('clicked',self.submit_teacher, page)
+    page.payments.payments_t.connect_object('payment-add',self.add_teacher_payment, page)
     self.window.add_page(page)
     return page
 
@@ -198,6 +199,7 @@ class Controller(gobject.GObject):
     if teacher.save():
       self.emit('teacher-changed', teacher, new_record)
       self.window.update_label(form)
+      form.payments.set_sensitive(True)
     else:
       ErrorMessage("No se puede guardar el profesor:", teacher.full_errors()).run()
 
@@ -219,6 +221,13 @@ class Controller(gobject.GObject):
     teachers = Teacher.get()
     page.refresh_list(teachers)
 
+  def add_teacher_payment(self, page):
+    payment = Payment()
+    payment.user = page.object
+    
+    dialog = AddPaymentDialog(payment)
+    dialog.connect('response', self.on_add_payment, page)
+    dialog.run()
 
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):
@@ -488,7 +497,7 @@ class Controller(gobject.GObject):
       membership.student_id = page.object.id
       if membership.save():
         page.object.add_membership(membership)
-        page.update_memberships()
+        page.update()
       else:
         ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
         destroy_dialog = False
@@ -551,7 +560,7 @@ class Controller(gobject.GObject):
       data = dialog.form.get_values()
       payment.set_attrs(data)
       if payment.save():
-        page.update_memberships()
+        page.update()
       else:
         ErrorMessage('No se pudo cargar el pago:', payment.full_errors()).run()
         destroy_dialog = False

@@ -76,6 +76,16 @@ class Schedule(Model):
     else:
       self.room_id = r.id
 
+  @property
+  def room_name(self):
+    if self._room is not None:
+      return self._room.name
+    else:
+      return ''
+
+  @room_name.setter
+  def room_name(self, name):
+    self.room = room.Room.find_by('name',name)
 
   def str_to_time(self):
     st = str(self.to_time).zfill(4)
@@ -114,7 +124,7 @@ class Schedule(Model):
     self.validate_presence_of('room')
 
   def to_db(self):
-    return {'klass_id': self.klass.id, 'from_time': self.from_time, 'to_time': self.to_time, 'day': self.day, 'room': self.room}
+    return {'klass_id': self.klass.id, 'from_time': self.from_time, 'to_time': self.to_time, 'day': self.day, 'room_id': self.room_id}
 
   @classmethod
   def possible_rooms(cls):

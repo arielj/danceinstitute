@@ -1,14 +1,13 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-from user import User
+import user
 import membership
-import payment
 
-class Student(User):
+class Student(user.User):
   def __init__(self, data = {}):
     self._memberships = None
-    User.__init__(self, data)
+    user.User.__init__(self, data)
 
   @classmethod
   def search(cls, value):
@@ -41,5 +40,3 @@ class Student(User):
     for m in self.memberships:
       m.student_id = self.id
 
-  def get_payments(self, include_installments = True):
-    return payment.Payment.for_user(self.id, include_installments)

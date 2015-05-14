@@ -108,7 +108,7 @@ class SchedulesForm(gtk.VBox):
         return self.days[key]['idx']
   
   def get_values(self):
-    return {'room': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
+    return {'room_name': self.get_selected_room(), 'day': self.get_selected_day(), 'from_time': self.from_time_e.get_text(), 'to_time': self.to_time_e.get_text()}
 
 class SchedulesList(gtk.ScrolledWindow):
   def __init__(self, schedules, with_actions = True):
@@ -222,5 +222,5 @@ class SchedulesTable(gtk.TreeView):
   def set_model(self, schedules):
     self.schedules = schedules
     for sch in self.schedules:
-      self.store.append([sch, sch.day_name(), sch.room, sch.str_from_time(), sch.str_to_time()])
+      self.store.append([sch, sch.day_name(), sch.room.name, sch.str_from_time(), sch.str_to_time()])
 

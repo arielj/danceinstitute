@@ -70,7 +70,7 @@ class I18n():
         'name': ['Name','Nombre'],
         'fee': ['Fee','Precio'],
         'alt_fee': ['Alternative Fee','Precio Alternativo'],
-        'klass_ids': ['Classes','Clases']
+        'klasses': ['Classes','Clases']
       },
       'payment': {
         'date': ['Date','Fecha'],

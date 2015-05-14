@@ -3,6 +3,7 @@
 
 import re
 from model import Model
+import payment
 
 class User(Model):
   table = 'users'
@@ -64,3 +65,5 @@ class User(Model):
     self.validate_format_of('lastname', frmt = 'name')
     self.validate_format_of('dni', expr = '^\d\d\.?\d\d\d\.?\d\d\d$')
 
+  def get_payments(self, include_installments = True):
+    return payment.Payment.for_user(self.id, include_installments)

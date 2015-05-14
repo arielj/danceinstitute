@@ -172,23 +172,23 @@ class PackageForm(FormFor):
         table.attach(check,c,c+1,r,r+1)
       self.fields.pack_start(table, False)
 
-  def get_klasses_ids(self):
-    ids = []
+  def get_klasses(self):
+    kls = []
     if self.object.is_new_record():
       for c in self.klass_checks:
         if c.get_active():
-          ids.append(c.k_id)
-    return ids
+          kls.append(c.k)
+    return kls
   
   def get_values(self):
     values = {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'alt_fee': self.alt_fee_e.get_text()}
-    ids = self.get_klasses_ids()
-    if ids:
-      values['klass_ids'] = ids
+    kls = self.get_klasses()
+    if kls:
+      values['klasses'] = kls
     return values
 
 class CustomCheckButton(gtk.CheckButton):
   def __init__(self,k):
     gtk.CheckButton.__init__(self,k.name)
-    self.k_id = k.id
+    self.k = k
 

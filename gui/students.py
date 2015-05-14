@@ -84,7 +84,7 @@ class StudentForm(FormFor):
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)
 
-  def update_memberships(self):
+  def update(self):
     self.memberships_panel.update()
 
   def on_membership_deleted(self, emmiter, m_id):

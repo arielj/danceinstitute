@@ -4,6 +4,7 @@
 import gtk
 import gobject
 from forms import FormFor
+from payments import PaymentsPanel
 
 class TeacherForm(FormFor):
   def __init__(self, teacher):
@@ -14,7 +15,11 @@ class TeacherForm(FormFor):
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit,False)
     
+    self.payments = PaymentsPanel(teacher)
+    self.payments.set_sensitive(teacher.is_not_new_record())
+    
     self.pack_start(self.fields, True)
+    self.pack_start(self.payments, True)
     
     self.show_all()
 
@@ -48,6 +53,9 @@ class TeacherForm(FormFor):
   
   def get_values(self):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'alt_phone': self.alt_phone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
+
+  def update(self):
+    self.payments.update()
 
 class TeachersList(gtk.ScrolledWindow):
   def __init__(self, teachers, with_actions = True):
@@ -214,3 +222,4 @@ class SelectTeacherDialog(gtk.Dialog):
   def on_row_activated(self, tree, path, column):
     t = self.get_selected_teacher()
     self.emit('response', gtk.RESPONSE_ACCEPT)
+

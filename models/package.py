@@ -11,7 +11,6 @@ class Package(Model):
   
   def __init__(self, attrs = {}):
     self.name = ''
-    self.klass_ids = []
     self._klasses = None
     self._fee = 0
     self._alt_fee = 0
@@ -19,7 +18,6 @@ class Package(Model):
 
   @property
   def fee(self):
-    print self._fee/100
     return self._fee/100
   
   @fee.setter
@@ -46,6 +44,10 @@ class Package(Model):
       self._klasses = klass.Klass.for_package(self.id)
     return self._klasses
 
+  @klasses.setter
+  def klasses(self, kls):
+    self._klasses = kls
+
   def klasses_names(self):
     return ', '.join(map(lambda x: x.name, self.klasses))
 
@@ -63,5 +65,5 @@ class Package(Model):
     self.validate_presence_of('name')
     self.validate_numericallity_of('fee', great_than = 0)
     if self.is_new_record():
-      self.validate_quantity_of('klass_ids', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
+      self.validate_quantity_of('klasses', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
 
