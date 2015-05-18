@@ -10,7 +10,7 @@ import teacher
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount','installment_id','user_id','user_type','date','description']
+  fields_for_save = ['amount','installment_id','user_id','user_type','date','description', 'done']
 
   def __init__(self, attrs = {}):
     self._amount = 0
@@ -21,6 +21,7 @@ class Payment(Model):
     self._user = None
     self._date = datetime.datetime.now().date()
     self._description = ''
+    self.done = False
     Model.__init__(self, attrs)
 
   @property
@@ -113,11 +114,19 @@ class Payment(Model):
                 except:
                   self._date = ''
 
+  @property
+  def done(self):
+    return bool(self._done)
+
+  @done.setter
+  def done(self,value):
+    self._done = bool(value)
+
   def _is_valid(self):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done)}
 
   def to_s(self):
     return str(self.date) + ": $" + str(self.amount)
@@ -127,10 +136,14 @@ class Payment(Model):
     return cls.get_where('installment_id',ins_id)
 
   @classmethod
-  def for_user(cls,u_id,include_installments = True):
+  def for_user(cls,u_id,include_installments = True, done = None):
     q = 'SELECT * FROM payments WHERE user_id = :u_id'
     args = {'u_id': u_id}
-    if include_installments:
-      return cls.get_many(q,args)
-    else:
-      return cls.get_many(q + ' AND installment_id IS NULL',args)
+    if not include_installments:
+      q = q + ' AND installment_id IS NULL'
+    
+    if done is not None:
+      q = q + ' AND done = :done'
+      args['done'] = int(done)
+
+    return cls.get_many(q,args)

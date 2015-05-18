@@ -11,7 +11,7 @@ class Conn(object):
 
   CREATE = {'settings': '''CREATE TABLE settings (key text, value text)''',
             'installments': '''CREATE TABLE installments (id integer primary key, year integer, month integer, membership_id integer, amount integer)''',
-            'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, user_id integer, user_type text default '',description text default '')''',
+            'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, user_id integer, user_type text default '',description text default '', done integer default 0)''',
             'rooms': '''CREATE TABLE rooms (id integer primary key, name text)''',
             'memberships': '''CREATE TABLE memberships (id integer primary key, student_id integer, for_id integer, for_type text, info text)''',
             'schedules': '''CREATE TABLE schedules (id integer primary key, klass_id integer, from_time integer, to_time integer, room_id integer, day integer)''',

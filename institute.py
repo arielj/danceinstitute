@@ -70,10 +70,12 @@ class Controller(gobject.GObject):
   def bind_status_signals(self):
     self.connect_object('membership-deleted', self.show_status, 'Inscripción eliminada.')
     self.connect_object('klass-changed', self.show_status, 'Clase guardada.')
-    self.connect_object('student-changed', self.show_status, 'Alumno guardado.')
-    self.connect_object('teacher-changed', self.show_status, 'Profesor guardado.')
+    self.connect('user-changed', self.on_user_changed)
     self.connect_object('settings-changed', self.show_status, 'Configuración guardada.')
     self.connect_object('payment-deleted', self.show_status, 'Pago eliminado.')
+
+  def on_user_changed(self, widget, user, new_record):
+    self.show_status(translations._m(user.cls_name())+' guardado.')
 
   def show_help_dialog(self, widget, dialog_class):
     dialog = eval(dialog_class)()
@@ -174,34 +176,10 @@ class Controller(gobject.GObject):
   #teachers controls
   def add_teacher(self, widget):
     teacher = Teacher()
-    page = self.teacher_form(widget, teacher)
+    page = self.user_form(teacher)
 
   def edit_teacher(self, widget, teacher):
-    page = self.teacher_form(widget, teacher)
-
-  def teacher_form(self, widget, teacher = None):
-    page = TeacherForm(teacher)
-    if teacher.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
-      if current:
-        self.window.focus_page(current)
-        return current
-      
-    page.submit.connect_object('clicked',self.submit_teacher, page)
-    page.payments.payments_t.connect_object('payment-add',self.add_teacher_payment, page)
-    self.window.add_page(page)
-    return page
-
-  def submit_teacher(self, form):
-    teacher = form.object
-    new_record = teacher.is_new_record()
-    teacher.set_attrs(form.get_values())
-    if teacher.save():
-      self.emit('teacher-changed', teacher, new_record)
-      self.window.update_label(form)
-      form.payments.set_sensitive(True)
-    else:
-      ErrorMessage("No se puede guardar el profesor:", teacher.full_errors()).run()
+    page = self.user_form(teacher)
 
   def list_teachers(self, widget):
     teachers = Teacher.get()
@@ -214,7 +192,7 @@ class Controller(gobject.GObject):
       self.window.add_page(page)
       page.connect('teacher-edit', self.edit_teacher)
       page.connect('teacher-add', self.add_teacher)
-      self.save_signal(self.connect('teacher-changed', self.refresh_teachers, page), page)
+      self.save_signal(self.connect('user-changed', self.refresh_teachers, page), page)
       return page
 
   def refresh_teachers(self, widget, teacher, created, page):
@@ -226,8 +204,73 @@ class Controller(gobject.GObject):
     payment.user = page.object
     
     dialog = AddPaymentDialog(payment)
-    dialog.connect('response', self.on_add_payment, page)
+    dialog.connect('response', self.on_add_payment, page, True)
     dialog.run()
+
+  #students controls
+  def add_student(self, widget):
+    student = Student()
+    page = self.user_form(student)
+
+  def edit_student(self, widget, student_id):
+    student = Student.find(student_id)
+    page = self.user_form(student)
+
+  def user_form(self, user):
+    page = UserForm(user)
+    if user.is_not_new_record():
+      current = self.window.get_page_by_label(page.get_tab_label())
+      if current:
+        self.window.focus_page(current)
+        return current
+      
+    page.submit.connect_object('clicked', self.submit_user, page)
+    page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
+    page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
+    page.memberships_panel.connect('add-installments', self.add_installments, page)
+    page.memberships_panel.connect('add-payment', self.add_payment, page)
+    page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
+    self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
+    self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
+    self.window.add_page(page)
+    return page
+
+  def submit_user(self, form):
+    user = form.object
+    new_record = user.is_new_record()
+    user.set_attrs(form.get_values())
+    if user.save():
+      self.emit('user-changed', user, new_record)
+      self.window.update_label(form)
+    else:
+      ErrorMessage("No se puede guardar el profesor:", user.full_errors()).run()
+
+  def submit_user(self, form):
+    user = form.object
+    new_record = user.is_new_record()
+    user.set_attrs(form.get_values())
+    if user.save():
+      self.emit('user-changed', user, new_record)
+      self.window.update_label(form)
+      if new_record:
+        form.enable_memberships()
+    else:
+      ErrorMessage("No se puede guardar el alumno:", student.full_errors()).run()
+
+  def search_student(self, widget):
+    page = SearchStudent()
+    self.window.add_page(page)
+    page.connect('search', self.on_student_search)
+    page.connect('student-edit', self.edit_student)
+    self.save_signal(self.connect('user-changed', page.on_search), page)
+  
+  def on_student_search(self, page, value):
+    students = Student.search(value)
+    page.update_results(students)
+
+
+
+
 
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):
@@ -377,6 +420,8 @@ class Controller(gobject.GObject):
       dialog.destroy()
 
 
+
+
   #packages controls
   def show_packages(self, widget):
     page = PackagesList(Package.all())
@@ -429,58 +474,6 @@ class Controller(gobject.GObject):
 
   def delete_package(self, widget, package):
     print 'delete package'
-
-
-  #students controls
-  def add_student(self, widget):
-    student = Student()
-    page = self.student_form(student)
-
-  def edit_student(self, widget, student_id):
-    student = Student.find(student_id)
-    page = self.student_form(student)
-
-  def student_form(self, student):
-    page = StudentForm(student)
-    if student.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
-      if current:
-        self.window.focus_page(current)
-        return current
-      
-    page.submit.connect_object('clicked', self.submit_student, page)
-    page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
-    page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
-    page.memberships_panel.connect('add-installments', self.add_installments, page)
-    page.memberships_panel.connect('add-payment', self.add_payment, page)
-    page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
-    self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
-    self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
-    self.window.add_page(page)
-    return page
-
-  def submit_student(self, form):
-    student = form.object
-    new_record = student.is_new_record()
-    student.set_attrs(form.get_values())
-    if student.save():
-      self.emit('student-changed', student, new_record)
-      self.window.update_label(form)
-      if new_record:
-        form.enable_memberships()
-    else:
-      ErrorMessage("No se puede guardar el alumno:", student.full_errors()).run()
-
-  def search_student(self, widget):
-    page = SearchStudent()
-    self.window.add_page(page)
-    page.connect('search', self.on_student_search)
-    page.connect('student-edit', self.edit_student)
-    self.save_signal(self.connect('student-changed', page.on_search), page)
-  
-  def on_student_search(self, page, value):
-    students = Student.search(value)
-    page.update_results(students)
 
 
 
@@ -545,7 +538,7 @@ class Controller(gobject.GObject):
       data = dialog.form.get_values()
       created = membership.create_installments(data['year'],data['initial_month'],data['final_month'],data['fee'])
       if created is True:
-        page.update_memberships()
+        page.update()
       else:
         ErrorMessage('No se pudieron agrega las cuotas:', created).run()
         destroy_dialog = False
@@ -556,13 +549,14 @@ class Controller(gobject.GObject):
 
 
   #payments controls
-  def add_payment(self, widget, installment, page):
+  def add_payment(self, widget, installment, done, page):
     if installment:
       payment = installment.build_payment()
       payment.amount = installment.to_pay()
     else:
       payment = Payment()
     payment.user = page.object
+    payment.done = done
 
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page)
@@ -610,17 +604,11 @@ class Controller(gobject.GObject):
       del self.connected_signals[obj]
 
 gobject.type_register(Controller)
-gobject.signal_new('student-changed', \
+gobject.signal_new('user-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
-                   #student object, creation(True value means the user just got created)
-
-gobject.signal_new('teacher-changed', \
-                   Controller, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
-                   #teacher object, creation(True value means the user just got created)
+                   #user object, creation(True value means the user just got created)
 
 gobject.signal_new('klass-changed', \
                    Controller, \

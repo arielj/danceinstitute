@@ -3,97 +3,7 @@
 
 import gtk
 import gobject
-
-class PaymentsPanel(gtk.VBox):
-  def __init__(self,teacher):
-    gtk.VBox.__init__(self)
-    
-    self.teacher = teacher
-    
-    self.pack_start(gtk.Label('Pagos'),False)
-    
-    self.payments_t = PaymentsList(teacher.get_payments())
-    self.pack_start(self.payments_t, True)
-
-  def update(self):
-    self.payments_t.update_table(self.teacher.get_payments())
-    
-class PaymentsList(gtk.ScrolledWindow):
-  def __init__(self, payments, with_actions = True):
-    gtk.ScrolledWindow.__init__(self)
-    self.set_border_width(4)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    self.payments = payments
-    self.with_actions = with_actions
-    
-    self.vbox = gtk.VBox()
-    
-    self.payments_t = PaymentsTable(payments)
-    self.t_selection = self.payments_t.get_selection()
-    self.t_selection.connect('changed', self.on_selection_changed)
-    
-    self.vbox.pack_start(self.payments_t, True)
-    
-    if self.with_actions:
-      self.add_b = gtk.Button('Agregar')
-      self.delete_b = gtk.Button('Borrar')
-      self.delete_b.set_sensitive(False)
-      self.add_b.connect('clicked', self.on_add_clicked)
-      self.delete_b.connect('clicked', self.on_delete_clicked)
-      
-      self.actions = gtk.HBox()
-      self.actions.pack_start(self.add_b, False)
-      self.actions.pack_start(self.delete_b, False)
-      
-      self.vbox.pack_start(self.actions, False)
-    
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.vbox)
-    self.add(viewport)
-    
-    self.show_all()
-
-  def get_tab_label(self):
-    return 'Pagos'
-
-  def update_table(self, payments):
-    self.payments_t.update(payments)
-
-  def on_selection_changed(self, selection):
-    if self.with_actions:
-      model, iter = selection.get_selected()
-      self.delete_b.set_sensitive(iter is not None)
-    self.emit('selection-changed', selection)
-
-  def on_add_clicked(self, btn):
-    self.emit('payment-add')
-
-  def on_delete_clicked(self, btn):
-    payment = self.get_selected()
-    if payment is not None:
-      self.emit('payment-delete', payment)
-
-  def get_selected(self):
-    model, iter = self.t_selection.get_selected()
-    return model.get_value(iter,0) if iter is not None else None
-
-  def refresh_list(self, payments):
-    self.payments_t.update(payments)
-
-gobject.type_register(PaymentsList)
-gobject.signal_new('payment-delete', \
-                   PaymentsList, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('payment-add', \
-                   PaymentsList, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, ())
-gobject.signal_new('selection-changed', \
-                   PaymentsList, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+from forms import FormFor
 
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments):
@@ -125,3 +35,104 @@ class PaymentsTable(gtk.TreeView):
   def set_model(self, payments):
     for p in payments:
       self.store.append((p,p.date,p.description,'$'+str(p.amount)))
+
+
+class AddPaymentDialog(gtk.Dialog):
+  def __init__(self,payment):
+    self.payment = payment
+    self.form = AddPaymentForm(payment)
+    gtk.Dialog.__init__(self, 'Agregar pago', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    self.vbox.pack_start(self.form, False)
+    self.vbox.show_all()
+
+class AddPaymentForm(FormFor):
+  def __init__(self, payment):
+    FormFor.__init__(self, payment)
+    
+    self.fields = gtk.VBox()
+    self.add_field('date', attrs=10)
+    self.add_field('amount', attrs=6)
+    
+    if payment.installment is None:
+      self.add_field('description', attrs=100)
+    
+    self.pack_start(self.fields, False)
+
+  def get_values(self):
+    data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text()}
+    if self.object.installment is None:
+      data['description'] = self.description_e.get_text()
+    return data
+
+class PaymentsTab(gtk.VBox):
+  def __init__(self, user, done = False):
+    gtk.VBox.__init__(self)
+    
+    self.membership = None
+    self.user = user
+    self.done = done
+    
+    self.info_vbox =gtk.VBox()
+    self.info_vbox.pack_start(gtk.Label('Pagos no relacionados a cuotas'), False)
+
+    self.pack_start(self.info_vbox, False)
+
+    #payment, date, description, amount
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str)
+    
+    self.refresh()
+    
+    self.list = gtk.TreeView(self.store)
+    self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
+    self.selection = self.list.get_selection()
+    self.selection.connect('changed', self.on_selection_changed)
+    
+    self.add_column('Fecha',1)
+    self.add_column('Descripción',2)
+    self.add_column('Monto',3)
+
+    self.scrolled = gtk.ScrolledWindow()
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.list)
+    self.scrolled.add(viewport)
+    
+    self.pack_start(self.scrolled, True)
+    
+    self.actions = gtk.HBox(True, 5)
+    
+    self.add_b = gtk.Button('Agregar Pago')
+    self.delete_b = gtk.Button('Eliminar Pago')
+    self.delete_b.set_sensitive(False)
+    
+    self.actions.pack_start(self.add_b, False)
+    self.actions.pack_start(self.delete_b, False)
+    
+    self.pack_start(self.actions, False)
+    
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.list.append_column(col)
+    return col
+
+  def refresh(self):
+    self.store.clear()
+    
+    for p in self.user.get_payments(include_installments = False, done = self.done):
+      self.store.append((p,p.date,p.description, p.amount))
+
+  def on_selection_changed(self, selection):
+    model, iter = selection.get_selected()
+    self.delete_b.set_sensitive(iter is not None)
+
+  def get_selected_payment(self):
+    model, iter = self.selection.get_selected()
+    if iter is None:
+      return None
+    else:
+      return model.get_value(iter,0)
+

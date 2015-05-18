@@ -28,8 +28,10 @@ class MainMenu(gtk.MenuBar):
     
     self.rooms_menu = gtk.Menu()
     self.list_rooms = gtk.MenuItem('Salas')
+    self.show_schedules = gtk.MenuItem('Horarios')
     
     self.rooms_menu.append(self.list_rooms)
+    self.rooms_menu.append(self.show_schedules)
     self.rooms.set_submenu(self.rooms_menu)
     
     #classes menu
@@ -39,12 +41,10 @@ class MainMenu(gtk.MenuBar):
     self.klasses_menu = gtk.Menu()
     self.add_klass = gtk.MenuItem('Agregar Clase')
     self.list_klasses = gtk.MenuItem('Clases')
-    self.show_schedules = gtk.MenuItem('Horarios')
     self.show_packages = gtk.MenuItem('Paquetes')
     
     self.klasses_menu.append(self.add_klass)
     self.klasses_menu.append(self.list_klasses)
-    self.klasses_menu.append(self.show_schedules)
     self.klasses_menu.append(self.show_packages)
     
     self.klasses.set_submenu(self.klasses_menu)

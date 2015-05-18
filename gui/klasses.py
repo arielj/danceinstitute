@@ -5,7 +5,7 @@ import gtk
 import gobject
 from forms import FormFor
 from schedules import *
-from teachers import *
+from users import *
 from translations import _t
 
 class KlassForm(FormFor):

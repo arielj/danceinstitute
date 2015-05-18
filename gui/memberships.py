@@ -4,13 +4,14 @@
 import gtk
 import gobject
 from forms import FormFor
-from translations import _t
+from payments import *
+from translations import _t, _m
 import datetime
 
 class MembershipsPanel(gtk.VBox):
-  def __init__(self, student):
+  def __init__(self, user):
     gtk.VBox.__init__(self)
-    self.student = student
+    self.user = user
 
     self.pack_start(gtk.Label('Clases y cuotas:'), False)
 
@@ -20,20 +21,26 @@ class MembershipsPanel(gtk.VBox):
 
     self.notebook = gtk.Notebook()
     
-    self.add_payments_tab()
+    self.add_payments_tabs()
     
     self.add_tabs()
       
     self.pack_start(self.notebook, True)
 
-  def add_payments_tab(self):
-    t = PaymentsTab(self.student)
-    self.notebook.append_page(t,gtk.Label('Pagos'))
+  def add_payments_tabs(self):
+    if self.user.is_teacher:
+      t2 = PaymentsTab(self.user, True)
+      self.notebook.append_page(t2,gtk.Label('Pagos al profesor'))
+      t2.delete_b.connect('clicked', self.on_delete_payment_clicked, t2)
+      t2.add_b.connect('clicked', self.on_add_payment_clicked, None, True)
+    
+    t = PaymentsTab(self.user)
+    self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.__class__.__name__.lower())))
     t.delete_b.connect('clicked', self.on_delete_payment_clicked, t)
     t.add_b.connect('clicked', self.on_add_payment_clicked, None)
-    
+
   def add_tabs(self):
-    for m in self.student.memberships:
+    for m in self.user.memberships:
       self.add_tab(m)
 
   def add_tab(self,m):
@@ -47,13 +54,13 @@ class MembershipsPanel(gtk.VBox):
     children = self.notebook.get_children()
     for tab in children:
       tab.refresh()
-    for m in self.student.memberships:
+    for m in self.user.memberships:
       if m not in map(lambda t: t.membership, children):
         self.add_tab(m)
     self.notebook.show_all()
 
   def on_membership_deleted(self, m_id):
-    self.student.remove_membership(m_id)
+    self.user.remove_membership(m_id)
     for tab in self.notebook.get_children():
       if isinstance(tab,PaymentsTab):
         tab.refresh()
@@ -72,11 +79,11 @@ class MembershipsPanel(gtk.VBox):
   def on_add_ins_clicked(self, widget, membership):
     self.emit('add-installments', membership)
 
-  def on_add_payment_clicked(self, widget, tab):
+  def on_add_payment_clicked(self, widget, tab, done = False):
     if isinstance(tab,MembershipTab):
-      self.emit('add-payment', tab.get_selected_installment())
+      self.emit('add-payment', tab.get_selected_installment(), done)
     else:
-      self.emit('add-payment', None)
+      self.emit('add-payment', None, done)
 
   def on_delete_payment_clicked(self, widget, tab):
     self.emit('delete-payment', tab.get_selected_payment())
@@ -93,7 +100,7 @@ gobject.signal_new('add-installments', \
 gobject.signal_new('add-payment', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool))
 gobject.signal_new('delete-payment', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
@@ -285,104 +292,4 @@ class AddInstallmentsForm(gtk.VBox):
 
   def get_values(self):
     return {'year': self.year_e.get_text(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'fee': self.fee_e.get_text()}
-
-
-class AddPaymentDialog(gtk.Dialog):
-  def __init__(self,payment):
-    self.payment = payment
-    self.form = AddPaymentForm(payment)
-    gtk.Dialog.__init__(self, 'Agregar pago', None,
-                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
-                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-    self.vbox.pack_start(self.form, False)
-    self.vbox.show_all()
-
-class AddPaymentForm(FormFor):
-  def __init__(self, payment):
-    FormFor.__init__(self, payment)
-    
-    self.fields = gtk.VBox()
-    self.add_field('date', attrs=10)
-    self.add_field('amount', attrs=6)
-    
-    if payment.installment is None:
-      self.add_field('description', attrs=100)
-    
-    self.pack_start(self.fields, False)
-
-  def get_values(self):
-    data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text()}
-    if self.object.installment is None:
-      data['description'] = self.description_e.get_text()
-    return data
-
-class PaymentsTab(gtk.VBox):
-  def __init__(self, student):
-    gtk.VBox.__init__(self)
-    
-    self.membership = None
-    self.student = student
-    
-    self.info_vbox =gtk.VBox()
-    self.info_vbox.pack_start(gtk.Label('Pagos no relacionados a cuotas'), False)
-
-    self.pack_start(self.info_vbox, False)
-
-    #payment, date, description, amount
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str)
-    
-    self.refresh()
-    
-    self.list = gtk.TreeView(self.store)
-    self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
-    self.selection = self.list.get_selection()
-    self.selection.connect('changed', self.on_selection_changed)
-    
-    self.add_column('Fecha',1)
-    self.add_column('Descripción',2)
-    self.add_column('Monto',3)
-
-    self.scrolled = gtk.ScrolledWindow()
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.list)
-    self.scrolled.add(viewport)
-    
-    self.pack_start(self.scrolled, True)
-    
-    self.actions = gtk.HBox(True, 5)
-    
-    self.add_b = gtk.Button('Agregar Pago')
-    self.delete_b = gtk.Button('Eliminar Pago')
-    self.delete_b.set_sensitive(False)
-    
-    self.actions.pack_start(self.add_b, False)
-    self.actions.pack_start(self.delete_b, False)
-    
-    self.pack_start(self.actions, False)
-    
-  def add_column(self, label, text_idx):
-    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
-    col.set_expand(True)
-    self.list.append_column(col)
-    return col
-
-  def refresh(self):
-    self.store.clear()
-    
-    for p in self.student.get_payments(include_installments = False):
-      self.store.append((p,p.date,p.description, p.amount))
-
-  def on_selection_changed(self, selection):
-    model, iter = selection.get_selected()
-    self.delete_b.set_sensitive(iter is not None)
-
-  def get_selected_payment(self):
-    model, iter = self.selection.get_selected()
-    if iter is None:
-      return None
-    else:
-      return model.get_value(iter,0)
-
 
