@@ -393,7 +393,7 @@ class TeachersList(gtk.ScrolledWindow):
   def on_delete_clicked(self, btn):
     teacher = self.get_selected()
     if teacher is not None:
-      self.emit('teacher-delete', teacher)
+      self.emit('teacher-delete', teacher.id)
 
   def get_selected(self):
     model, iter = self.t_selection.get_selected()
@@ -410,7 +410,7 @@ gobject.signal_new('teacher-edit', \
 gobject.signal_new('teacher-delete', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+                   gobject.TYPE_NONE, (int, ))
 gobject.signal_new('teacher-add', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \

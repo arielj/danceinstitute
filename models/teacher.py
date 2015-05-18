@@ -19,3 +19,6 @@ class Teacher(user.User):
     where = where + ' AND ' + w if where else w
 
     return cls.all(where=where,args=args)
+ 
+  def before_delete(self):
+    return self.get_conn().execute('DELETE FROM klasses_teachers WHERE klasses_teachers.teacher_id = :teacher_id',{'teacher_id': self.id})

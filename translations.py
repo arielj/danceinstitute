@@ -126,7 +126,7 @@ class I18n():
       'field_not_greate_than_or_equal': ['Field "%(field)s" must be greater or equal than %(than)s.', 'El campo "%(field)s" debe ser mayor o igual a %(than)s.'],
       'field_not_less_than_or_equal': ['Field "%(field)s" must be less or equal than %(than)s.', 'El campo "%(field)s" debe ser menor o igual a %(than)s'],
       'wrong_format': ['Field "%(field)s"\'s format is not valid.', 'El formato del campo "%(field)s" no es válido.'],
-      'only_letters': ['Field "%(field)s" must be only letters.', 'El campo "%(field)s" debe ser sólo letras.'],
+      'only_letters': ['Field "%(field)s" must have only letters.', 'El campo "%(field)s" debe tener sólo letras.'],
       'wrong_quantity': ['Quantity of %(field)s is wrong.', 'La cantidad de %(field)s es inválida.'],
       'has_many_invalid': ['One or more %(relationship)s are invalid.','Uno/a o más %(relationship)s son inválidos.']
     }

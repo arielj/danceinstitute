@@ -198,8 +198,23 @@ class Controller(gobject.GObject):
       self.window.add_page(page)
       page.connect('teacher-edit', self.edit_teacher)
       page.connect('teacher-add', self.add_teacher)
+      page.connect('teacher-delete', self.ask_delete_teacher)
       self.save_signal(self.connect('user-changed', self.refresh_teachers, page), page)
+      self.save_signal(self.connect('teacher-deleted', self.refresh_teachers, None, page), page)
       return page
+
+  def ask_delete_teacher(self, page, teacher_id):
+    teacher = Teacher.find(teacher_id)
+    if teacher:
+      dialog = ConfirmDialog('Vas a borrar a '+teacher.to_label()+":\n¿Estás seguro?")
+      dialog.connect('response', self.delete_teacher, teacher)
+      dialog.run()
+
+  def delete_teacher(self, dialog, response, teacher):
+    if response == gtk.RESPONSE_ACCEPT:
+      teacher.delete()
+      self.emit('teacher-deleted', teacher.id)
+    dialog.destroy()
 
   def refresh_teachers(self, widget, teacher, created, page):
     teachers = Teacher.get()
@@ -249,20 +264,10 @@ class Controller(gobject.GObject):
     if user.save():
       self.emit('user-changed', user, new_record)
       self.window.update_label(form)
-    else:
-      ErrorMessage("No se puede guardar el profesor:", user.full_errors()).run()
-
-  def submit_user(self, form):
-    user = form.object
-    new_record = user.is_new_record()
-    user.set_attrs(form.get_values())
-    if user.save():
-      self.emit('user-changed', user, new_record)
-      self.window.update_label(form)
       if new_record:
         form.enable_memberships()
     else:
-      ErrorMessage("No se puede guardar el alumno:", user.full_errors()).run()
+      ErrorMessage("No se puede guardar el " + translations._m(user.cls_name()) + ":", user.full_errors()).run()
 
   def search_student(self, widget):
     page = SearchStudent()
@@ -270,6 +275,7 @@ class Controller(gobject.GObject):
     page.connect('search', self.on_student_search)
     page.connect('student-edit', self.edit_student)
     self.save_signal(self.connect('user-changed', page.on_search), page)
+    self.save_signal(self.connect('student-deleted', page.on_search, None), page)
   
   def on_student_search(self, page, value):
     students = Student.search(value)
@@ -641,6 +647,19 @@ gobject.signal_new('room-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #room object, creation(True value means the user just got created)
+
+gobject.signal_new('teacher-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #teacher id
+
+gobject.signal_new('student-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #student id
+
 
 gobject.signal_new('membership-deleted', \
                    Controller, \

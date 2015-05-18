@@ -6,6 +6,17 @@ from model import Model
 import payment
 import membership
 
+def titleize(value):
+  names = []
+  for name in (value or '').split(' '):
+    titleized = ''
+    if len(name) > 0:
+      titleized += name[0]
+    if len(name) > 1:
+      titleized += name[1:]
+    names.append(titleized)
+  return ' '.join(names)
+
 class User(Model):
   table = 'users'
   fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',
@@ -34,7 +45,7 @@ class User(Model):
   @name.setter
   def name(self,value):
     #str.title() broken if str has accented chars
-    self._name = ' '.join(map(lambda x: x[0].upper()+x[1:], value.split(' ')))
+    self._name = titleize(value)
 
   @property
   def lastname(self):
@@ -43,7 +54,7 @@ class User(Model):
   @lastname.setter
   def lastname(self,value):
     #str.title() broken if str has accented chars
-    self._lastname = ' '.join(map(lambda x: x[0].upper()+x[1:], value.split(' ')))
+    self._lastname = titleize(value)
 
   @property
   def male(self):
@@ -75,6 +86,9 @@ class User(Model):
       if m.id and m.id == membership_id:
         self.memberships.remove(m)
 
+  def to_label(self):
+    return ' '.join([self.name,self.lastname])
+
   def after_save(self):
     for m in self.memberships:
       m.save(validate = False)
@@ -92,6 +106,9 @@ class User(Model):
     return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments}
 
   def _is_valid(self):
+    self.validate_presence_of('name')
+    self.validate_presence_of('lastname')
+    self.validate_presence_of('dni')
     self.validate_format_of('name', frmt = 'name')
     self.validate_format_of('lastname', frmt = 'name')
     self.validate_format_of('dni', expr = '^\d\d\.?\d\d\d\.?\d\d\d$')
