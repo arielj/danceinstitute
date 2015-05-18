@@ -113,36 +113,37 @@ class Klass(Model):
     return sch
 
   @property
-  def teachers(self, requery = False):
-    if requery or self._teachers is None:
+  def teachers(self):
+    if self._teachers is None:
       self._teachers = teacher.Teacher.for_klass(self)
     return self._teachers
 
   @property
-  def schedules(self, requery = False):
-    if requery or self._schedules is None:
+  def schedules(self):
+    if self._schedules is None:
       self._schedules = schedule.Schedule.for_klass(self)
     return self._schedules
 
   def add_schedule(self, schedule):
-    self.schedules.append(schedule)
-    schedule.klass_id = self.id
-    if not schedule.is_new_record():
-      self.schedule_ids.append(schedule.id)
+    if schedule.is_new_record or schedule.id not in map(lambda s: s.id, self.schedules):
+      self.schedules.append(schedule)
+      schedule.klass_id = self.id
 
   def add_teacher(self, teacher):
     if teacher.id not in map(lambda t: t.id, self.teachers):
       self.teachers.append(teacher)
 
   def remove_schedule(self, schedule):
-    if schedule in self.schedules:
-      self.schedules.remove(schedule)
-      self._schedules_remove.append(schedule)
+    for s in self.schedules:
+      if s.id == schedule.id:
+        self.schedules.remove(s)
+        self._schedules_remove.append(s)
 
   def remove_teacher(self, teacher):
-    if teacher in self.teachers:
-      self.teachers.remove(teacher)
-      self._teachers_remove.append(teacher)
+    for t in self.teachers:
+      if t.id == teacher.id:
+        self.teachers.remove(t)
+        self._teachers_remove.append(t)
 
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')

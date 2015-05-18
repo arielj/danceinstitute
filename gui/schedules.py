@@ -166,7 +166,7 @@ class SchedulesList(gtk.ScrolledWindow):
     model, iter = self.table.get_selection().get_selected()
     if iter is not None:
       schedule = model.get_value(iter,0)
-      self.emit('schedule-delete', schedule)
+      self.emit('schedule-remove', schedule)
 
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
@@ -182,7 +182,7 @@ gobject.signal_new('schedule-edit', \
                    SchedulesList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-gobject.signal_new('schedule-delete', \
+gobject.signal_new('schedule-remove', \
                    SchedulesList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))

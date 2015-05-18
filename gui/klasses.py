@@ -68,7 +68,7 @@ class KlassForm(FormFor):
     self.schedules_ls = SchedulesList(self.object.schedules)
     self.schedules_ls.connect('schedule-add', self.on_schedule_add)
     self.schedules_ls.connect('schedule-edit', self.on_schedule_edit)
-    self.schedules_ls.connect('schedule-delete', self.on_schedule_delete)
+    self.schedules_ls.connect('schedule-remove', self.on_schedule_delete)
 
     field = gtk.VBox()
     field.pack_start(self.schedules_l, False)
@@ -116,7 +116,7 @@ class KlassForm(FormFor):
     self.emit('schedule-edit', schedule)
 
   def on_schedule_delete(self, widget, schedule):
-    print 'borrar....'
+    self.emit('schedule-remove', schedule)
 
   def on_assign_clicked(self, widget):
     self.emit('teacher-search')
@@ -133,6 +133,10 @@ class KlassForm(FormFor):
 
 gobject.type_register(KlassForm)
 gobject.signal_new('schedule-edit', \
+                   KlassForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('schedule-remove', \
                    KlassForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
@@ -314,7 +318,7 @@ class KlassesList(gtk.ScrolledWindow):
     model = tree.get_model()
     itr = model.get_iter(path)
     klass = model.get_value(itr, 0)
-    self.emit('klass-edit', klass)
+    self.emit('klass-edit', klass.id)
 
   def on_selection_changed(self, selection):
     if self.with_actions:

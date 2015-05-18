@@ -1,6 +1,8 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+import sys
+import getopt
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -21,10 +23,11 @@ class Controller(gobject.GObject):
   
   #stop app
   def quit(self, widget, data=None):
+    Conn.close()
     gtk.main_quit()
 
-  def __init__(self):
-    Conn.create_tables()
+  def __init__(self, env):
+    Conn.start_connection(env)
     gobject.GObject.__init__(self)
     self.settings = Settings.get_settings()
 
@@ -73,6 +76,7 @@ class Controller(gobject.GObject):
     self.connect('user-changed', self.on_user_changed)
     self.connect_object('settings-changed', self.show_status, 'Configuración guardada.')
     self.connect_object('payment-deleted', self.show_status, 'Pago eliminado.')
+    self.connect_object('package-changed', self.show_status, 'Paquete guardado.')
 
   def on_user_changed(self, widget, user, new_record):
     self.show_status(translations._m(user.cls_name())+' guardado.')
@@ -97,6 +101,8 @@ class Controller(gobject.GObject):
     else:
       self.window.add_page(page)
       return page
+
+
 
   #config controls
   def show_config(self, widget):
@@ -207,6 +213,7 @@ class Controller(gobject.GObject):
     dialog.connect('response', self.on_add_payment, page, True)
     dialog.run()
 
+
   #students controls
   def add_student(self, widget):
     student = Student()
@@ -255,7 +262,7 @@ class Controller(gobject.GObject):
       if new_record:
         form.enable_memberships()
     else:
-      ErrorMessage("No se puede guardar el alumno:", student.full_errors()).run()
+      ErrorMessage("No se puede guardar el alumno:", user.full_errors()).run()
 
   def search_student(self, widget):
     page = SearchStudent()
@@ -279,7 +286,8 @@ class Controller(gobject.GObject):
       klass.build_schedule({'from_time': time, 'room': room, 'day': day_idx})
     page = self.klass_form(widget, klass)
   
-  def edit_klass(self, widget, klass):
+  def edit_klass(self, widget, klass_id):
+    klass = Klass.find(klass_id)
     page = self.klass_form(widget, klass)
   
   def klass_form(self, widget, klass = None):
@@ -293,6 +301,7 @@ class Controller(gobject.GObject):
     page.submit.connect_object('clicked',self.submit_klass, page)
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
+    page.connect('schedule-remove', self.remove_schedule)
     page.connect('teacher-search', self.show_select_teacher_dialog)
     page.connect('teacher-remove', self.on_remove_teacher)
     page.connect('list-students', self.on_list_students)
@@ -412,12 +421,14 @@ class Controller(gobject.GObject):
         ErrorMessage("No se puede guardar el horario:", schedule.full_errors()).run()
 
     elif response == gtk.RESPONSE_DELETE_EVENT:
-      if schedule in page.object.get_schedules():
-        page.object.remove_schedule(schedule)
-        page.update_schedules()
+      self.remove_schedule(page,schedule)
 
     if destroy_dialog:
       dialog.destroy()
+
+  def remove_schedule(self, page, schedule):
+    page.object.remove_schedule(schedule)
+    page.update_schedules()
 
 
 
@@ -474,6 +485,7 @@ class Controller(gobject.GObject):
 
   def delete_package(self, widget, package):
     print 'delete package'
+
 
 
 
@@ -548,6 +560,7 @@ class Controller(gobject.GObject):
 
 
 
+
   #payments controls
   def add_payment(self, widget, installment, done, page):
     if installment:
@@ -588,6 +601,7 @@ class Controller(gobject.GObject):
       self.emit('payment-deleted', payment.id)
 
     dialog.destroy()
+
 
 
 
@@ -646,6 +660,18 @@ gobject.signal_new('settings-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 
-if __name__ == "__main__":
-  ctrlr = Controller()
+def main(argv):
+  env = 'dev'
+  try:
+    opts, args = getopt.getopt(argv,"e:",["env="])
+    for opt, arg in opts:
+      if opt in ('-e', '--env'):
+        env = arg
+  except getopt.GetoptError:
+    print "args error"
+  ctrlr = Controller(env = env)
   ctrlr.main()
+
+if __name__ == "__main__":
+  main(sys.argv[1:])
+

@@ -33,7 +33,8 @@ class User(Model):
   
   @name.setter
   def name(self,value):
-    self._name = value.title()
+    #str.title() broken if str has accented chars
+    self._name = ' '.join(map(lambda x: x[0].upper()+x[1:], value.split(' ')))
 
   @property
   def lastname(self):
@@ -41,7 +42,8 @@ class User(Model):
 
   @lastname.setter
   def lastname(self,value):
-    self._lastname = value.title()
+    #str.title() broken if str has accented chars
+    self._lastname = ' '.join(map(lambda x: x[0].upper()+x[1:], value.split(' ')))
 
   @property
   def male(self):

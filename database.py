@@ -3,11 +3,12 @@
 
 import sqlite3
 import datetime
+import os
+
+FILENAME = 'data.db'
 
 class Conn(object):
-  _conn = sqlite3.connect(":memory:")
-  _conn.row_factory = sqlite3.Row
-  _conn.text_factory = str
+  _conn = None
 
   CREATE = {'settings': '''CREATE TABLE settings (key text, value text)''',
             'installments': '''CREATE TABLE installments (id integer primary key, year integer, month integer, membership_id integer, amount integer)''',
@@ -23,6 +24,35 @@ class Conn(object):
            }
 
   @classmethod
+  def start_connection(cls,env):
+    create_db = False
+    seed_db = False
+    dev_data = False
+    if env == 'test' or env == 'dev':
+      cls._conn = sqlite3.connect(":memory:")
+      create_db = True
+      seed_db = True
+      dev_data = True
+    else:
+      if not os.path.isfile(FILENAME):
+        create_db = True
+        seed_db = True
+        open(FILENAME,'a').close()
+      cls._conn = sqlite3.connect(FILENAME)
+
+    if create_db:
+      cls.create_tables()
+    
+    if seed_db:
+      cls.seed()
+    
+    if dev_data:
+      cls.dev_data()
+
+    cls._conn.row_factory = sqlite3.Row
+    cls._conn.text_factory = str
+
+  @classmethod
   def create_tables(cls):
     cls.create('settings')
     cls.create('installments')
@@ -35,7 +65,6 @@ class Conn(object):
     cls.create('packages')
     cls.create('klasses_teachers')
     cls.create('klasses_packages')
-    cls.seed()
     cls.commit()
 
   @classmethod
@@ -44,6 +73,19 @@ class Conn(object):
 
   @classmethod
   def seed(cls):
+    cls.execute('''INSERT INTO rooms (name) VALUES ('Sala 1')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('name','Nombre')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('opening','18:00')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('closing','24:00')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_after','10')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_value','50')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('startup_size','')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
+    cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
+    cls.commit()
+
+  @classmethod
+  def dev_data(cls):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Tierra')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Aire')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
@@ -84,4 +126,10 @@ class Conn(object):
 
   @classmethod
   def execute(cls, q, p = ()):
-    return cls._conn.execute(q, p)
+    cur = cls._conn.execute(q, p)
+    cls.commit()
+    return cur
+
+  @classmethod
+  def close(cls):
+    cls._conn.close()
