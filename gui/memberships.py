@@ -167,7 +167,7 @@ class MembershipTab(gtk.VBox):
     self.store.clear()
     
     for ins in self.membership.installments:
-      self.store.append((ins,ins.year,ins.month_name(),"$"+str(ins.total()), ins.status(), ins.payments_details()))
+      self.store.append((ins,ins.year,ins.month_name(),ins.detailed_total(), ins.status, ins.payments_details()))
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()

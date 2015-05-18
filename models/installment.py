@@ -1,12 +1,14 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+import re
 from datetime import datetime
 from decimal import Decimal
 from translations import _t
 from model import Model
 import payment
 import membership
+import settings
 
 class Installment(Model):
   table = 'installments'
@@ -19,6 +21,7 @@ class Installment(Model):
     self._membership = None
     self._amount = 0
     self._payments = None
+    self._status = 'waiting'
     
     Model.__init__(self, data)
 
@@ -49,13 +52,30 @@ class Installment(Model):
     return sum(map(lambda p: p.amount, self.payments),0)
 
   def total(self):
+    return self.amount+self.get_recharge()
+
+  def get_recharge(self):
     recharge = 0
     
-    # calcular recargo según fecha del mes?
-    # debería ser configurable la fecha y el porcentaje
-    # debería poder configurar 2 recargos
+    sets = settings.Settings.get_settings()
+    today = datetime.today()
+    
+    if self._status != 'paid' and self.year <= today.year and self.month <= today.month and today.day > sets.recharge_after:
+      if re.match('^\d+%$',sets.recharge_value):
+        recharge = self.amount/100*(int(sets.recharge_value[0:-1]))
+      elif re.match('^\d+$',sets.recharge_value):
+        recharge = int(sets.recharge_value)
+    
+    return recharge
 
-    return self.amount*(1+recharge)
+  def detailed_total(self):
+    recharge = self.get_recharge()
+    if recharge > 0:
+      recharge = '(+'+str(recharge)+')'
+    else:
+      recharge = ''
+
+    return '$'+str(self.amount)+recharge
 
   def to_pay(self):
     return self.total()-self.paid()
@@ -64,7 +84,7 @@ class Installment(Model):
     return _t('months')[self.month]
 
   def status(self):
-    return 'Pagado' if self.to_pay() == 0 else 'A pagar'
+    return 'Pagado' if self._status == 'paid' else 'A pagar'
 
   @property
   def membership(self):
@@ -92,6 +112,9 @@ class Installment(Model):
       p.user = self.get_student()
       if p.save():
         self.payments.append(p)
+        if self.to_pay() == 0:
+          self._status = 'paid'
+          self.save(validate = False)
         return True
       else:
         return p.full_errors()
