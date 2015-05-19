@@ -4,7 +4,7 @@
 import re
 from datetime import datetime
 from decimal import Decimal
-from translations import _t
+from translations import _t, _a
 from model import Model
 import payment
 import membership
@@ -12,7 +12,7 @@ import settings
 
 class Installment(Model):
   table = 'installments'
-  fields_for_save = ['year','month','membership_id','amount']
+  fields_for_save = ['year','month','membership_id','amount', 'status']
 
   def __init__(self, data = {}):
     self._year = datetime.today().year
@@ -60,7 +60,7 @@ class Installment(Model):
     sets = settings.Settings.get_settings()
     today = datetime.today()
     
-    if self._status != 'paid' and self.year <= today.year and self.month <= today.month and today.day > sets.recharge_after:
+    if self._status != 'paid' and self.year <= today.year and self.month < today.month and today.day > int(sets.recharge_after):
       if re.match('^\d+%$',sets.recharge_value):
         recharge = self.amount/100*(int(sets.recharge_value[0:-1]))
       elif re.match('^\d+$',sets.recharge_value):
@@ -69,11 +69,14 @@ class Installment(Model):
     return recharge
 
   def detailed_total(self):
-    recharge = self.get_recharge()
-    if recharge > 0:
-      recharge = '(+'+str(recharge)+')'
+    if self._status != 'paid_with_interests':
+      recharge = self.get_recharge()
+      if recharge > 0:
+        recharge = '(+'+str(recharge)+')'
+      else:
+        recharge = ''
     else:
-      recharge = ''
+      recharge = '(+'+str(self.paid() - self.amount)+')'
 
     return '$'+str(self.amount)+recharge
 
@@ -83,8 +86,13 @@ class Installment(Model):
   def month_name(self):
     return _t('months')[self.month]
 
+  @property
   def status(self):
-    return 'Pagado' if self._status == 'paid' else 'A pagar'
+    return _a(self.cls_name(), self._status)
+
+  @status.setter
+  def status(self, value):
+    self._status = value
 
   @property
   def membership(self):
@@ -99,7 +107,7 @@ class Installment(Model):
     return self._payments
 
   def to_db(self):
-    return {'year': self.year, 'month': self.month, 'membership_id': self.membership_id, 'amount': self.amount}
+    return {'year': self.year, 'month': self.month, 'membership_id': self.membership_id, 'amount': self.amount, 'status': self._status}
 
   def _is_valid(self):
     self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
@@ -113,13 +121,16 @@ class Installment(Model):
       if p.save():
         self.payments.append(p)
         if self.to_pay() == 0:
-          self._status = 'paid'
+          if self.get_recharge() > 0:
+            self._status = 'paid_with_interests'
+          else:
+            self._status = 'paid'
           self.save(validate = False)
         return True
       else:
         return p.full_errors()
     else:
-      return "No se puede agregar un pago con mayor valor que resto a pagar."
+      return "No se puede agregar un pago con mayor valor que el resto a pagar."
 
   def get_student_id(self):
     s = self.get_student()

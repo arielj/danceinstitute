@@ -44,7 +44,10 @@ class I18n():
         'membership': ['Membership', 'Inscripción'],
         'paid': ['Paid','Pagado'],
         'amount': ['Amount','Cantidad'],
-        'payment': ['Payment','Pago']
+        'payment': ['Payment','Pago'],
+        'paid': ['Paid','Pagado'],
+        'waiting': ['Waiting','A pagar'],
+        'paid_with_interests': ['Paid with interests', 'Pagado con intereses']
       },
       'klass': {
         'name': ['Name','Nombre'],

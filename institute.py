@@ -569,28 +569,32 @@ class Controller(gobject.GObject):
 
   #payments controls
   def add_payment(self, widget, installment, done, page):
+    payment = Payment()
     if installment:
-      payment = installment.build_payment()
       payment.amount = installment.to_pay()
-    else:
-      payment = Payment()
     payment.user = page.object
     payment.done = done
 
     dialog = AddPaymentDialog(payment)
-    dialog.connect('response', self.on_add_payment, page)
+    dialog.connect('response', self.on_add_payment, page, installment)
     dialog.run()
   
-  def on_add_payment(self, dialog, response, page):
+  def on_add_payment(self, dialog, response, page, installment = None):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
-      payment = dialog.payment
       data = dialog.form.get_values()
-      payment.set_attrs(data)
-      if payment.save():
+      if installment is not None:
+        added = installment.add_payment(date = data['date'], amount = data['amount'])
+      else:
+        payment = dialog.payment
+        payment.set_attrs(data)
+        added = payment.save()
+        if added is False:
+          added = payment.full_errors()
+      if added is True:
         page.update()
       else:
-        ErrorMessage('No se pudo cargar el pago:', payment.full_errors()).run()
+        ErrorMessage('No se pudo cargar el pago:', added).run()
         destroy_dialog = False
 
     if destroy_dialog:
