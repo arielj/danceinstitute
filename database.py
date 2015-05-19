@@ -16,7 +16,7 @@ class Conn(object):
             'rooms': '''CREATE TABLE rooms (id integer primary key, name text)''',
             'memberships': '''CREATE TABLE memberships (id integer primary key, student_id integer, for_id integer, for_type text, info text)''',
             'schedules': '''CREATE TABLE schedules (id integer primary key, klass_id integer, from_time integer, to_time integer, room_id integer, day integer)''',
-            'users': '''CREATE TABLE users (id integer primary key, name text, lastname text, dni string, cellphone text, alt_phone text, birthday date, address text, male integer, email text, is_teacher integer, comments text default '')''',
+            'users': '''CREATE TABLE users (id integer primary key, name text, lastname text, dni string, cellphone text, alt_phone text, birthday date, address text, male integer, email text, is_teacher integer, comments text default '', facebook_uid text default '')''',
             'klasses': '''CREATE TABLE klasses (id integer primary key, name text, normal_fee integer, half_fee integer, once_fee integer, inscription_fee integer, min_age integer, max_age integer, quota integer, info text)''',
             'klasses_teachers': '''CREATE TABLE klasses_teachers (klass_id integer, teacher_id integer)''',
             'packages': '''CREATE TABLE packages (id integer primary key, name text, fee integer, alt_fee integer)''',
