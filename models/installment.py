@@ -36,6 +36,9 @@ class Installment(Model):
     except:
       self._year = 0
 
+  def to_label(self):
+    return self.month_name() + " " + str(self.year)
+
   @property
   def amount(self):
     return self._amount/100

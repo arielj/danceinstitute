@@ -100,6 +100,9 @@ class UserForm(FormFor):
   def on_payment_deleted(self, emmiter, p_id):
     self.memberships_panel.on_payment_deleted(p_id)
 
+  def on_installment_deleted(self, emmiter, i_id):
+    self.memberships_panel.on_installment_deleted(i_id)
+
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):
     return "Buscar alumno/a"

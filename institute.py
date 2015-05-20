@@ -76,6 +76,7 @@ class Controller(gobject.GObject):
     self.connect('user-changed', self.on_user_changed)
     self.connect_object('settings-changed', self.show_status, 'Configuración guardada.')
     self.connect_object('payment-deleted', self.show_status, 'Pago eliminado.')
+    self.connect_object('installment-deleted', self.show_status, 'Cuota eliminada.')
     self.connect_object('package-changed', self.show_status, 'Paquete guardado.')
 
   def on_user_changed(self, widget, user, new_record):
@@ -252,8 +253,10 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('add-installments', self.add_installments, page)
     page.memberships_panel.connect('add-payment', self.add_payment, page)
     page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
+    page.memberships_panel.connect('delete-installment', self.ask_delete_installment, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
+    self.save_signal(self.connect('installment-deleted', page.on_installment_deleted), page)
     self.window.add_page(page)
     return page
 
@@ -565,6 +568,19 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
+  def ask_delete_installment(self, widget, installment, page):
+    dialog = ConfirmDialog('Vas a borrar la cuota de '+installment.to_label()+"\n¿Estás seguro?")
+    dialog.connect('response', self.delete_installment, installment)
+    dialog.run()
+
+  def delete_installment(self, dialog, response, installment):
+    if response == gtk.RESPONSE_ACCEPT:
+      installment.delete()
+      self.emit('installment-deleted', installment.id)
+
+    dialog.destroy()
+
+
 
 
 
@@ -665,6 +681,11 @@ gobject.signal_new('student-deleted', \
                    gobject.TYPE_NONE, (int,))
                    #student id
 
+gobject.signal_new('installment-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #installment id
 
 gobject.signal_new('membership-deleted', \
                    Controller, \
