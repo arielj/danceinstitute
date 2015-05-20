@@ -288,6 +288,7 @@ class Controller(gobject.GObject):
   #klasses controls
   def add_klass(self, widget, room = '', time = '', day_idx = 0):
     klass = Klass()
+    room = Room.find_by('name',room)
     if room and time:
       klass.build_schedule({'from_time': time, 'room': room, 'day': day_idx})
     page = self.klass_form(widget, klass)
