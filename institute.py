@@ -8,6 +8,7 @@ pygtk.require('2.0')
 import gtk
 import gobject
 import webbrowser
+import re
 from database import Conn
 from gui import *
 from settings import Settings
@@ -289,7 +290,9 @@ class Controller(gobject.GObject):
   def open_fb(self, page):
     facebook_uid = page.facebook_uid_e.get_text()
     if facebook_uid:
-      webbrowser.open_new_tab('https://www.facebook.com/'+facebook_uid)
+      if not re.match('https://www.facebook.com/',facebook_uid):
+        facebook_uid = 'https://www.facebook.com/'+facebook_uid
+      webbrowser.open_new_tab(facebook_uid)
     else:
       ErrorMessage('No se puede abrir la página de Facebook de la persona:', 'No se cargó una ID de facebook').run()
 
