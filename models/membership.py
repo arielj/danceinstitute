@@ -64,6 +64,14 @@ class Membership(Model):
     if i.id not in map(lambda i: i.id, self.installments):
       self.installments.append(i)
 
+  def remove_installment(self, i):
+    if isinstance(i,installment.Installment):
+      i = i.id
+
+    for ins in self.installments:
+      if ins.id == i:
+        self.installments.remove(ins)
+
   def create_installments(self, year, initial_month, final_month, fee):
     year = year
     initial_month = initial_month

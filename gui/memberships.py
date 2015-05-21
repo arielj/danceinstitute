@@ -71,6 +71,8 @@ class MembershipsPanel(gtk.VBox):
 
   def on_installment_deleted(self, i_id):
     for tab in self.notebook.get_children():
+      if not isinstance(tab,PaymentsTab):
+        tab.membership.remove_installment(i_id)
       tab.refresh()
     self.update()
 
