@@ -108,7 +108,6 @@ class User(Model):
   def _is_valid(self):
     self.validate_presence_of('name')
     self.validate_presence_of('lastname')
-    self.validate_presence_of('dni')
     self.validate_format_of('name', frmt = 'name')
     self.validate_format_of('lastname', frmt = 'name')
     self.validate_format_of('dni', expr = '^\d\d\.?\d\d\d\.?\d\d\d$')

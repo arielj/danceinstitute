@@ -70,18 +70,19 @@ class Model(object):
       self.add_error(field, _e(err) % args)
 
   def validate_format_of(self, field, frmt = None, expr = None, message = None):
-    field_name = _a(self.cls_name(),field)
-    if expr is None:
-      if frmt == 'name':
-        expr = '^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\'\s]+$'
-        if message is None:
-          message = _e('only_letters') % {'field': field_name}
-    
-    if expr is not None and not re.match(expr, getattr(self,field)):
-      if message is None:
-        message = _e('wrong_format') % {'field': field_name}
+    if getattr(self,field):
+      field_name = _a(self.cls_name(),field)
+      if expr is None:
+        if frmt == 'name':
+          expr = '^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\'\s]+$'
+          if message is None:
+            message = _e('only_letters') % {'field': field_name}
       
-      self.add_error(field, message)
+      if expr is not None and not re.match(expr, getattr(self,field)):
+        if message is None:
+          message = _e('wrong_format') % {'field': field_name}
+        
+        self.add_error(field, message)
 
   def validate_quantity_of(self, field, great_than = None, less_than = None, message = None):
     field_name = _a(self.cls_name(),field)
