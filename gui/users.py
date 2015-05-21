@@ -5,6 +5,7 @@ import gtk
 import gobject
 from forms import FormFor
 from memberships import *
+from translations import _a
 
 class UserForm(FormFor):
   def __init__(self, user):
@@ -77,16 +78,34 @@ class UserForm(FormFor):
     gender_field.pack_start(self.gender_l, False)
     gender_field.pack_start(radios_hbox, False)
     hbox.pack_start(gender_field, False)
-    hbox.pack_start(gtk.VBox(), False)
-    self.fields.pack_start(hbox, False)
+    
+    fb_field = gtk.VBox()
+    self.facebook_uid_l = gtk.Label(_a(self.object.__class__.__name__.lower(), 'facebook_uid'))
+    self.facebook_uid_e = gtk.Entry(300)
+    v = self.object.facebook_uid
+    v = v if v is not None else ''
+    self.facebook_uid_e.set_text(str(v))
+    self.open_fb = gtk.Button('Abrir')
+    
+    inner_hbox = gtk.HBox()
+    inner_hbox.pack_start(self.facebook_uid_e, True)
+    inner_hbox.pack_start(self.open_fb, False)
+    
+    fb_field.pack_start(self.facebook_uid_l, False)
+    fb_field.pack_start(inner_hbox, False)
 
+    hbox.pack_start(fb_field, True)
+
+    self.fields.pack_start(hbox, False)
+    
+    
     f, l, e = self.add_field('comments', field_type = 'text')
     e.set_size_request(-1,200)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
     self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text()}
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text()}
 
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)

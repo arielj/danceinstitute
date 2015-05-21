@@ -40,34 +40,35 @@ class Model(object):
 
   def validate_numericallity_of(self, field, great_than = None, less_than = None, great_than_or_equal = None, less_than_or_equal = None, only_integer = True):
     v = getattr(self,field)
-    field_name = _a(self.cls_name(),field)
-    err = False
-    extra = False
-    try:
-      if only_integer:
-        v = int(v)
-      else:
-        v = Decimal(v)
-      if great_than is not None and v <= great_than:
-        err = 'field_not_greate_than'
-        extra = {'than': great_than}
-      if less_than is not None and v >= less_than:
-        err = 'field_not_less_than'
-        extra = {'than': less_than}
-      if great_than_or_equal is not None and v < great_than_or_equal:
-        err = 'field_not_great_than_or_equal'
-        extra = {'than': great_than_or_equal}
-      if less_than_or_equal is not None and v > less_than_or_equal:
-        err = 'field_not_less_than_or_equal'
-        extra = {'than': less_than_or_equal}
-    except:
-      err = 'field_not_number'
-    
-    if err:
-      args = {'field': field_name}
-      if extra:
-        args.update(extra)
-      self.add_error(field, _e(err) % args)
+    if v:
+      field_name = _a(self.cls_name(),field)
+      err = False
+      extra = False
+      try:
+        if only_integer:
+          v = int(v)
+        else:
+          v = Decimal(v)
+        if great_than is not None and v <= great_than:
+          err = 'field_not_greate_than'
+          extra = {'than': great_than}
+        if less_than is not None and v >= less_than:
+          err = 'field_not_less_than'
+          extra = {'than': less_than}
+        if great_than_or_equal is not None and v < great_than_or_equal:
+          err = 'field_not_great_than_or_equal'
+          extra = {'than': great_than_or_equal}
+        if less_than_or_equal is not None and v > less_than_or_equal:
+          err = 'field_not_less_than_or_equal'
+          extra = {'than': less_than_or_equal}
+      except:
+        err = 'field_not_number'
+      
+      if err:
+        args = {'field': field_name}
+        if extra:
+          args.update(extra)
+        self.add_error(field, _e(err) % args)
 
   def validate_format_of(self, field, frmt = None, expr = None, message = None):
     if getattr(self,field):

@@ -7,6 +7,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gobject
+import webbrowser
 from database import Conn
 from gui import *
 from settings import Settings
@@ -248,6 +249,7 @@ class Controller(gobject.GObject):
         return current
       
     page.submit.connect_object('clicked', self.submit_user, page)
+    page.open_fb.connect_object('clicked', self.open_fb, page)
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
     page.memberships_panel.connect('add-installments', self.add_installments, page)
@@ -284,6 +286,12 @@ class Controller(gobject.GObject):
     students = Student.search(value)
     page.update_results(students)
 
+  def open_fb(self, page):
+    facebook_uid = page.facebook_uid_e.get_text()
+    if facebook_uid:
+      webbrowser.open_new_tab('https://www.facebook.com/'+facebook_uid)
+    else:
+      ErrorMessage('No se puede abrir la página de Facebook de la persona:', 'No se cargó una ID de facebook').run()
 
 
 

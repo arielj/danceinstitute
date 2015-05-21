@@ -20,7 +20,7 @@ def titleize(value):
 class User(Model):
   table = 'users'
   fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',
-                     'address','male','email','is_teacher','comments']
+                     'address','male','email','is_teacher','comments','facebook_uid']
 
   def __init__(self, data = {}):
     self._name = ''
@@ -103,7 +103,7 @@ class User(Model):
       m.student_id = self.id
 
   def to_db(self):
-    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments}
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid}
 
   def _is_valid(self):
     self.validate_presence_of('name')

@@ -103,7 +103,8 @@ class I18n():
         'email': ['Email', 'E-mail'],
         'is_teacher': ['Is teacher','Es profesor'],
         'comments': ['Comments','Comentarios'],
-        'memberships': ['Memberships','Inscripciones']
+        'memberships': ['Memberships','Inscripciones'],
+        'facebook_uid': ['Facebook ID', 'ID de Facebook']
       },
       'teacher': {
         'name': ['Name','Nombre'],
@@ -118,7 +119,8 @@ class I18n():
         'gender': ['Gender','Sexo'],
         'email': ['Email', 'E-mail'],
         'is_teacher': ['Is teacher','Es profesor'],
-        'comments': ['Comments','Comentarios']
+        'comments': ['Comments','Comentarios'],
+        'facebook_uid': ['Facebook ID', 'ID de Facebook']
       }
     },
     'errors': {
