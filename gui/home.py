@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import gtk
+import gobject
 
 class Home(gtk.HBox):
   def __init__(self, klasses = [], notes = [], installments = []):
-    gtk.HBox.__init__(self)
+    gtk.HBox.__init__(self, False, 10)
     self.set_border_width(4)
     
     left = gtk.VBox()
@@ -17,6 +18,7 @@ class Home(gtk.HBox):
     
     
     self.installments = OverdueInstallments(installments)
+    self.installments.list.connect('row-activated', self.on_installment_activated)
     
     self.pack_start(left)
     self.pack_start(self.installments)
@@ -26,6 +28,18 @@ class Home(gtk.HBox):
   def get_tab_label(self):
     return 'Inicio'
 
+  def on_installment_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    user_id = model.get_value(itr, 1)
+    if user_id:
+      self.emit('user-edit', user_id)
+
+gobject.type_register(Home)
+gobject.signal_new('user-edit', \
+                   Home, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
 class TodayKlasses(gtk.VBox):
   def __init__(self,klasses):
@@ -84,7 +98,39 @@ class Notes(gtk.VBox):
 
 class OverdueInstallments(gtk.VBox):
   def __init__(self,installments):
+    self.installments = installments
     gtk.VBox.__init__(self)
     self.pack_start(gtk.Label('Cuotas atrasadas'), False)
+
+    #installment, user_id, user_label, year, month
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT,str,str,str)
     
+    self.refresh()
     
+    self.list = gtk.TreeView(self.store)
+    self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
+    
+    self.add_column('Usuario',2)
+    self.add_column('Año',3)
+    self.add_column('Mes',4)
+
+    self.scrolled = gtk.ScrolledWindow()
+    viewport = gtk.Viewport()
+    viewport.set_shadow_type(gtk.SHADOW_NONE)
+    viewport.add(self.list)
+    self.scrolled.add(viewport)
+    
+    self.pack_start(self.scrolled, True)
+
+  def refresh(self):
+    self.store.clear()
+    
+    for ins in self.installments:
+      u = ins.get_student()
+      self.store.append((ins,u.id,u.to_label(),ins.year,ins.month_name()))
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.list.append_column(col)
+    return col

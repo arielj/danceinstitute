@@ -161,3 +161,16 @@ class Installment(Model):
       p.installment = None
       p.save(validate=False)
     return True
+
+  @classmethod
+  def overdues(cls):
+    today = datetime.today()
+    month = today.month
+    year = today.year
+    if today.day < settings.Settings.get_settings().recharge_after:
+      month = month-1
+    if month == 0:
+      month = 12
+      year = year-1
+      
+    return cls.get_many('SELECT * FROM installments WHERE status = :status AND year = :year AND month <= :month',{'status': 'waiting', 'year': year, 'month': month})

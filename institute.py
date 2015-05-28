@@ -96,12 +96,13 @@ class Controller(gobject.GObject):
     self.window.show_status(status)
 
   def home(self, widget):
-    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()))
+    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()), installments = installment.Installment.overdues())
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:
       self.window.focus_page(current)
       return current
     else:
+      page.connect('user-edit', self.edit_student)
       self.window.add_page(page)
       return page
 
