@@ -28,10 +28,10 @@ class Conn(object):
     create_db = False
     seed_db = False
     dev_data = False
+    check_version = False
     if env == 'test' or env == 'dev':
       cls._conn = sqlite3.connect(":memory:")
       create_db = True
-      seed_db = True
       dev_data = True
     else:
       if not os.path.isfile(FILENAME):
@@ -42,6 +42,8 @@ class Conn(object):
 
     if create_db:
       cls.create_tables()
+
+    cls.check_version()
     
     if seed_db:
       cls.seed()
@@ -85,6 +87,18 @@ class Conn(object):
     cls.commit()
 
   @classmethod
+  def check_version(cls):
+    result = cls.execute('''SELECT value FROM settings WHERE key = "version";''').fetchone()
+    if result:
+      version = result[0]
+    else:
+      version = '0.1'
+    
+    if version == '0.1':
+      cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
+      cls.execute('INSERT INTO settings (key, value) VALUES ("version","0.2")')
+
+  @classmethod
   def dev_data(cls):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Tierra')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Aire')''')
@@ -102,7 +116,7 @@ class Conn(object):
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (2, 1900, 2030, 2, 3)''')
     cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Lau', 'Gut', '35592392', '0299-15-453-4315', '1991-02-12', '9 de Julio 1140', 0, 'lali_gut@yahoo.com.ar', 1)''')
     cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Tincho', 'Arce', '11111111', 'nose', '1981-02-12', 'Barrio mercantil', 1, 'tincho@sharife.com.ar', 1)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0)''')
+    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('Flamenco Adultos', 350, 200, 50, 0, 15, 0, 15, 'Traer zapatos con taco ancho y una pollera larga.')''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('HipHop Adolescentes', 300, 200, 30, 0, 13, 22,30, 'Zapatillas y ropa cómoda')''')
     cls.execute('''INSERT INTO klasses_teachers (klass_id, teacher_id) VALUES (1,1)''')

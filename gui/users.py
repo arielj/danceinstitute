@@ -51,7 +51,12 @@ class UserForm(FormFor):
     
     personal_info_box = gtk.HBox(True, 8)
     self.add_field('dni', attrs=10, box=personal_info_box)
-    self.add_field('birthday', attrs=10, box=personal_info_box)
+    
+    age_hbox = gtk.HBox(True, 8)
+    self.add_field('birthday', attrs=10, box=age_hbox)
+    self.birthday_e.connect('focus-out-event',self.on_birthday_focus_out)
+    self.add_field('age', attrs=2, box=age_hbox)
+    personal_info_box.pack_start(age_hbox, True)
     self.fields.pack_start(personal_info_box, False)
     
     contact_info_box = gtk.HBox(True, 8)
@@ -105,7 +110,7 @@ class UserForm(FormFor):
     self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text()}
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text()}
 
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)
@@ -121,6 +126,12 @@ class UserForm(FormFor):
 
   def on_installment_deleted(self, emmiter, i_id):
     self.memberships_panel.on_installment_deleted(i_id)
+
+  def on_birthday_focus_out(self, entry, event):
+    date = entry.get_text()
+    age = self.object.__class__.calculate_age(date)
+    if age:
+      self.age_e.set_text(str(age))
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):

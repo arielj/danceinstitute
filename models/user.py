@@ -5,6 +5,7 @@ import re
 from model import Model
 import payment
 import membership
+import datetime
 
 def titleize(value):
   names = []
@@ -20,7 +21,7 @@ def titleize(value):
 class User(Model):
   table = 'users'
   fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',
-                     'address','male','email','is_teacher','comments','facebook_uid']
+                     'address','male','email','is_teacher','comments','facebook_uid','age']
 
   def __init__(self, data = {}):
     self._name = ''
@@ -29,11 +30,13 @@ class User(Model):
     self.cellphone = ''
     self.alt_phone = ''
     self.birthday = ''
+    self._age = 0
     self.address = ''
     self._male = True
     self.email = ''
     self._is_teacher = False
     self.comments = ''
+    self.facebook_uid = ''
     self._memberships = None
     
     Model.__init__(self,data)
@@ -73,6 +76,17 @@ class User(Model):
     self._is_teacher = int(value)
 
   @property
+  def age(self):
+    return self._age
+  
+  @age.setter
+  def age(self,value):
+    try:
+      self._age = int(value)
+    except:
+      self._age = 0
+
+  @property
   def memberships(self):
     if self._memberships is None:
       self._memberships = membership.Membership.for_student(self.id)
@@ -103,7 +117,7 @@ class User(Model):
       m.student_id = self.id
 
   def to_db(self):
-    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid}
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age}
 
   def _is_valid(self):
     self.validate_presence_of('name')
@@ -114,3 +128,32 @@ class User(Model):
 
   def get_payments(self, include_installments = True, done = None):
     return payment.Payment.for_user(self.id, include_installments, done)
+
+
+  @classmethod
+  def calculate_age(cls,born):
+    if not isinstance(born,datetime.date):
+      try:
+        born = datetime.datetime.strptime(born,'%Y/%m/%d').date()
+      except:
+        try:
+          born = datetime.datetime.strptime(born,'%Y/%d/%m').date()
+        except:
+          try:
+            born = datetime.datetime.strptime(born,'%Y-%m-%d').date()
+          except:
+            try:
+              born = datetime.datetime.strptime(born,'%Y-%d-%m').date()
+            except:
+              try:
+                born = datetime.datetime.strptime(born,'%d-%m-%Y').date()
+              except:
+                try:
+                  born = datetime.datetime.strptime(born,'%d/%m/%Y').date()
+                except:
+                  born = False
+    if born:
+      today = datetime.date.today()
+      return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+    else:
+      return False
