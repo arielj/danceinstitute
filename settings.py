@@ -12,6 +12,7 @@ class Settings(object):
     self.tabs_position = 'top'
     self.recharge_after = 0
     self.recharge_value = 0
+    self.notes = ''
 
   def get_opening_h(self):
     return int(self.opening.split(':')[0])

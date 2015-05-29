@@ -50,6 +50,8 @@ class Controller(gobject.GObject):
     self.connected_signals = {}
     
     self.connect('settings-changed', self.on_settings_changed)
+    
+    self.home(None)
 
   def close_tab(self, window, page):
     self.window.remove_page(page)
@@ -96,17 +98,21 @@ class Controller(gobject.GObject):
     self.window.show_status(status)
 
   def home(self, widget):
-    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()), installments = installment.Installment.overdues())
+    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()), installments = installment.Installment.overdues(), notes = self.settings.notes)
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:
       self.window.focus_page(current)
       return current
     else:
       page.connect('user-edit', self.edit_student)
+      page.notes.save.connect_object('clicked',self.save_notes, page)
       self.window.add_page(page)
       return page
 
-
+  def save_notes(self, page):
+    self.settings.notes = page.get_notes()
+    if self.settings.save():
+      self.emit('settings-changed')
 
   #config controls
   def show_config(self, widget):

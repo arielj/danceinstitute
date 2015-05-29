@@ -5,17 +5,16 @@ import gtk
 import gobject
 
 class Home(gtk.HBox):
-  def __init__(self, klasses = [], notes = [], installments = []):
+  def __init__(self, klasses = [], notes = '', installments = []):
     gtk.HBox.__init__(self, False, 10)
     self.set_border_width(4)
     
     left = gtk.VBox()
     self.klasses = TodayKlasses(klasses)
-    left.pack_start(self.klasses)
+    left.pack_start(self.klasses, False)
 
     self.notes = Notes(notes)
-    left.pack_start(self.notes)
-    
+    left.pack_start(self.notes, True)
     
     self.installments = OverdueInstallments(installments)
     self.installments.list.connect('row-activated', self.on_installment_activated)
@@ -34,6 +33,10 @@ class Home(gtk.HBox):
     user_id = model.get_value(itr, 1)
     if user_id:
       self.emit('user-edit', user_id)
+
+  def get_notes(self):
+    buff = self.notes.entry.get_buffer()
+    return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
 
 gobject.type_register(Home)
 gobject.signal_new('user-edit', \
@@ -95,6 +98,18 @@ class Notes(gtk.VBox):
   def __init__(self,notes):
     gtk.VBox.__init__(self)
     self.pack_start(gtk.Label('Notas'), False)
+    self.entry = gtk.TextView()
+    self.entry.set_editable(True)
+    self.entry.get_buffer().set_text(notes)
+    self.entry.set_wrap_mode(gtk.WRAP_WORD)
+    e = gtk.ScrolledWindow()
+    e.add(self.entry)
+    e.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+    e.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
+    self.pack_start(e,True)
+    
+    self.save = gtk.Button('Guardar nota')
+    self.pack_start(self.save, False)
 
 class OverdueInstallments(gtk.VBox):
   def __init__(self,installments):

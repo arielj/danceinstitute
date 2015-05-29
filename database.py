@@ -98,6 +98,11 @@ class Conn(object):
       cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
       cls.execute('INSERT INTO settings (key, value) VALUES ("version","0.2")')
       version = '0.2'
+    
+    if version == '0.2':
+      cls.execute('INSERT INTO settings (key, value) VALUES ("notes", "")')
+      cls.set_version('0.3')
+      version = '0.3'
 
   @classmethod
   def set_version(cls,version):
@@ -137,6 +142,7 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (key, value) VALUES ('startup_size','')''')
     cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
     cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
+    cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
     cls.commit()
 
   @classmethod

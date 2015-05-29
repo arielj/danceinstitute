@@ -108,9 +108,13 @@ class UserForm(FormFor):
     e.set_size_request(-1,200)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
     self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
+
+  def get_comments_text(self):
+    buff = self.comments_e.get_buffer()
+    return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text()}
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text(), 'comments': self.get_comments_text()}
 
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)
