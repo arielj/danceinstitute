@@ -35,6 +35,7 @@ class Config(gtk.ScrolledWindow):
     self.recharge_after_e.set_text(str(getattr(self.settings,'recharge_after')))
     self.recharge_value_e = self.add_field('Valor del recargo (formato: 10 o 10%)', attrs=10)
     self.recharge_value_e.set_text(str(getattr(self.settings,'recharge_value')))
+    
     self.language_e = self.add_field('Idioma', attrs=2)
     self.language_e.set_text(str(getattr(self.settings,'language')))
 
@@ -42,7 +43,7 @@ class Config(gtk.ScrolledWindow):
     self.tabs_position_e.set_text(str(getattr(self.settings,'tabs_position')))
     self.startup_size_e = self.add_field('Tamaño inicial (formato: 1024x768)', attrs=15)
     self.startup_size_e.set_text(str(getattr(self.settings,'startup_size')))
-    
+
     self.submit = gtk.Button('Guardar')
     
     self.vbox.pack_start(self.submit, False)

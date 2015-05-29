@@ -7,6 +7,7 @@ from forms import FormFor
 from schedules import *
 from users import *
 from translations import _t
+import settings
 
 class KlassForm(FormFor):
   def __init__(self, klass):
@@ -168,6 +169,13 @@ class SchedulesTables(gtk.ScrolledWindow):
     
     self.vbox = gtk.VBox(False, 10)
     
+    self.schedules_by_room_cb = gtk.CheckButton('Separar horarios por sala')
+    self.schedules_by_room_cb.set_active(True)
+    self.schedules_by_room_cb.connect('toggled',self.on_schedules_by_room_toggled)
+
+    self.vbox.pack_start(self.schedules_by_room_cb,False)
+    
+    self.rooms_vbox = gtk.VBox(False, 4)
     self.room_table = {}
     for room in klasses.iterkeys():
       vbox = gtk.VBox(False, 3)
@@ -176,14 +184,26 @@ class SchedulesTables(gtk.ScrolledWindow):
       self.room_table[room].connect('row-activated', self.on_row_activated)
       vbox.pack_start(label, False)
       vbox.pack_start(self.room_table[room], False)
-      self.vbox.pack_start(vbox, False)
+      self.rooms_vbox.pack_start(vbox, False)
 
+    self.mixed_vbox = gtk.VBox(False, 4)
+    vbox = gtk.VBox(False, 3)
+    label = gtk.Label('Horarios:')
+    vbox.pack_start(label, False)
+    self.mixed_table = RoomKlassesTable(None, self.klasses)
+    vbox.pack_start(self.mixed_table, False)
+    self.mixed_vbox.pack_start(vbox, False)
+    
+    self.vbox.pack_start(self.rooms_vbox, False)
+    self.vbox.pack_start(self.mixed_vbox, False)
+      
     viewport = gtk.Viewport()
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.vbox)
     self.add(viewport)
     
     self.show_all()
+    self.mixed_vbox.hide()
 
   def get_tab_label(self):
     return 'Horarios'
@@ -205,6 +225,16 @@ class SchedulesTables(gtk.ScrolledWindow):
     self.klasses = klasses
     for room in self.klasses:
       self.room_table[room].refresh(self.klasses[room])
+    self.mixed_table.refresh(self.klasses)
+    
+
+  def on_schedules_by_room_toggled(self, check):
+    if check.get_active():
+      self.rooms_vbox.show()
+      self.mixed_vbox.hide()
+    else:
+      self.rooms_vbox.hide()
+      self.mixed_vbox.show()
     
 gobject.type_register(SchedulesTables)
 gobject.signal_new('klass-edit', \
@@ -235,7 +265,7 @@ class RoomKlassesTable(gtk.TreeView):
     self.add_column('Jueves', 4, 'thu',3)
     self.add_column('Viernes', 5, 'fri',4)
     self.add_column('Sábado', 6, 'sat',5)
-    self.add_column('Domingo', 7, 'sun',6)
+    self.add_column('Domingo', 7, 'sun',6) 
   
   def add_column(self, label, idx, name, day_idx):
     col = ListColumn(label, idx, name, day_idx)
@@ -250,14 +280,32 @@ class RoomKlassesTable(gtk.TreeView):
 
   def refresh(self, klasses):
     self.store.clear()
-    keys = klasses.keys()
+    if self.room:
+      keys = klasses.keys()
+    else:
+      keys = klasses[klasses.keys()[0]].keys()
+
     keys.sort()
     for h in keys:
-      k = klasses[h]
-      insert = [h]
-      for d in _t('abbr_days','en'):
-        insert.append(k[d].name if k[d] else '')
-      self.store.append(insert)
+      if self.room:
+        rooms = [self.room]
+      else:
+        rooms = klasses.iterkeys()
+      
+      for room in rooms:
+        if self.room:
+          k = klasses[h]
+        else:
+          k = klasses[room][h]
+        insert = [h]
+        do_insert = False
+        for d in _t('abbr_days','en'):
+          kls_name = k[d].name if k[d] else ''
+          if kls_name:
+            do_insert = True
+          insert.append(kls_name)
+        if do_insert or self.room:
+          self.store.append(insert)      
 
 class ListColumn(gtk.TreeViewColumn):
   def __init__(self, label, idx, name, day_idx):

@@ -97,6 +97,11 @@ class Conn(object):
     if version == '0.1':
       cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
       cls.execute('INSERT INTO settings (key, value) VALUES ("version","0.2")')
+      version = '0.2'
+
+  @classmethod
+  def set_version(cls,version):
+    cls.execute('UPDATE settings SET value = :version WHERE key = "version"',{'version': version})
 
   @classmethod
   def dev_data(cls):
