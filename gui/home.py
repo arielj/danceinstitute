@@ -9,7 +9,7 @@ class Home(gtk.HBox):
     gtk.HBox.__init__(self, False, 10)
     self.set_border_width(4)
     
-    left = gtk.VBox()
+    left = gtk.VBox(False, 10)
     self.klasses = TodayKlasses(klasses)
     left.pack_start(self.klasses, False)
 

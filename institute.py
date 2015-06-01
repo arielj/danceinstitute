@@ -10,6 +10,7 @@ import gobject
 import tempfile
 import webbrowser
 import re
+import datetime
 from database import Conn
 from gui import *
 from settings import Settings
@@ -653,10 +654,19 @@ class Controller(gobject.GObject):
 
   #resports
   def daily_payments(self, menu_item):
-    page = DailyPayments(Payment.all())
+    today = datetime.datetime.today()
+    page = DailyPayments(Payment.filter(today,today,False))
     page.export.connect_object('clicked', self.export_daily_payments, page)
+    page.filter.connect_object('clicked', self.filter_payments, page)
     self.window.add_page(page)
     return page
+
+  def filter_payments(self, page):
+    f = page.get_from()
+    t = page.get_to()
+    received = page.get_done_or_received()
+    payments = Payment.filter(f,t,received)
+    page.update(payments)
 
   def export_daily_payments(self, page):
     f, path = tempfile.mkstemp('.html')

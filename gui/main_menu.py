@@ -80,8 +80,8 @@ class MainMenu(gtk.MenuBar):
     self.append(self.reports)
     
     self.reports_menu = gtk.Menu()
-    self.daily_payments = gtk.MenuItem('Pagos por día')
-    self.students_stats = gtk.MenuItem('Estadísticas de alumnos')
+    self.daily_payments = gtk.MenuItem('Pagos')
+    self.students_stats = gtk.MenuItem('Alumnos')
     
     self.reports_menu.append(self.daily_payments)
     self.reports_menu.append(self.students_stats)
