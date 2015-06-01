@@ -75,6 +75,19 @@ class MainMenu(gtk.MenuBar):
     
     self.students.set_submenu(self.students_menu)
     
+    #reports menu
+    self.reports = gtk.MenuItem('Reportes')
+    self.append(self.reports)
+    
+    self.reports_menu = gtk.Menu()
+    self.daily_payments = gtk.MenuItem('Pagos por día')
+    self.students_stats = gtk.MenuItem('Estadísticas de alumnos')
+    
+    self.reports_menu.append(self.daily_payments)
+    self.reports_menu.append(self.students_stats)
+    
+    self.reports.set_submenu(self.reports_menu)
+    
     #help menu
     self.help = gtk.MenuItem('Ayuda')
     self.append(self.help)

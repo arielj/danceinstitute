@@ -7,6 +7,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gobject
+import tempfile
 import webbrowser
 import re
 from database import Conn
@@ -71,6 +72,7 @@ class Controller(gobject.GObject):
     self.window.menu.show_packages.connect('activate', self.show_packages)
     self.window.menu.add_student.connect('activate', self.add_student)
     self.window.menu.search_student.connect('activate', self.search_student)
+    self.window.menu.daily_payments.connect('activate', self.daily_payments)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
@@ -646,6 +648,22 @@ class Controller(gobject.GObject):
       self.emit('payment-deleted', payment.id)
 
     dialog.destroy()
+
+
+
+  #resports
+  def daily_payments(self, menu_item):
+    page = DailyPayments(Payment.all())
+    page.export.connect_object('clicked', self.export_daily_payments, page)
+    self.window.add_page(page)
+    return page
+
+  def export_daily_payments(self, page):
+    f, path = tempfile.mkstemp('.html')
+    f = open(path,'w')
+    f.write(page.to_html())
+    f.close
+    webbrowser.open_new_tab(path)
 
 
 

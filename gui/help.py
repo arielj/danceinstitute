@@ -30,11 +30,11 @@ class License(gtk.Dialog):
     try:
       return open('LICENSE').read()
     except:
-      return 'No se pudo leer el archivo de licensia'
+      return 'No se pudo leer el archivo de licencia'
 
 class About(gtk.AboutDialog):
   def __init__(self):
-    name = 'Dancing'
+    name = 'DanS'
     gtk.AboutDialog.__init__(self)
     self.set_program_name(name)
     self.set_comments('Software to manage a dance institute/academy')

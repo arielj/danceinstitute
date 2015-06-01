@@ -9,3 +9,4 @@ from widgets import *
 from packages import *
 from home import *
 from rooms import *
+from reports import *
