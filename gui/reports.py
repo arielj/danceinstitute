@@ -30,7 +30,7 @@ class DailyPayments(gtk.VBox):
     
     self.pack_start(self.form, False)
     
-    self.headings = ['Alumno', 'Fecha', 'Monto', 'Detalle']
+    self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle']
     
     self.list = PaymentsList(payments, self.headings)
     
@@ -114,6 +114,7 @@ def html_wrapper(content):
   css = """#wrapper {
 	  padding:0px;
 	  width:900px;
+	  max-width: 100%;
 	  margin: 0 auto;
 	  border:1px solid #000000;
 	
@@ -162,12 +163,10 @@ def html_wrapper(content):
   #wrapper tr:hover td{
 	
   }
-  #wrapper tr:nth-child(odd){ background-color:#e5e5e5; }
-  #wrapper tr:nth-child(even){ background-color:#b2b2b2; }
+  #wrapper tr:nth-child(even){ background-color:#e5e5e5; }
+  #wrapper tr:nth-child(odd){ background-color:#b2b2b2; }
   #wrapper td{
 	  vertical-align:middle;
-	
-	
 	  border:1px solid #000000;
 	  border-width:0px 1px 1px 0px;
 	  text-align:left;
@@ -178,13 +177,13 @@ def html_wrapper(content):
 	  color:#000000;
   }
   #wrapper tr:last-child td{
-	  border-width:0px 1px 0px 0px;
+	  border-width:0px 1px 1px 0px;
   }
   #wrapper tr td:last-child{
 	  border-width:0px 0px 1px 0px;
   }
   #wrapper tr:last-child td:last-child{
-	  border-width:0px 0px 0px 0px;
+	  border-width:0px 0px 1px 0px;
   }
   #wrapper tr th{
 		  background:-o-linear-gradient(bottom, #7f7f7f 5%, #cccccc 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #7f7f7f), color-stop(1, #cccccc) );
@@ -194,7 +193,7 @@ def html_wrapper(content):
 	  background-color:#7f7f7f;
 	  border:0px solid #000000;
 	  text-align:center;
-	  border-width:0px 0px 1px 1px;
+	  border-width:1px 1px 1px 1px;
 	  font-size:18px;
 	  font-family:Arial;
 	  font-weight:bold;
@@ -208,10 +207,10 @@ def html_wrapper(content):
 	  background-color:#7f7f7f;
   }
   #wrapper tr th:first-child{
-	  border-width:0px 0px 1px 0px;
+	  border-width:1px 0px 1px 0px;
   }
   #wrapper tr th:last-child{
-	  border-width:0px 0px 1px 1px;
+	  border-width:1px 0px 1px 1px;
   }
   #total {
     padding: 10px 5px;

@@ -150,4 +150,4 @@ class Payment(Model):
 
   @classmethod
   def filter(cls, f, t, done):
-    return cls.get_many('SELECT * FROM payments WHERE date >= :from AND date < :to AND done = :done ORDER BY date ASC', {'from': f, 'to': t, 'done': int(done)})
+    return cls.get_many('SELECT * FROM payments WHERE date >= :from AND date <= :to AND done = :done ORDER BY date ASC', {'from': f, 'to': t, 'done': int(done)})
