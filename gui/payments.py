@@ -4,6 +4,7 @@
 import gtk
 import gobject
 from forms import FormFor
+import widgets
 
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments):
@@ -54,6 +55,7 @@ class AddPaymentForm(FormFor):
     
     self.fields = gtk.VBox()
     self.add_field('date', attrs=10)
+    self.date_e.connect('button-press-event', self.show_calendar)
     self.add_field('amount', attrs=6)
     
     if payment.installment is None:
@@ -66,6 +68,14 @@ class AddPaymentForm(FormFor):
     if self.object.installment is None:
       data['description'] = self.description_e.get_text()
     return data
+
+  def show_calendar(self, widget, event):
+    widgets.CalendarPopup(lambda cal, dialog: self.on_date_selected(cal,widget,dialog), widget.get_text()).run()
+
+  def on_date_selected(self, calendar, widget, dialog):
+    year, month, day = dialog.get_date_values()
+    widget.set_text("%s-%s-%s" % (year, month, day))
+    dialog.destroy()
 
 class PaymentsTab(gtk.VBox):
   def __init__(self, user, done = False):

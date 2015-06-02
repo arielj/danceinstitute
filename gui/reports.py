@@ -4,6 +4,7 @@
 import gtk
 import gobject
 import datetime
+import widgets
 
 class DailyPayments(gtk.VBox):
   def __init__(self, payments):
@@ -12,8 +13,14 @@ class DailyPayments(gtk.VBox):
     
     self.from_e = gtk.Entry(10)
     self.from_e.set_text(str(datetime.datetime.today()))
+    self.from_e.connect('button-press-event', self.show_calendar)
+    self.from_e.set_property("editable", False)
+    self.from_e.set_can_focus(False)
     self.to_e = gtk.Entry(10)
     self.to_e.set_text(str(datetime.datetime.today()))
+    self.to_e.connect('button-press-event', self.show_calendar)
+    self.to_e.set_property("editable", False)
+    self.to_e.set_can_focus(False)
     self.done_rb = gtk.RadioButton(None, 'Hechos')
     self.received_rb = gtk.RadioButton(self.done_rb, 'Recibidos')
     self.received_rb.set_active(True)
@@ -73,6 +80,14 @@ class DailyPayments(gtk.VBox):
       self.payments = payments
     self.list.update(self.payments)
 
+  def show_calendar(self, widget, event):
+    widgets.CalendarPopup(lambda cal, dialog: self.on_date_selected(cal,widget,dialog), widget.get_text()).run()
+
+  def on_date_selected(self, calendar, widget, dialog):
+    year, month, day = dialog.get_date_values()
+    widget.set_text("%s-%s-%s" % (year, month, day))
+    dialog.destroy()
+
 class PaymentsList(gtk.TreeView):
   def __init__(self, payments, headings):
     self.create_store(payments)
@@ -101,9 +116,6 @@ class PaymentsList(gtk.TreeView):
   def set_model(self, payments):
     for p in payments:
       self.store.append((p,p.user.to_label(),str(p.date),str(p.amount), p.description))
-
-
-
 
 
 
