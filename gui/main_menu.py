@@ -81,10 +81,10 @@ class MainMenu(gtk.MenuBar):
     
     self.reports_menu = gtk.Menu()
     self.daily_payments = gtk.MenuItem('Pagos')
-    self.students_stats = gtk.MenuItem('Alumnos')
+    #self.students_stats = gtk.MenuItem('Alumnos')
     
     self.reports_menu.append(self.daily_payments)
-    self.reports_menu.append(self.students_stats)
+    #self.reports_menu.append(self.students_stats)
     
     self.reports.set_submenu(self.reports_menu)
     

@@ -36,6 +36,8 @@ class Controller(gobject.GObject):
     self.settings = Settings.get_settings()
 
     self.window = MainWindow()
+    if env != 'test':
+      self.window.show_all()
     self.window.connect("delete_event", self.delete_event)
     self.window.connect("destroy", self.quit)
     self.window.connect('close-tab', self.close_tab)
@@ -689,6 +691,9 @@ class Controller(gobject.GObject):
       for h_id in self.connected_signals[obj]:
         self.disconnect(h_id)
       del self.connected_signals[obj]
+
+  def current_page(self):
+    return self.window.current_page()
 
 gobject.type_register(Controller)
 gobject.signal_new('user-changed', \

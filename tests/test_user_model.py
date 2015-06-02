@@ -1,11 +1,7 @@
-import unittest
-import database
+import custom_test_case
 from models import student
 
-class StudentTests(unittest.TestCase):
-  def setUp(self):
-    database.Conn.start_connection('test')
-
+class StudentTests(custom_test_case.CustomTestCase):
   def test_dni_uniqueness(self):
     u = student.Student.find_by('dni', '32496445')
     self.assertTrue(u.is_valid())

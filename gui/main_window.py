@@ -22,8 +22,6 @@ class MainWindow(gtk.Window):
     self.statusbar_timer = None
     self.v_box.pack_end(self.statusbar, False)
 
-    self.show_all()
-
   def add_page(self, page):
     label = NotebookTabLabel(page)
     num = self.notebook.append_page(page,label)
@@ -63,6 +61,10 @@ class MainWindow(gtk.Window):
   def focus_page(self, page):
     num = self.notebook.page_num(page)
     self.notebook.set_current_page(num)
+
+  def current_page(self):
+    num = self.notebook.get_current_page()
+    return self.notebook.get_nth_page(num) if num is not None else None
 
 gobject.type_register(MainWindow)
 gobject.signal_new('close-tab', \
