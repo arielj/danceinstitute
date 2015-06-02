@@ -135,7 +135,8 @@ class I18n():
       'wrong_format': ['Field "%(field)s"\'s format is not valid.', 'El formato del campo "%(field)s" no es válido.'],
       'only_letters': ['Field "%(field)s" must have only letters.', 'El campo "%(field)s" debe tener sólo letras.'],
       'wrong_quantity': ['Quantity of %(field)s is wrong.', 'La cantidad de %(field)s es inválida.'],
-      'has_many_invalid': ['One or more %(relationship)s are invalid.','Uno/a o más %(relationship)s son inválidos.']
+      'has_many_invalid': ['One or more %(relationship)s are invalid.','Uno/a o más %(relationship)s son inválidos.'],
+      'already_in_use': ['Value of field %(field)s already in use.','El valor del campo %(field)s ya está en uso.']
     }
   }
 

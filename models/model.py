@@ -104,6 +104,19 @@ class Model(object):
     if not are_valid:
       self.add_error(relationship, _e('has_many_invalid') % {'relationship': _a(self.cls_name(),relationship)})
 
+  def validate_uniqueness_of(self, field, value = None):
+    if value is None:
+      value = getattr(self,field)
+    if value:
+      exists = False
+      q = 'SELECT * FROM ' + self.table + ' WHERE ' + field + ' = :value'
+      args = {'value': value}
+      if self.id:
+        args['id'] = self.id
+        q = q + ' AND id != :id'
+
+      if self.__class__.exists(q, args):
+        self.add_error(field, _e('already_in_use') % {'field': _a(self.cls_name(),field)})
 
   def cls_name(self):
     return self.__class__.__name__
@@ -114,7 +127,8 @@ class Model(object):
 
   @classmethod
   def find_by(cls, field, value):
-    return cls(Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone())
+    res = Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone()
+    return cls(res) if res else False
 
   @classmethod
   def all(cls, where = '', args = ()):
@@ -194,3 +208,13 @@ class Model(object):
     for r in Conn.execute(query,params).fetchall():
       results.append(cls(r))
     return results
+
+  @classmethod
+  def get_one(cls,query, params = ()):
+    r = Conn.execute(query,params).fetchone()
+    return cls(r) if r else False
+
+  @classmethod
+  def exists(cls,query, params = ()):
+    return True if Conn.execute(query,params).fetchone() else False
+

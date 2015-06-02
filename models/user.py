@@ -26,7 +26,7 @@ class User(Model):
   def __init__(self, data = {}):
     self._name = ''
     self._lastname = ''
-    self.dni = ''
+    self._dni = ''
     self.cellphone = ''
     self.alt_phone = ''
     self.birthday = ''
@@ -76,6 +76,18 @@ class User(Model):
     self._is_teacher = int(value)
 
   @property
+  def dni(self):
+    if self._dni:
+      return self._dni[0:2]+'.'+self._dni[2:5]+'.'+self._dni[5:8]
+    else:
+      return ''
+
+  @dni.setter
+  def dni(self, value):
+    if value:
+      self._dni = re.sub(r'\.','',str(value))
+
+  @property
   def age(self):
     return self._age
   
@@ -117,14 +129,15 @@ class User(Model):
       m.student_id = self.id
 
   def to_db(self):
-    return {'name': self.name, 'lastname': self.lastname, 'dni': self.dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age}
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age}
 
   def _is_valid(self):
     self.validate_presence_of('name')
     self.validate_presence_of('lastname')
     self.validate_format_of('name', frmt = 'name')
     self.validate_format_of('lastname', frmt = 'name')
-    self.validate_format_of('dni', expr = '^\d\d\.?\d\d\d\.?\d\d\d$')
+    self.validate_format_of('dni', expr = '^\d\d\.\d\d\d\.\d\d\d$')
+    self.validate_uniqueness_of('dni', self._dni)
 
   def get_payments(self, include_installments = True, done = None):
     return payment.Payment.for_user(self.id, include_installments, done)
