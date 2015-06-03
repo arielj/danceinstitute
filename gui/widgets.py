@@ -28,7 +28,7 @@ class CalendarPopup(gtk.Dialog):
   def __init__(self, callback, date):
     gtk.Dialog.__init__(self,'Elegí una fecha', None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
-                       (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
+                       ())
     
     year, month, day = date.split('-')
     self.calendar = gtk.Calendar()

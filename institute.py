@@ -251,7 +251,6 @@ class Controller(gobject.GObject):
 
   def edit_student(self, widget, student_id):
     student = Student.find(student_id)
-    print Student.all()
     page = self.user_form(student)
 
   def user_form(self, user):

@@ -12,6 +12,12 @@ class Model(object):
     self.errors = {}
     
     self.set_attrs(attrs)
+
+  @classmethod
+  def create(cls, attrs = {}):
+    obj = cls(attrs)
+    obj.save()
+    return obj
     
   def set_attrs(self, data = {}):
     if data:

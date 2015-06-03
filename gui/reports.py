@@ -40,6 +40,7 @@ class DailyPayments(gtk.VBox):
     self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle']
     
     self.list = PaymentsList(payments, self.headings)
+    self.list.connect('row-activated', self.on_row_activated)
     
     self.pack_start(self.list, True)
     
@@ -87,6 +88,12 @@ class DailyPayments(gtk.VBox):
     year, month, day = dialog.get_date_values()
     widget.set_text("%s-%s-%s" % (year, month, day))
     dialog.destroy()
+
+  def on_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('student-edit', payment.user_id)
 
 gobject.type_register(DailyPayments)
 gobject.signal_new('student-edit', \

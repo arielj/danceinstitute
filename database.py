@@ -25,34 +25,35 @@ class Conn(object):
 
   @classmethod
   def start_connection(cls,env):
-    create_db = False
-    seed_db = False
-    dev_data = False
-    check_version = False
-    if env == 'test' or env == 'dev':
-      cls._conn = sqlite3.connect(":memory:")
-      create_db = True
-      dev_data = True
-    else:
-      if not os.path.isfile(FILENAME):
+    if cls._conn is None:
+      create_db = False
+      seed_db = False
+      dev_data = False
+      check_version = False
+      if env == 'test' or env == 'dev':
+        cls._conn = sqlite3.connect(":memory:")
         create_db = True
-        seed_db = True
-        open(FILENAME,'a').close()
-      cls._conn = sqlite3.connect(FILENAME)
+        dev_data = True
+      else:
+        if not os.path.isfile(FILENAME):
+          create_db = True
+          seed_db = True
+          open(FILENAME,'a').close()
+        cls._conn = sqlite3.connect(FILENAME)
 
-    if create_db:
-      cls.create_tables()
+      if create_db:
+        cls.create_tables()
 
-    cls.check_version()
-    
-    if seed_db:
-      cls.seed()
-    
-    if dev_data:
-      cls.dev_data()
+      cls.check_version()
+      
+      if seed_db:
+        cls.seed()
+      
+      if dev_data:
+        cls.dev_data()
 
-    cls._conn.row_factory = sqlite3.Row
-    cls._conn.text_factory = str
+      cls._conn.row_factory = sqlite3.Row
+      cls._conn.text_factory = str
 
   @classmethod
   def create_tables(cls):
