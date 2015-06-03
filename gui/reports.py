@@ -88,6 +88,12 @@ class DailyPayments(gtk.VBox):
     widget.set_text("%s-%s-%s" % (year, month, day))
     dialog.destroy()
 
+gobject.type_register(DailyPayments)
+gobject.signal_new('student-edit', \
+                   DailyPayments, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+
 class PaymentsList(gtk.TreeView):
   def __init__(self, payments, headings):
     self.create_store(payments)

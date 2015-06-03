@@ -251,6 +251,7 @@ class Controller(gobject.GObject):
 
   def edit_student(self, widget, student_id):
     student = Student.find(student_id)
+    print Student.all()
     page = self.user_form(student)
 
   def user_form(self, user):
@@ -660,6 +661,7 @@ class Controller(gobject.GObject):
     page = DailyPayments(Payment.filter(today,today,False))
     page.export.connect_object('clicked', self.export_daily_payments, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
+    page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
 
