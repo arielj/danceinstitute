@@ -16,6 +16,7 @@ from gui import *
 from settings import Settings
 from models import *
 import translations
+import exporter
 
 class Controller(gobject.GObject):
   def main(self):
@@ -413,7 +414,8 @@ class Controller(gobject.GObject):
 
   def on_list_students(self, page):
     dialog = StudentsListDialog(page.object)
-    dialog.list.connect_object('student-activated', self.on_student_activated,dialog)
+    dialog.list.connect_object('student-activated', self.on_student_activated, dialog)
+    dialog.export.connect_object('clicked', self.export_klass_students, dialog, page.object)
     dialog.connect('response', self.students_list_dialog_response)
     dialog.run()
 
@@ -424,6 +426,10 @@ class Controller(gobject.GObject):
     dialog.destroy()
     self.edit_student(dialog,student.id)
 
+  def export_klass_students(self, dialog, klass):
+    table_html = dialog.list.to_html()
+    title = '<h1>Alumnos de la clase: '+klass.name+'</h1>'
+    self.export(exporter.html_wrapper(title+table_html))
 
 
 
@@ -672,12 +678,7 @@ class Controller(gobject.GObject):
     page.update(payments)
 
   def export_daily_payments(self, page):
-    f, path = tempfile.mkstemp('.html')
-    f = open(path,'w')
-    f.write(page.to_html())
-    f.close
-    webbrowser.open_new_tab(path)
-
+    self.export(page.to_html())
 
 
 
@@ -692,6 +693,13 @@ class Controller(gobject.GObject):
       for h_id in self.connected_signals[obj]:
         self.disconnect(h_id)
       del self.connected_signals[obj]
+
+  def export(self, html):
+    f, path = tempfile.mkstemp('.html')
+    f = open(path,'w')
+    f.write(html)
+    f.close
+    webbrowser.open_new_tab(path)
 
   def current_page(self):
     return self.window.current_page()

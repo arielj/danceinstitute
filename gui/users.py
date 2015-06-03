@@ -6,6 +6,7 @@ import gobject
 from forms import FormFor
 from memberships import *
 from translations import _a
+import exporter
 
 class UserForm(FormFor):
   def __init__(self, user):
@@ -226,6 +227,9 @@ class StudentsList(gtk.ScrolledWindow):
     model, iter = self.t_selection.get_selected()
     return model.get_value(iter,0) if iter is not None else None
 
+  def to_html(self):
+    return self.students_t.to_html()
+
 gobject.type_register(StudentsList)
 gobject.signal_new('student-activated', \
                    StudentsList, \
@@ -241,12 +245,10 @@ class StudentsTable(gtk.TreeView):
     
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
-    self.add_column('Nombre',1)
-    self.add_column('Apellido',2)
-    self.add_column('D.N.I.',3)
-    self.add_column('Email',4)
-    self.add_column('Dirección',5)
-    self.add_column('Celular', 6)
+    self.headings = ['Nombre','Apellido','D.N.I.','Email','Dirección','Celular']
+    
+    for idx, h in enumerate(self.headings, 1):
+      self.add_column(h,idx)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
@@ -269,6 +271,10 @@ class StudentsTable(gtk.TreeView):
     for t in self.students:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
 
+  def to_html(self):
+    rows = map(lambda s: [s.name, s.lastname, s.dni, s.email, s.address, s.cellphone], self.students)
+    return exporter.html_table(self.headings, rows)
+
 class StudentsListDialog(gtk.Dialog):
   def __init__(self, klass):
     gtk.Dialog.__init__(self, 'Alumnos de la clase '+klass.name, None,
@@ -276,7 +282,9 @@ class StudentsListDialog(gtk.Dialog):
                         ())
     self.set_size_request(700,400)
     self.list = StudentsList(klass.get_students())
-    self.vbox.pack_start(self.list,True)
+    self.export = gtk.Button('Exportar')
+    self.vbox.pack_start(self.list, True)
+    self.vbox.pack_start(self.export, False)
     
     self.show_all()
 
