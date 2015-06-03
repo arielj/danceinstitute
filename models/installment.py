@@ -63,11 +63,13 @@ class Installment(Model):
     sets = settings.Settings.get_settings()
     today = datetime.today()
     
-    if self._status != 'paid' and self.year <= today.year and self.month < today.month and today.day > int(sets.recharge_after):
-      if re.match('^\d+%$',sets.recharge_value):
-        recharge = self.amount/100*(int(sets.recharge_value[0:-1]))
-      elif re.match('^\d+$',sets.recharge_value):
-        recharge = int(sets.recharge_value)
+    if self._status != 'paid':
+      if self.year <= today.year:
+        if self.month+1 < today.month or (self.month+1 == today.month and today.day > int(sets.recharge_after)):
+          if re.match('^\d+%$',sets.recharge_value):
+            recharge = self.amount/100*(int(sets.recharge_value[0:-1]))
+          elif re.match('^\d+$',sets.recharge_value):
+            recharge = int(sets.recharge_value)
     
     return recharge
 
@@ -169,8 +171,8 @@ class Installment(Model):
     year = today.year
     if today.day < settings.Settings.get_settings().recharge_after:
       month = month-1
-    if month == 0:
-      month = 12
+    if month == -1:
+      month = 11
       year = year-1
       
-    return cls.get_many('SELECT * FROM installments WHERE status = :status AND year = :year AND month <= :month',{'status': 'waiting', 'year': year, 'month': month})
+    return cls.get_many('SELECT * FROM installments WHERE status = :status AND year = :year AND month < :month',{'status': 'waiting', 'year': year, 'month': month})
