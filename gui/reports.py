@@ -10,7 +10,7 @@ import exporter
 class DailyPayments(gtk.VBox):
   def __init__(self, payments):
     self.payments = payments
-    gtk.VBox.__init__(self)
+    gtk.VBox.__init__(self, False, 5)
     
     self.from_e = gtk.Entry(10)
     self.from_e.set_text(str(datetime.datetime.today()))
@@ -45,6 +45,11 @@ class DailyPayments(gtk.VBox):
     
     self.pack_start(self.list, True)
     
+    total_hbox = gtk.HBox()
+    self.total_label = gtk.Label('Total: $'+self.sum_total(payments))
+    total_hbox.pack_start(self.total_label, False)
+    self.pack_start(total_hbox, False)
+    
     self.export = gtk.Button('Exportar')
     self.pack_start(self.export, False)
     
@@ -59,7 +64,7 @@ class DailyPayments(gtk.VBox):
 
     rows = map(lambda p: self.values_for_html(p), self.payments)
     total = sum(map(lambda p: p.amount, self.payments))
-    caption = 'Total: <span class="amount">$'+str(total)+'</span>'
+    caption = 'Total: <b>$'+str(total)+'</b>'
 
     return exporter.html_wrapper(title+exporter.html_table(self.headings,rows,caption))
     
@@ -80,6 +85,10 @@ class DailyPayments(gtk.VBox):
     if payments is not None:
       self.payments = payments
     self.list.update(self.payments)
+    self.total_label.set_text('Total: $'+self.sum_total(payments))
+
+  def sum_total(self, payments):
+    return str(sum(map(lambda p: p.amount, payments)))
 
   def show_calendar(self, widget, event):
     widgets.CalendarPopup(lambda cal, dialog: self.on_date_selected(cal,widget,dialog), widget.get_text()).run()
