@@ -315,22 +315,23 @@ class ListColumn(gtk.TreeViewColumn):
     self.set_expand(True)
 
 
-class KlassesList(gtk.ScrolledWindow):
+class KlassesList(gtk.VBox):
   def __init__(self, klasses, with_actions = True):
-    gtk.ScrolledWindow.__init__(self)
+    gtk.VBox.__init__(self)
     self.set_border_width(4)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.klasses = klasses
     self.with_actions = with_actions
     
-    self.vbox = gtk.VBox()
-    
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
     self.klasses_t = KlassesTable(klasses)
     self.klasses_t.connect('row-activated', self.on_row_activated)
     self.t_selection = self.klasses_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
-    
-    self.vbox.pack_start(self.klasses_t, True)
+
+    self.scroll.add(self.klasses_t)
+    self.pack_start(self.scroll, True)
     
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
@@ -347,12 +348,7 @@ class KlassesList(gtk.ScrolledWindow):
       self.actions.pack_start(self.edit_b, False)
       self.actions.pack_start(self.delete_b, False)
       
-      self.vbox.pack_start(self.actions, False)
-    
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.vbox)
-    self.add(viewport)
+      self.pack_start(self.actions, False)
     
     self.show_all()
 

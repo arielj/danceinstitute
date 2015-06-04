@@ -43,7 +43,11 @@ class DailyPayments(gtk.VBox):
     self.list = PaymentsList(payments, self.headings)
     self.list.connect('row-activated', self.on_row_activated)
     
-    self.pack_start(self.list, True)
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.list)
+    
+    self.pack_start(self.scroll, True)
     
     total_hbox = gtk.HBox()
     self.total_label = gtk.Label('Total: $'+self.sum_total(payments))

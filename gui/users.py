@@ -197,20 +197,18 @@ gobject.signal_new('search', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 
-class StudentsList(gtk.ScrolledWindow):
+class StudentsList(gtk.VBox):
   def __init__(self, students):
-    gtk.ScrolledWindow.__init__(self)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    gtk.VBox.__init__(self, False, 6)
     self.students = students
-    
-    self.vbox = gtk.VBox()
     
     self.students_t = StudentsTable(students)
     self.students_t.connect('row-activated', self.on_row_activated)
-    
-    self.vbox.pack_start(self.students_t, True)
-    
-    self.add_with_viewport(self.vbox)
+
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.students_t)
+    self.pack_start(self.scroll, True)
     
     self.show_all()
 
@@ -367,22 +365,22 @@ class TeacherForm(FormFor):
   def update(self):
     self.payments.update()
 
-class TeachersList(gtk.ScrolledWindow):
+class TeachersList(gtk.VBox):
   def __init__(self, teachers, with_actions = True):
-    gtk.ScrolledWindow.__init__(self)
+    gtk.VBox.__init__(self)
     self.set_border_width(4)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.teachers = teachers
     self.with_actions = with_actions
-    
-    self.vbox = gtk.VBox()
     
     self.teachers_t = TeachersTable(teachers)
     self.teachers_t.connect('row-activated', self.on_row_activated)
     self.t_selection = self.teachers_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
     
-    self.vbox.pack_start(self.teachers_t, True)
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.teachers_t)
+    self.pack_start(self.scroll, True)
     
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
@@ -399,12 +397,7 @@ class TeachersList(gtk.ScrolledWindow):
       self.actions.pack_start(self.edit_b, False)
       self.actions.pack_start(self.delete_b, False)
       
-      self.vbox.pack_start(self.actions, False)
-    
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.vbox)
-    self.add(viewport)
+      self.pack_start(self.actions, False)
     
     self.show_all()
 
