@@ -30,6 +30,19 @@ class Klass(Model):
     
     Model.__init__(self, data)
 
+  def before_delete(self):
+    if package.Package.with_klass(self):
+      return "Un paquete incluye a esta clase."
+    if membership.Membership.for_klass_or_package(self):
+      return "Hay alumnos inscriptos a esta clase."
+    
+    for sch in self.schedules:
+      sch.delete()
+      
+    self.__class__.get_conn().execute('DELETE FROM klasses_teachers WHERE klass_id = :klass_id', {'klass_id': self.id})
+    
+    return True
+
   def to_db(self):
     return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info}
 

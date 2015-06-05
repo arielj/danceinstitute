@@ -92,7 +92,7 @@ class KlassForm(FormFor):
     self.remove_b.set_sensitive(False)
     actions.pack_start(self.remove_b, False)
     
-    self.teachers_ls.vbox.pack_start(actions, False)
+    self.teachers_ls.pack_start(actions, False)
 
     field = gtk.VBox()
     field.set_size_request(650,-1)

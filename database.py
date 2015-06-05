@@ -33,7 +33,7 @@ class Conn(object):
       if env == 'test' or env == 'dev':
         cls._conn = sqlite3.connect(":memory:")
         create_db = True
-        dev_data = True
+        dev_data = env == 'dev'
       else:
         if not os.path.isfile(FILENAME):
           create_db = True

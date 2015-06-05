@@ -155,7 +155,7 @@ class Model(object):
 
   def save(self, validate = True):
     if not validate or self.is_valid():
-      if self.before_save():
+      if self.before_save() is True:
         self.do_save()
         self.after_save()
         return True
@@ -186,11 +186,12 @@ class Model(object):
     return not self.is_new_record()
 
   def delete(self):
-    if self.before_delete():
+    can_delete = self.before_delete()
+    if can_delete is True:
       self.do_delete()
       self.after_delete()
       return True
-    return False
+    return can_delete
 
   def before_delete(self):
     return True

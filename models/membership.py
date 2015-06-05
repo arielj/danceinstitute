@@ -54,6 +54,15 @@ class Membership(Model):
       self._student = student.Student.find(self.student_id)
     return self._student
 
+  @student.setter
+  def student(self, st):
+    if st is not None:
+      self.student_id = st.id
+      self._student = st
+    else:
+      self.student_id = None
+      self._student = None
+
   @property
   def installments(self):
     if self._installments is None:

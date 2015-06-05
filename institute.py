@@ -88,6 +88,7 @@ class Controller(gobject.GObject):
     self.connect_object('payment-deleted', self.show_status, 'Pago eliminado.')
     self.connect_object('installment-deleted', self.show_status, 'Cuota eliminada.')
     self.connect_object('package-changed', self.show_status, 'Paquete guardado.')
+    self.connect_object('klass-deleted', self.show_status, 'Clase borrada.')
 
   def on_user_changed(self, widget, user, new_record):
     self.show_status(translations._m(user.cls_name())+' guardado.')
@@ -367,7 +368,9 @@ class Controller(gobject.GObject):
       self.window.add_page(page)
       page.connect('klass-edit', self.edit_klass)
       page.connect('klass-add', self.add_klass)
+      page.connect('klass-delete', self.delete_klass)
       self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+      self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
       return page
 
   def refresh_schedules(self, widget, kls, created, page):
@@ -387,6 +390,13 @@ class Controller(gobject.GObject):
       self.window.update_label(form)
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
+
+  def delete_klass(self, widget, klass):
+    deleted = klass.delete()
+    if deleted is True:
+      self.emit('klass-deleted', klass.id)
+    else:
+      ErrorMessage("No se puede borrar la clase:", deleted).run()
 
   def show_select_teacher_dialog(self, page):
     teachers = Teacher.get(exclude = page.object.teacher_ids())
@@ -728,6 +738,12 @@ gobject.signal_new('room-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #room object, creation(True value means the user just got created)
+
+gobject.signal_new('klass-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #klass id
 
 gobject.signal_new('teacher-deleted', \
                    Controller, \
