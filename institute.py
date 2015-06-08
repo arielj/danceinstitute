@@ -223,14 +223,22 @@ class Controller(gobject.GObject):
   def ask_delete_teacher(self, page, teacher_id):
     teacher = Teacher.find(teacher_id)
     if teacher:
-      dialog = ConfirmDialog('Vas a borrar a '+teacher.to_label()+":\n¿Estás seguro?")
-      dialog.connect('response', self.delete_teacher, teacher)
-      dialog.run()
+      can_delete = teacher.can_delete()
+      if can_delete is True:
+        dialog = ConfirmDialog('Vas a borrar a '+teacher.to_label()+":\n¿Estás seguro?")
+        dialog.connect('response', self.delete_teacher, teacher)
+        dialog.run()
+      else:
+        ErrorMessage("No se puede borrar al profesor:", can_delete).run()
 
   def delete_teacher(self, dialog, response, teacher):
     if response == gtk.RESPONSE_ACCEPT:
-      teacher.delete()
-      self.emit('teacher-deleted', teacher.id)
+      deleted = teacher.delete()
+      if deleted is True:
+        self.emit('teacher-deleted', teacher.id)
+      else:
+        print deleted
+        ErrorMessage("No se puede borrar al profesor:", deleted).run()
     dialog.destroy()
 
   def refresh_teachers(self, widget, teacher, created, page):
@@ -368,7 +376,7 @@ class Controller(gobject.GObject):
       self.window.add_page(page)
       page.connect('klass-edit', self.edit_klass)
       page.connect('klass-add', self.add_klass)
-      page.connect('klass-delete', self.delete_klass)
+      page.connect('klass-delete', self.ask_delete_klass)
       self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
       self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
       return page
@@ -391,12 +399,25 @@ class Controller(gobject.GObject):
     else:
       ErrorMessage("No se puede guardar la clase:", kls.full_errors()).run()
 
-  def delete_klass(self, widget, klass):
-    deleted = klass.delete()
-    if deleted is True:
-      self.emit('klass-deleted', klass.id)
-    else:
-      ErrorMessage("No se puede borrar la clase:", deleted).run()
+  def ask_delete_klass(self, page, klass):
+    klass = Klass.find(klass.id)
+    if klass:
+      can_delete = klass.can_delete()
+      if can_delete is True:
+        dialog = ConfirmDialog('Vas a borrar la clase: '+klass.name+":\n¿Estás seguro?")
+        dialog.connect('response', self.delete_klass, klass)
+        dialog.run()
+      else:
+        ErrorMessage("No se puede borrar la clase:", can_delete).run()
+
+  def delete_klass(self, dialog, response, klass):
+    if response == gtk.RESPONSE_ACCEPT:
+      deleted = klass.delete()
+      if deleted is True:
+        self.emit('klass-deleted', klass.id)
+      else:
+        ErrorMessage("No se puede borrar la clase:", deleted).run()
+    dialog.destroy()
 
   def show_select_teacher_dialog(self, page):
     teachers = Teacher.get(exclude = page.object.teacher_ids())
@@ -493,8 +514,9 @@ class Controller(gobject.GObject):
       self.window.add_page(page)
       page.connect('package-add',self.add_package)
       page.connect('package-edit', self.edit_package)
-      page.connect('package-delete', self.delete_package)
+      page.connect('package-delete', self.ask_delete_package)
       self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
+      self.save_signal(self.connect('package-deleted', self.refresh_packages, None, page), page)
       return page
 
   def add_package(self, widget):
@@ -532,8 +554,25 @@ class Controller(gobject.GObject):
     packages = Package.all()
     page.refresh_list(packages)
 
-  def delete_package(self, widget, package):
-    print 'delete package'
+  def ask_delete_package(self, page, package):
+    package = Package.find(package.id)
+    if package:
+      can_delete = package.can_delete()
+      if can_delete is True:
+        dialog = ConfirmDialog('Vas a borrar el paquete: '+package.name+":\n¿Estás seguro?")
+        dialog.connect('response', self.delete_package, package)
+        dialog.run()
+      else:
+        ErrorMessage("No se puede borrar el paquete:", can_delete).run()
+
+  def delete_package(self, dialog, response, package):
+    if response == gtk.RESPONSE_ACCEPT:
+      deleted = package.delete()
+      if deleted is True:
+        self.emit('package-deleted', package.id)
+      else:
+        ErrorMessage("No se puede borrar el paquete:", deleted).run()
+    dialog.destroy()
 
 
 
@@ -768,6 +807,12 @@ gobject.signal_new('membership-deleted', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (int,))
                    #membership id
+
+gobject.signal_new('package-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #package id
 
 gobject.signal_new('payment-deleted', \
                    Controller, \

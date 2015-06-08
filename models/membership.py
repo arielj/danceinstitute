@@ -115,7 +115,7 @@ class Membership(Model):
     return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info}
 
   def _is_valid(self):
-    return True
+    self.validate_presence_of('student')
 
   def before_delete(self):
     for i in self.installments:

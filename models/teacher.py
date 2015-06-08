@@ -1,4 +1,9 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
+
 import user
+import membership
+import payment
 
 class Teacher(user.User):
   def __init__(self, data = {}):
@@ -19,6 +24,14 @@ class Teacher(user.User):
     where = where + ' AND ' + w if where else w
 
     return cls.all(where=where,args=args)
+
+  def can_delete(self):
+    if membership.Membership.for_student(self.id):
+      return "El profesor está inscripto en una o más clases."
+    if payment.Payment.for_user(self.id):
+      return "El profesor tiene pagos hechos o recibidos."
+    return True
  
   def before_delete(self):
-    return self.get_conn().execute('DELETE FROM klasses_teachers WHERE klasses_teachers.teacher_id = :teacher_id',{'teacher_id': self.id})
+    self.get_conn().execute('DELETE FROM klasses_teachers WHERE klasses_teachers.teacher_id = :teacher_id',{'teacher_id': self.id})
+    return True

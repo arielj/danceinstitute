@@ -185,12 +185,16 @@ class Model(object):
   def is_not_new_record(self):
     return not self.is_new_record()
 
+  def can_delete(self):
+    return True
+
   def delete(self):
-    can_delete = self.before_delete()
+    can_delete = self.can_delete()
     if can_delete is True:
-      self.do_delete()
-      self.after_delete()
-      return True
+      can_delete = self.before_delete()
+      if can_delete is True:
+        self.do_delete()
+        self.after_delete()
     return can_delete
 
   def before_delete(self):
