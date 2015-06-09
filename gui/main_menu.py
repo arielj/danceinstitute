@@ -80,11 +80,11 @@ class MainMenu(gtk.MenuBar):
     self.append(self.reports)
     
     self.reports_menu = gtk.Menu()
-    self.daily_payments = gtk.MenuItem('Pagos')
-    #self.students_stats = gtk.MenuItem('Alumnos')
+    self.payments = gtk.MenuItem('Pagos')
+    self.daily_cash = gtk.MenuItem('Caja Diaria')
     
-    self.reports_menu.append(self.daily_payments)
-    #self.reports_menu.append(self.students_stats)
+    self.reports_menu.append(self.payments)
+    self.reports_menu.append(self.daily_cash)
     
     self.reports.set_submenu(self.reports_menu)
     

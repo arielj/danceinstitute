@@ -103,6 +103,9 @@ def html_wrapper(content):
   #caption {
     padding: 10px 5px;
   }
+  .clear {
+    clear: both;
+  }
 """
 
   return '<html><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type"><style>'+ css +'</style></head><body><div id="wrapper">'+content+'</div></body></html'
