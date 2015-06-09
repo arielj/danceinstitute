@@ -1,6 +1,7 @@
 from tests import custom_test_case
 from models import klass
 from models import schedule
+from models import membership
 from tests.factories import Factory
 
 class KlassTests(custom_test_case.CustomTestCase):

@@ -20,7 +20,8 @@ class Conn(object):
             'klasses': '''CREATE TABLE klasses (id integer primary key, name text, normal_fee integer, half_fee integer, once_fee integer, inscription_fee integer, min_age integer, max_age integer, quota integer, info text)''',
             'klasses_teachers': '''CREATE TABLE klasses_teachers (klass_id integer, teacher_id integer)''',
             'packages': '''CREATE TABLE packages (id integer primary key, name text, fee integer, alt_fee integer)''',
-            'klasses_packages': '''CREATE TABLE klasses_packages (klass_id integer, package_id integer)'''
+            'klasses_packages': '''CREATE TABLE klasses_packages (klass_id integer, package_id integer)''',
+            'movements': '''CREATE TABLE movements (id integer primary key, date date, amount integer, description text default '', done integer default 0)'''
            }
 
   @classmethod
@@ -104,6 +105,11 @@ class Conn(object):
       cls.execute('INSERT INTO settings (key, value) VALUES ("notes", "")')
       cls.set_version('0.3')
       version = '0.3'
+    
+    if version == '0.3':
+      cls.create('movements')
+      cls.set_version('0.4')
+      version = '0.4'
 
   @classmethod
   def set_version(cls,version):
@@ -119,6 +125,8 @@ class Conn(object):
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 200, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.date(2015,3,1),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type, done) VALUES (?, 100, 'lalala', 1, 'Teacher',1)''',(datetime.datetime.today().date(),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.datetime.today().date(),))
     cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 100, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (1, 2000, 2130, 3, 0)''')
@@ -127,12 +135,6 @@ class Conn(object):
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (2, 1900, 2030, 2, 3)''')
     cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Lau', 'Gut', '35592392', '0299-15-453-4315', '1991-02-12', '9 de Julio 1140', 0, 'lali_gut@yahoo.com.ar', 1)''')
     cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher) VALUES ('Tincho', 'Arce', '11111111', 'nose', '1981-02-12', 'Barrio mercantil', 1, 'tincho@sharife.com.ar', 1)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
-    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
     cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Ariel', 'Juod', '32496445', '0299-15-411-5106', '1986-07-18', '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('Flamenco Adultos', 350, 200, 50, 0, 15, 0, 15, 'Traer zapatos con taco ancho y una pollera larga.')''')
     cls.execute('''INSERT INTO klasses (name, normal_fee, half_fee, once_fee, inscription_fee, min_age, max_age, quota, info) VALUES ('HipHop Adolescentes', 300, 200, 30, 0, 13, 22,30, 'Zapatillas y ropa cómoda')''')
@@ -150,6 +152,7 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
     cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
+    cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 50, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
     cls.commit()
 
   @classmethod

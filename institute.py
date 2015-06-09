@@ -105,7 +105,13 @@ class Controller(gobject.GObject):
     self.window.show_status(status)
 
   def home(self, widget):
-    page = Home(klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),datetime.datetime.today().weekday()), installments = installment.Installment.overdues(), notes = self.settings.notes)
+    today = datetime.datetime.today().date()
+    klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),today.weekday())
+    installments = installment.Installment.overdues()
+    notes = self.settings.notes
+    payments = payment.Payment.filter(today,today)
+    movements = movement.Movement.by_date(today)
+    page = Home(klasses, notes, installments, payments, movements)
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:
       self.window.focus_page(current)
@@ -113,8 +119,52 @@ class Controller(gobject.GObject):
     else:
       page.connect('user-edit', self.edit_student)
       page.notes.save.connect_object('clicked',self.save_notes, page)
+      page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
+      page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
+      self.save_signal(self.connect_object('movement-deleted', self.update_movements, page), page)
       self.window.add_page(page)
       return page
+
+  def add_movement_dialog(self, page):
+    movement = Movement()
+    dialog = AddMovementDialog(movement)
+    dialog.connect('response', self.on_add_movement, page)
+    dialog.run()
+  
+  def on_add_movement(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      data = dialog.form.get_values()
+      movement = dialog.movement
+      movement.set_attrs(data)
+      added = movement.save()
+      if added is False:
+        added = movement.full_errors()
+      if added is True:
+        self.update_movements(page)
+      else:
+        ErrorMessage('No se pudo cargar el movimiento:', added).run()
+        destroy_dialog = False
+
+    if destroy_dialog:
+      dialog.destroy()
+
+  def ask_delete_movement(self, page):
+    mov = page.daily_cash.movements_l.get_selected_movement()
+    if mov:
+      dialog = ConfirmDialog('Vas a borrar el movimiento: '+mov.description+"\n¿Estás seguro?")
+      dialog.connect('response', self.delete_movement, mov)
+      dialog.run()
+
+  def delete_movement(self, dialog, response, movement):
+    if response == gtk.RESPONSE_ACCEPT:
+      movement.delete()
+      self.emit('movement-deleted', movement.id)
+
+    dialog.destroy()
+
+  def update_movements(self, page, extra = None):
+    page.update_movements(movement.Movement.by_date(datetime.datetime.today().date()))
 
   def save_notes(self, page):
     self.settings.notes = page.get_notes()
@@ -815,6 +865,12 @@ gobject.signal_new('package-deleted', \
                    #package id
 
 gobject.signal_new('payment-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int,))
+                   #payment id
+
+gobject.signal_new('movement-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (int,))

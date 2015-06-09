@@ -46,7 +46,7 @@ class Model(object):
 
   def validate_numericallity_of(self, field, great_than = None, less_than = None, great_than_or_equal = None, less_than_or_equal = None, only_integer = True):
     v = getattr(self,field)
-    if v:
+    if v is not None:
       field_name = _a(self.cls_name(),field)
       err = False
       extra = False

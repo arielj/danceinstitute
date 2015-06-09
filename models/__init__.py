@@ -7,4 +7,5 @@ from membership import Membership
 from installment import Installment
 from schedule import Schedule
 from package import Package
+from movement import Movement
 

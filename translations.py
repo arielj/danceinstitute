@@ -36,7 +36,8 @@ class I18n():
       'room': ['Room','Sala'],
       'schedule': ['Schedule','Horario'],
       'student': ['Student','Alumno'],
-      'teacher': ['Teacher','Profesor']
+      'teacher': ['Teacher','Profesor'],
+      'movement': ['Movement','Movimiento']
     },
     'attrs': {
       'installment': {
@@ -76,6 +77,11 @@ class I18n():
         'klasses': ['Classes','Clases']
       },
       'payment': {
+        'date': ['Date','Fecha'],
+        'amount': ['Amount','Monto'],
+        'description': ['Description','Descripción']
+      },
+      'movement': {
         'date': ['Date','Fecha'],
         'amount': ['Amount','Monto'],
         'description': ['Description','Descripción']
