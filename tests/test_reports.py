@@ -9,7 +9,7 @@ class PaymentsReportTest(CustomTestCase):
   
   def test_controller_opens_user_edit_when_signal(self):
     ctrlr = Controller('test')
-    page = ctrlr.daily_payments(None)
+    page = ctrlr.payments_report(None)
     s = Factory.create('student')
     page.emit('student-edit',s.id)
     self.assertIsInstance(ctrlr.current_page(), gui.users.UserForm)

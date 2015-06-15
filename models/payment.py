@@ -149,11 +149,14 @@ class Payment(Model):
     return cls.get_many(q,args)
 
   @classmethod
-  def filter(cls, f, t, done = None):
+  def filter(cls, f, t, done = None, user_id = None):
     args = {'from': str(f), 'to': str(t)}
     q = 'SELECT * FROM payments WHERE date >= :from AND date <= :to'
     if done is not None:
       q = q + ' AND done = :done'
       args['done'] = int(done)
+    if user_id is not None:
+      q = q + ' AND user_id = :user_id'
+      args['user_id'] = user_id
     q = q + ' ORDER BY date ASC'
     return cls.get_many(q, args)

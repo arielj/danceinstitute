@@ -11,7 +11,8 @@ class Factory():
           'package': {'fee': 300, 'name': 'Paquete loco'},
           'membership': {},
           'schedule': {'from_time': '1800', 'to_time': '1900'},
-          'room': {'name': 'Sala1'}}
+          'room': {'name': 'Sala1'},
+          'installment': {'amount': 250}}
   
   @classmethod
   def build(cls, model, attrs = {}):

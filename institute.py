@@ -763,7 +763,7 @@ class Controller(gobject.GObject):
   #resports
   def payments_report(self, menu_item):
     today = datetime.datetime.today()
-    page = PaymentsReport(Payment.filter(today,today,False))
+    page = PaymentsReport(Payment.filter(today,today,False),User.all())
     page.export.connect_object('clicked', self.export_payments_report, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)

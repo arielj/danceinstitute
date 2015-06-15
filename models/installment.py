@@ -57,29 +57,35 @@ class Installment(Model):
   def total(self):
     return self.amount+self.get_recharge()
 
-  def get_recharge(self):
+  def get_recharge(self, after_day = None, recharge_value = None):
+    if after_day is None:
+      after_day = sets.recharge_after
+    if recharge_value is None:
+      recharge_value = sets.recharge_value
+
     recharge = 0
     
     sets = settings.Settings.get_settings()
-    today = datetime.today()
+    today = self.__class__._today()
     
     if self._status != 'paid':
-      if self.year <= today.year:
-        if self.month+1 < today.month or (self.month+1 == today.month and today.day > int(sets.recharge_after)):
-          if re.match('^\d+%$',sets.recharge_value):
-            recharge = self.amount/100*(int(sets.recharge_value[0:-1]))
-          elif re.match('^\d+$',sets.recharge_value):
-            recharge = int(sets.recharge_value)
+      if self.date(after_day) < today:
+        if re.match('^\d+%$',recharge_value):
+          recharge = self.amount*(int(recharge_value[0:-1]))/100
+        elif re.match('^\d+$',recharge_value):
+          recharge = int(recharge_value)
     
     return recharge
+
+  def date(self, after_day):
+    if after_day is None: after_day = sets.recharge_after
+
+    return datetime.strptime(str(self.year)+"-"+str(self.month+1)+"-"+str(after_day),'%Y-%m-%d').date()
 
   def detailed_total(self):
     if self._status != 'paid_with_interests':
       recharge = self.get_recharge()
-      if recharge > 0:
-        recharge = '(+'+str(recharge)+')'
-      else:
-        recharge = ''
+      recharge = '(+'+str(recharge)+')' if recharge > 0 else ''
     else:
       recharge = '(+'+str(self.paid() - self.amount)+')'
 
@@ -104,6 +110,15 @@ class Installment(Model):
     if self.membership_id and self._membership is None:
       self._membership = membership.Membership.find(self.membership_id)
     return self._membership
+
+  @membership.setter
+  def membership(self, value):
+    if value is None:
+      self.membership_id = None
+      self._membership = None
+    else:
+      self.membership_id = value.id
+      self._membership = value
 
   @property
   def payments(self):
@@ -166,7 +181,7 @@ class Installment(Model):
 
   @classmethod
   def overdues(cls):
-    today = datetime.today()
+    today = cls._today()
     month = today.month
     year = today.year
     if today.day < settings.Settings.get_settings().recharge_after:
@@ -176,3 +191,7 @@ class Installment(Model):
       year = year-1
       
     return cls.get_many('SELECT * FROM installments WHERE status = :status AND year = :year AND month < :month',{'status': 'waiting', 'year': year, 'month': month})
+
+  @classmethod
+  def _today(cls):
+    return datetime.today()

@@ -66,6 +66,7 @@ class I18n():
       },
       'membership': {
         'student_id': ['Student','Alumno'],
+        'student': ['Student','Alumno'],
         'klass_or_package': ['Class or Package','Clase o Paquete'],
         'installments': ['Installments','Cuotas'],
         'info': ['Information','Información']

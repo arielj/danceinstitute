@@ -1,5 +1,6 @@
 from room import Room
 from payment import Payment
+from user import User
 from teacher import Teacher
 from student import Student
 from klass import Klass

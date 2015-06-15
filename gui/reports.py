@@ -8,8 +8,9 @@ import widgets
 import exporter
 
 class PaymentsReport(gtk.VBox):
-  def __init__(self, payments):
+  def __init__(self, payments, users):
     self.payments = payments
+    self.users = users
     gtk.VBox.__init__(self, False, 5)
     
     self.from_e = gtk.Entry(10)
@@ -25,6 +26,13 @@ class PaymentsReport(gtk.VBox):
     self.done_rb = gtk.RadioButton(None, 'Hechos')
     self.received_rb = gtk.RadioButton(self.done_rb, 'Recibidos')
     self.received_rb.set_active(True)
+    
+    users_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    users_model.append((None,'Todos'))
+    for user in self.users:
+      users_model.append((user, user.to_label()))
+    
+    self.user = gtk.ComboBoxEntry(users_model,1)
     self.filter = gtk.Button('Buscar')
     
     self.form = gtk.HBox(False, 5)
@@ -34,6 +42,7 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.to_e, False)
     self.form.pack_start(self.done_rb, False)
     self.form.pack_start(self.received_rb, False)
+    self.form.pack_start(self.user, False)
     self.form.pack_start(self.filter, False)
     
     self.pack_start(self.form, False)
@@ -83,6 +92,9 @@ class PaymentsReport(gtk.VBox):
 
   def get_done_or_received(self):
     return self.done_rb.get_active()
+
+  def get_selected_user(self):
+    return self.user.get_tree().get_value(self.user.get_active_iter(),0)
 
   def update(self, payments = None):
     if payments is not None:
