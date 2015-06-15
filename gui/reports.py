@@ -94,7 +94,11 @@ class PaymentsReport(gtk.VBox):
     return self.done_rb.get_active()
 
   def get_selected_user(self):
-    return self.user.get_tree().get_value(self.user.get_active_iter(),0)
+    itr = self.user.get_active_iter()
+    if itr is not None:
+      return self.user.get_model().get_value(itr,0)
+    else:
+      return None
 
   def update(self, payments = None):
     if payments is not None:

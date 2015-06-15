@@ -774,7 +774,9 @@ class Controller(gobject.GObject):
     f = page.get_from()
     t = page.get_to()
     received = page.get_done_or_received()
-    payments = Payment.filter(f,t,received)
+    user = page.get_selected_user()
+    u_id = user.id if user is not None else None
+    payments = Payment.filter(f,t,received,u_id)
     page.update(payments)
 
   def export_payments_report(self, page):
