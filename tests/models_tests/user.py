@@ -10,3 +10,13 @@ class StudentTests(custom_test_case.CustomTestCase):
     self.assertFalse(s2.is_valid())
     self.assertIn('dni', s2.errors)
 
+  def test_cannot_be_deleted_if_has_memberships(self):
+    s = Factory.create('student', {'dni': '32496446'})
+    self.assertIs(s.can_delete(), True)
+    m = Factory.create('membership', {'student': s})
+    self.assertIsNot(s.can_delete(), True)
+    
+    s = Factory.create('student', {'dni': '32496447'})
+    self.assertIs(s.can_delete(), True)
+    p = Factory.create('payment', {'user': s})
+    self.assertIsNot(s.can_delete(), True)

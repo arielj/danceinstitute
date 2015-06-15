@@ -120,6 +120,14 @@ class User(Model):
       m.save(validate = False)
     return True
 
+  def can_delete(self):
+    if membership.Membership.get_where('student_id', self.id):
+      return "El alumno está inscripto en una o más clases."
+    if payment.Payment.for_user(self.id):
+      return "El alumno realizó pagos."
+    return True
+
+
   def _is_valid(self):
     user.User._is_valid(self)
     self.validate_has_many('memberships')

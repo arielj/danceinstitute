@@ -155,10 +155,29 @@ class SearchStudent(gtk.VBox):
     self.results.connect('student-activated', self.on_student_activated)
     self.pack_start(self.results, True)
     
+    self.actions = gtk.HBox(False, 4)
+    self.add = gtk.Button('Agregar')
+    self.add.connect('clicked', self.on_add_student_clicked)
+    self.edit = gtk.Button('Editar')
+    self.edit.set_sensitive(False)
+    self.edit.connect('clicked', self.on_edit_student_clicked)
+    self.delete = gtk.Button('Borrar')
+    self.delete.set_sensitive(False)
+    self.delete.connect('clicked', self.on_delete_student_clicked)
+    self.results.students_t.get_selection().connect('changed', self.on_selection_changed)
+    
+    self.actions.pack_start(self.add, False)
+    self.actions.pack_start(self.edit, False)
+    self.actions.pack_start(self.delete, False)
+    
+    self.pack_start(self.actions, False)
+    
     self.show_all()
 
   def update_results(self, students = None):
     self.results.update_table(students)
+    self.edit.set_sensitive(False)
+    self.delete.set_sensitive(False)
 
   def on_search(self, widget, student = None, new_record = None):
     self.emit('search', self.form.get_value())
@@ -166,12 +185,38 @@ class SearchStudent(gtk.VBox):
   def on_student_activated(self, widget, student):
     self.emit('student-edit', student.id)
 
+  def on_selection_changed(self, selection):
+    model, iter = selection.get_selected()
+    self.edit.set_sensitive(iter is not None)
+    self.delete.set_sensitive(iter is not None)
+
+  def on_edit_student_clicked(self, button):
+    student = self.results.get_selected()
+    if student is not None:
+      self.emit('student-edit',student.id)
+  
+  def on_delete_student_clicked(self, button):
+    student = self.results.get_selected()
+    if student is not None:
+      self.emit('student-delete',student)
+
+  def on_add_student_clicked(self,button):
+    self.emit('student-add')
+
 gobject.type_register(SearchStudent)
 gobject.signal_new('search', \
                    SearchStudent, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (str, ))
 gobject.signal_new('student-edit', \
+                   SearchStudent, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (int, ))
+gobject.signal_new('student-add', \
+                   SearchStudent, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('student-delete', \
                    SearchStudent, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
@@ -222,7 +267,7 @@ class StudentsList(gtk.VBox):
     self.emit('student-activated', student)
 
   def get_selected(self):
-    model, iter = self.t_selection.get_selected()
+    model, iter = self.students_t.get_selection().get_selected()
     return model.get_value(iter,0) if iter is not None else None
 
   def to_html(self):

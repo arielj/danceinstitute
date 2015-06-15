@@ -353,6 +353,8 @@ class Controller(gobject.GObject):
     self.window.add_page(page)
     page.connect('search', self.on_student_search)
     page.connect('student-edit', self.edit_student)
+    page.connect('student-add', self.add_student)
+    page.connect('student-delete', self.ask_delete_student)
     self.save_signal(self.connect('user-changed', page.on_search), page)
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
   
@@ -369,7 +371,25 @@ class Controller(gobject.GObject):
     else:
       ErrorMessage('No se puede abrir la página de Facebook de la persona:', 'No se cargó una ID de facebook').run()
 
+  def ask_delete_student(self, page, student):
+    student = Student.find(student.id)
+    if student:
+      can_delete = student.can_delete()
+      if can_delete is True:
+        dialog = ConfirmDialog('Vas a borrar al alumno: '+student.to_label()+":\n¿Estás seguro?")
+        dialog.connect('response', self.delete_student, student)
+        dialog.run()
+      else:
+        ErrorMessage("No se puede borrar al alumno:", can_delete).run()
 
+  def delete_student(self, dialog, response, student):
+    if response == gtk.RESPONSE_ACCEPT:
+      deleted = student.delete()
+      if deleted is True:
+        self.emit('student-deleted', student.id)
+      else:
+        ErrorMessage("No se puede borrar al alumno:", deleted).run()
+    dialog.destroy()
 
 
   #klasses controls

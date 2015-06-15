@@ -149,7 +149,7 @@ class Model(object):
   @classmethod
   def get_where(cls,field,value):
     results = []
-    for r in Conn.execute('SELECT * FROM '+cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchall():
+    for r in Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchall():
       results.append(cls(r))
     return results
 
