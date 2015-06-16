@@ -115,14 +115,10 @@ class Model(object):
     if value is None:
       value = getattr(self,field)
     if value:
-      exists = False
-      q = 'SELECT * FROM ' + self.table + ' WHERE ' + field + ' = :value'
-      args = {'value': value}
-      if self.id:
-        args['id'] = self.id
-        q = q + ' AND id != :id'
-
-      if self.__class__.exists(q, args):
+      q = Query(self.__class__).where(field,value)
+      if self.id: q.where('id',self.id,comparission='!=')
+      
+      if q.anything():
         self.add_error(field, _e('already_in_use') % {'field': _a(self.cls_name(),field)})
 
   def cls_name(self):
@@ -136,14 +132,6 @@ class Model(object):
   def find_by(cls, field, value):
     res = Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone()
     return cls(res) if res else False
-
-  @classmethod
-  def all(cls, where = '', args = ()):
-    return Query(cls)
-
-  @classmethod
-  def where(cls,field,value):
-    return Query(cls).where(field,value)
 
   def save(self, validate = True):
     if not validate or self.is_valid():
@@ -207,17 +195,27 @@ class Model(object):
 
   @classmethod
   def get_many(cls,query, params = ()):
-    results = []
-    for r in Conn.execute(query,params).fetchall():
-      results.append(cls(r))
-    return results
+    return map(lambda r: cls(r), Conn.execute(query,params).fetchall())
 
   @classmethod
   def get_one(cls,query, params = ()):
     r = Conn.execute(query,params).fetchone()
     return cls(r) if r else False
 
-  @classmethod
-  def exists(cls,query, params = ()):
-    return True if Conn.execute(query,params).fetchone() else False
 
+
+  @classmethod
+  def all(cls):
+    return Query(cls)
+
+  @classmethod
+  def where(cls,field, value, comparission = '=', placeholder = None):
+    return Query(cls).where(field,value,comparission,placeholder)
+
+  @classmethod
+  def count(cls):
+    return Query(cls).count()
+
+  @classmethod
+  def exists(cls):
+    return Query(cls).exists()

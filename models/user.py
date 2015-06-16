@@ -121,9 +121,9 @@ class User(Model):
     return True
 
   def can_delete(self):
-    if membership.Membership.get_where('student_id', self.id):
+    if membership.Membership.where('student_id', self.id).anything():
       return "El alumno está inscripto en una o más clases."
-    if payment.Payment.for_user(self.id):
+    if payment.Payment.for_user(self.id).anything():
       return "El alumno realizó pagos."
     return True
 

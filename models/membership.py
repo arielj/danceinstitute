@@ -132,4 +132,4 @@ class Membership(Model):
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):
-    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name())
+    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name()).anything()

@@ -1,3 +1,5 @@
+from database import Conn
+
 class Query(object):
   def __init__(self, cls):
     self.cls = cls
@@ -13,6 +15,13 @@ class Query(object):
       self.query_result = self.cls.get_many(self.query(), self.values)
     return self.query_result[index]
 
+  def __contains__(self,item):
+    if self.query_result is None:
+      self.query_result = self.cls.get_many(self.query(), self.values)
+    found = item.id in map(lambda i: i.id, self.query_result)
+    self.query_result = None
+    return found
+
   def query(self):
     q = 'SELECT * FROM ' + self.cls.table
     if self.wheres: q = q + self.get_wheres()
@@ -23,10 +32,11 @@ class Query(object):
 
   def where(self, field, value = None, comparission = '=', placeholder = None):
     self.query_result = None
-    if placeholder is None: placeholder = field
+    if placeholder is None: placeholder = ':'+field
+    aux_placeholder = placeholder[1:]
     if value is not None:
       self.wheres.append("%s %s %s" % (field, comparission, placeholder))
-      self.values[placeholder] = value
+      self.values[aux_placeholder] = value
     else:
       self.wheres.append(field)
 
@@ -52,6 +62,16 @@ class Query(object):
 
   def count(self):
     q = 'SELECT COUNT(*) FROM ' + self.cls.table
-    if self.wheres: q = q + self.get_where()
+    if self.wheres: q = q + self.get_wheres()
 
-    return self.cls.get_conn().execute(q, self.values).fetchone()[0]
+    return Conn.execute(q, self.values).fetchone()[0]
+
+  def exists(self):
+    return self.cls.get_one() != None
+
+  def anything(self):
+    return self.count() > 0
+
+  def do_get(self):
+    self.query_result = self.cls.get_many(self.query(), self.values)
+    return self.query_result

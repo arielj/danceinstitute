@@ -135,7 +135,7 @@ class Klass(Model):
   @property
   def schedules(self):
     if self._schedules is None:
-      self._schedules = schedule.Schedule.for_klass(self)
+      self._schedules = schedule.Schedule.for_klass(self).do_get()
     return self._schedules
 
   def add_schedule(self, schedule):
