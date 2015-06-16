@@ -199,7 +199,7 @@ class Controller(gobject.GObject):
 
   #rooms controls
   def list_rooms(self, widget):
-    rooms = Room.all()
+    rooms = Room.all().order_by('name ASC')
     page = RoomsList(rooms)
     current = self.window.get_page_by_label(page.get_tab_label())
     if current:

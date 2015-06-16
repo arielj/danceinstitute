@@ -4,6 +4,7 @@
 import datetime
 from translations import _t
 from model import Model
+from lib.query_builder import Query
 import room
 import klass
 
@@ -71,10 +72,7 @@ class Schedule(Model):
   @room.setter
   def room(self,r):
     self._room = r
-    if r is None:
-      self.room_id = None
-    else:
-      self.room_id = r.id
+    self.room_id = None if r is None else r.id
 
   @property
   def room_name(self):
@@ -132,4 +130,4 @@ class Schedule(Model):
 
   @classmethod
   def for_klass(cls,kls):
-    return cls.get_where('klass_id',kls.id)
+    return Query(cls).where('klass_id',kls.id)

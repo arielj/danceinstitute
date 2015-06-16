@@ -5,6 +5,7 @@ from decimal import Decimal
 import datetime
 from translations import _t
 from model import Model
+from lib.query_builder import Query
 import student
 import installment
 import klass
@@ -127,8 +128,8 @@ class Membership(Model):
 
   @classmethod
   def for_student(cls,st_id):
-    return cls.get_where('student_id',st_id)
+    return Query(cls).where('student_id', st_id)
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):
-    return cls.get_many('SELECT * FROM memberships WHERE for_id = :for_id AND for_type = :for_type',{'for_id': k_or_p.id, 'for_type': k_or_p.__class__.__name__})
+    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name())

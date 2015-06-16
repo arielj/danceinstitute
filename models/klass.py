@@ -3,6 +3,7 @@
 
 from translations import _t
 from model import Model
+from lib.query_builder import Query
 import teacher
 import schedule
 import package
@@ -175,4 +176,4 @@ class Klass(Model):
       ms = ms + membership.Membership.for_klass_or_package(p)
     
     return map(lambda m: m.student, ms)
-      
+

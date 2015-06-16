@@ -7,6 +7,7 @@ import datetime
 import installment
 import student
 import teacher
+from lib.query_builder import Query
 
 class Payment(Model):
   table = 'payments'
@@ -133,30 +134,22 @@ class Payment(Model):
 
   @classmethod
   def for_installment(cls,ins_id):
-    return cls.get_where('installment_id',ins_id)
+    Query(cls).where('installment_id',ins_id)
 
   @classmethod
   def for_user(cls,u_id,include_installments = True, done = None):
-    q = 'SELECT * FROM payments WHERE user_id = :u_id'
-    args = {'u_id': u_id}
-    if not include_installments:
-      q = q + ' AND installment_id IS NULL'
-    
-    if done is not None:
-      q = q + ' AND done = :done'
-      args['done'] = int(done)
+    q = Query(cls).where('user_id', u_id)
 
-    return cls.get_many(q,args)
+    if not include_installments: q.where('installment_id IS NULL')
+    if done is not None: q.where('done', int(done))
+
+    return q
 
   @classmethod
   def filter(cls, f, t, done = None, user_id = None):
-    args = {'from': str(f), 'to': str(t)}
-    q = 'SELECT * FROM payments WHERE date >= :from AND date <= :to'
-    if done is not None:
-      q = q + ' AND done = :done'
-      args['done'] = int(done)
-    if user_id is not None:
-      q = q + ' AND user_id = :user_id'
-      args['user_id'] = user_id
-    q = q + ' ORDER BY date ASC'
-    return cls.get_many(q, args)
+    q = Query(cls).where('date', str(f), comparission = '>=', placeholder = ':from').where('date', str(t), comparission = '<=', placeholder = ':to')
+    
+    if done is not None: q.where('done', int(done))
+    if user_id is not None: q.where('user_id', user_id)
+
+    return q.order_by('date ASC')

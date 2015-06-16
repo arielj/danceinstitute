@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from translations import _t, _a
 from model import Model
+from lib.query_builder import Query
 import payment
 import membership
 import settings
@@ -173,7 +174,7 @@ class Installment(Model):
 
   @classmethod
   def for_membership(cls,membership_id):
-    return cls.get_where('membership_id',membership_id)
+    return Query(cls).where('membership_id', membership_id)
 
   def before_delete(self):
     for p in self.payments:
@@ -192,8 +193,8 @@ class Installment(Model):
     if month == -1:
       month = 11
       year = year-1
-      
-    return cls.get_many('SELECT * FROM installments WHERE status = :status AND year = :year AND month < :month',{'status': 'waiting', 'year': year, 'month': month})
+
+    return Query(cls).where('status','waiting').where('year', year).where('month',month)
 
   @classmethod
   def _today(cls):

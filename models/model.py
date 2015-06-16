@@ -5,6 +5,7 @@ from database import Conn
 from translations import _a, _e
 from decimal import Decimal
 import re
+from lib.query_builder import Query
 
 class Model(object):
   def __init__(self, attrs = {}):
@@ -138,20 +139,11 @@ class Model(object):
 
   @classmethod
   def all(cls, where = '', args = ()):
-    results = []
-    if where:
-      where = ' WHERE ' + where
-
-    for r in Conn.execute('SELECT * FROM '+cls.table + where, args).fetchall():
-      results.append(cls(r))
-    return results
+    return Query(cls)
 
   @classmethod
-  def get_where(cls,field,value):
-    results = []
-    for r in Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchall():
-      results.append(cls(r))
-    return results
+  def where(cls,field,value):
+    return Query(cls).where(field,value)
 
   def save(self, validate = True):
     if not validate or self.is_valid():

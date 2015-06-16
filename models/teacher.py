@@ -16,14 +16,11 @@ class Teacher(user.User):
 
   @classmethod
   def get(cls, where = '', args = {}, exclude = None):
-    w = 'is_teacher = 1'
-    if exclude:
-      w = w + ' AND id NOT IN (:ids)'
-      args['ids'] = ','.join(map(lambda i: str(i),exclude))
+    q = Query(cls).where('is_teacher', 1)
 
-    where = where + ' AND ' + w if where else w
+    if exclude: q.where('id', ','.join(map(lambda i: str(i),exclude)), comparission = 'NOT IN', placeholder = '(:ids)')
 
-    return cls.all(where=where,args=args)
+    return q
 
   def can_delete(self):
     if membership.Membership.for_student(self.id):

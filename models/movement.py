@@ -3,6 +3,7 @@
 
 from decimal import Decimal
 from model import Model
+from lib.query_builder import Query
 import datetime
 
 class Movement(Model):
@@ -91,23 +92,20 @@ class Movement(Model):
   @classmethod
   def incoming(cls, date_f = None, date_t = None):
     if date_f or date_t:
-      return cls.by_date(date_f, date_t, 'done = :done', {'done': 0})
+      return cls.by_date(date_f, date_t).where('done', 0)
     else:
-      return cls.get_where('done',0)
+      return cls.where('done',0)
 
   @classmethod
   def outgoing(cls, date_f = None, date_t = None):
     if date_f or date_t:
-      return cls.by_date(date_f, date_t, 'done = :done', {'done': 1})
+      return cls.by_date(date_f, date_t).where('done', 1)
     else:
-      return cls.get_where('done',1)
+      return cls.where('done',1)
 
   @classmethod
-  def by_date(cls, date_f, date_t = None, where = '', args = {}):
-    if date_t is None:
-      date_t = date_f
-    if where != '':
-      where = where + ' AND '
-    args['date_f'] = str(date_f)
-    args['date_t'] = str(date_t)
-    return cls.get_many('SELECT * FROM movements WHERE ' + where + ' date >= :date_f AND date <= :date_t', args)
+  def by_date(cls, date_f, date_t = None):
+    if date_t is None: date_t = date_f
+
+    return Query(cls).where('date', str(date_f), comparission = '>=', placeholder = ':date_f').where('date', str(date_t), comparission = '>=', placeholder = ':date_t')
+
