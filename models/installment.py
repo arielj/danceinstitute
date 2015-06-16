@@ -117,17 +117,12 @@ class Installment(Model):
 
   @membership.setter
   def membership(self, value):
-    if value is None:
-      self.membership_id = None
-      self._membership = None
-    else:
-      self.membership_id = value.id
-      self._membership = value
+    self.membership_id = None if value is None else value.id
+    self._membership = value
 
   @property
   def payments(self):
-    if self._payments is None:
-      self._payments = payment.Payment.for_installment(self.id).do_get()
+    if self._payments is None: self._payments = payment.Payment.for_installment(self.id).do_get()
     return self._payments
 
   def to_db(self):
