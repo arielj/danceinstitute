@@ -32,9 +32,9 @@ class Klass(Model):
     Model.__init__(self, data)
 
   def can_delete(self):
-    if package.Package.with_klass(self):
+    if package.Package.with_klass(self).anything():
       return "Un paquete incluye a esta clase."
-    if membership.Membership.for_klass_or_package(self):
+    if membership.Membership.for_klass_or_package(self).anything():
       return "Hay alumnos inscriptos a esta clase."
     return True
 
@@ -167,13 +167,13 @@ class Klass(Model):
 
   @classmethod
   def for_package(cls,package_id):
-    return cls.get_many('SELECT klasses.* FROM klasses_packages LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id WHERE klasses_packages.package_id = ?',(package_id,))
+    return Query(cls).set_from('klasses_packages').set_join('LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id').where('package_id',package_id)
 
   def get_students(self):
-    ms = membership.Membership.for_klass_or_package(self)
+    ms = membership.Membership.for_klass_or_package(self).do_get()
     
     for p in package.Package.with_klass(self):
-      ms = ms + membership.Membership.for_klass_or_package(p)
+      ms = ms + membership.Membership.for_klass_or_package(p).do_get()
     
     return map(lambda m: m.student, ms)
 

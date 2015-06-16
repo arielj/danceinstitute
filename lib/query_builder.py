@@ -9,6 +9,9 @@ class Query(object):
     self.limit = None
     self.order = None
     self.offset = None
+    self.select_str = cls.table+'.*'
+    self.from_str = cls.table
+    self.join_str = None
 
   def _do_query(self, force = False):
     if self.query_result is None or force is True:
@@ -30,7 +33,8 @@ class Query(object):
     return found
 
   def query(self):
-    q = 'SELECT * FROM ' + self.cls.table
+    q = 'SELECT '+self.select_str+' FROM ' + self.from_str
+    if self.join_str: q = q + ' ' + self.join_str
     if self.wheres: q = q + self.get_wheres()
     if self.order is not None: q = q + ' ORDER BY %s' % self.order
     if self.offset is not None: q = q + ' OFFSET %i' % self.offset
@@ -77,17 +81,33 @@ class Query(object):
     self.limit = limit
     return self
 
+  def set_join(self, j):
+    self.query_result = None
+    self.join_str = j
+    return self
+
+  def set_select(self, s):
+    self.query_result = None
+    self.select_str = s
+    return self
+
+  def set_from(self, f):
+    self.query_result = None
+    self.from_str = f
+    return self
+
   def get_wheres(self):
     return ' WHERE ' + ' AND '.join(self.wheres)
 
   def count(self):
-    q = 'SELECT COUNT(*) FROM ' + self.cls.table
+    q = 'SELECT COUNT(*) FROM ' + self.from_str
+    if self.join_str: q = q + ' ' + self.join_str
     if self.wheres: q = q + self.get_wheres()
 
     return Conn.execute(q, self.values).fetchone()[0]
 
   def exists(self):
-    return self.cls.get_one() != None
+    return self.cls.get_one(self.query(),self.values) != None
 
   def anything(self):
     return self.count() > 0

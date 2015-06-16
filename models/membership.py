@@ -111,8 +111,7 @@ class Membership(Model):
     self.validate_presence_of('student')
 
   def before_delete(self):
-    for i in self.installments:
-      i.delete()
+    for i in self.installments: i.delete()
     return True
 
   def is_package(self):
@@ -124,4 +123,4 @@ class Membership(Model):
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):
-    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name()).anything()
+    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name())

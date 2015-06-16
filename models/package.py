@@ -3,6 +3,7 @@
 
 from decimal import Decimal
 from model import Model
+from lib.query_builder import Query
 import membership
 import klass
 
@@ -70,10 +71,10 @@ class Package(Model):
 
   @classmethod
   def with_klass(cls,klass):
-    return cls.get_many('SELECT packages.* FROM klasses_packages LEFT JOIN packages ON klasses_packages.package_id = packages.id WHERE klasses_packages.klass_id = :k_id', {'k_id': klass.id})
+    return Query(cls).set_from('klasses_packages').set_join('LEFT JOIN packages ON klasses_packages.package_id = packages.id').where('klasses_packages.klass_id', klass.id, placeholder='klass_id')
 
   def can_delete(self):
-    if membership.Membership.for_klass_or_package(self):
+    if membership.Membership.for_klass_or_package(self).anything():
       return "Hay alumnos inscriptos a este paquete."
     return True
 
