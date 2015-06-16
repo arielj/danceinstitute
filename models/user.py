@@ -105,8 +105,8 @@ class User(Model):
     return self._memberships
 
   def reload_memberships(self):
-    self._memberships = [] if self.is_new_record() else membership.Membership.for_student(self.id)
-    return self._memberships
+    self._memberships = None
+    return self.memberships
 
   def to_label(self):
     return ' '.join([self.name,self.lastname])

@@ -70,17 +70,9 @@ class Membership(Model):
       self._installments = installment.Installment.for_membership(self.id)
     return self._installments
 
-  def add_installment(self, i):
-    if i.id not in map(lambda i: i.id, self.installments):
-      self.installments.append(i)
-
-  def remove_installment(self, i):
-    if isinstance(i,installment.Installment):
-      i = i.id
-
-    for ins in self.installments:
-      if ins.id == i:
-        self.installments.remove(ins)
+  def reload_installments(self):
+    self._installments = None
+    return self.installments
 
   def create_installments(self, year, initial_month, final_month, fee):
     year = year
@@ -95,7 +87,7 @@ class Membership(Model):
             for m in range(initial_month, final_month+1):
               i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
               if i.save():
-                self.add_installment(i)
+                self.reload_installments()
               else:
                 return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
             return True

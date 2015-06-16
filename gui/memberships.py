@@ -62,7 +62,7 @@ class MembershipsPanel(gtk.VBox):
     self.notebook.show_all()
 
   def on_membership_deleted(self, m_id):
-    self.user.remove_membership(m_id)
+    self.user.reload_memberships()
     for tab in self.notebook.get_children():
       if isinstance(tab,PaymentsTab):
         tab.refresh()
@@ -72,8 +72,7 @@ class MembershipsPanel(gtk.VBox):
 
   def on_installment_deleted(self, i_id):
     for tab in self.notebook.get_children():
-      if not isinstance(tab,PaymentsTab):
-        tab.membership.remove_installment(i_id)
+      if not isinstance(tab,PaymentsTab): tab.membership.reload_installments()
       tab.refresh()
     self.update()
 

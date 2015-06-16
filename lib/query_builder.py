@@ -51,8 +51,6 @@ class Query(object):
           if comparission is None: comparission = 'IN'
           aux = '(:'+placeholder+')'
           value = ','.join(map(lambda v: str(v),value))
-
-          
         else:
           if comparission is None: comparission = '='
           aux = ':'+placeholder
