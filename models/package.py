@@ -42,8 +42,7 @@ class Package(Model):
 
   @property
   def klasses(self):
-    if self._klasses is None:
-      self._klasses = klass.Klass.for_package(self.id)
+    if self._klasses is None: self._klasses = klass.Klass.for_package(self.id)
     return self._klasses
 
   @klasses.setter
@@ -59,8 +58,8 @@ class Package(Model):
   def after_save(self):
     c = self.__class__.get_conn()
     for k in self.klasses:
-      args = {'klass_id': k.id, 'package_id': self.id}
-      if c.execute('SELECT COUNT(*) FROM klasses_packages WHERE klass_id = :klass_id AND package_id = :package_id', args).fetchone()[0] == 0:
+      if Query(self.__class__).set_from('klasses_packages').where('klass_id', k.id).where('package_id', self.id).count() == 0:
+        args = {'klass_id': k.id, 'package_id': self.id}
         self.__class__.get_conn().execute('INSERT INTO klasses_packages (klass_id,package_id) VALUES (:klass_id,:package_id)', args)
 
   def _is_valid(self):

@@ -66,8 +66,8 @@ class Klass(Model):
     self._teachers_remove = []
 
     for t in self.teachers:
-      args = {'klass_id': self.id, 'teacher_id': t.id}
-      if c.execute('SELECT COUNT(*) FROM klasses_teachers WHERE klass_id = :klass_id AND teacher_id = :teacher_id', args).fetchone()[0] == 0:
+      if Query(self.__class__).set_from('klasses_teachers').where('klass_id', self.id).where('teacher_id',t.id).count() == 0:
+        args = {'klass_id': self.id, 'teacher_id': t.id}
         self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
     
     for s in self._schedules_remove:
@@ -129,7 +129,7 @@ class Klass(Model):
   @property
   def teachers(self):
     if self._teachers is None:
-      self._teachers = [] if self.is_new_record() else teacher.Teacher.for_klass(self)
+      self._teachers = [] if self.is_new_record() else teacher.Teacher.for_klass(self).do_get()
     return self._teachers
 
   @property
