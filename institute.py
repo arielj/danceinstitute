@@ -106,6 +106,11 @@ class Controller(gobject.GObject):
     self.window.show_status(status)
 
   def home(self, widget):
+    current = self.window.get_page_by_label(Home.tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+
     today = datetime.datetime.today().date()
     klasses = klass.Klass.for_day(self.settings.get_opening_h(), self.settings.get_closing_h(),today.weekday())
     installments = installment.Installment.overdues()
@@ -113,18 +118,13 @@ class Controller(gobject.GObject):
     payments = payment.Payment.filter(today,today)
     movements = movement.Movement.by_date(today)
     page = Home(klasses, notes, installments, payments, movements)
-    current = self.window.get_page_by_label(page.get_tab_label())
-    if current:
-      self.window.focus_page(current)
-      return current
-    else:
-      page.connect('user-edit', self.edit_student)
-      page.notes.save.connect_object('clicked',self.save_notes, page)
-      page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
-      page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
-      self.save_signal(self.connect_object('movement-deleted', self.update_movements, page), page)
-      self.window.add_page(page)
-      return page
+    page.connect('user-edit', self.edit_student)
+    page.notes.save.connect_object('clicked',self.save_notes, page)
+    page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
+    page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
+    self.save_signal(self.connect_object('movement-deleted', self.update_movements, page), page)
+    self.window.add_page(page)
+    return page
 
   def add_movement_dialog(self, page):
     movement = Movement()
@@ -199,13 +199,13 @@ class Controller(gobject.GObject):
 
   #rooms controls
   def list_rooms(self, widget):
-    rooms = Room.all().order_by('name ASC')
-    page = RoomsList(rooms)
-    current = self.window.get_page_by_label(page.get_tab_label())
+    current = self.window.get_page_by_label(RoomsList.tab_label())
     if current:
       self.window.focus_page(current)
       return current
     else:
+      rooms = Room.all().order_by('name ASC')
+      page = RoomsList(rooms)
       self.window.add_page(page)
       page.connect('room-edit', self.edit_room)
       page.connect('room-add', self.add_room)
@@ -219,14 +219,14 @@ class Controller(gobject.GObject):
   def edit_room(self, widget, room):
     page = self.room_form(widget, room)
 
-  def room_form(self, widget, room = None):
-    page = RoomForm(room)
+  def room_form(self, widget, room):
     if room.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
+      current = self.window.get_page_by_object(room)
       if current:
         self.window.focus_page(current)
         return current
-      
+
+    page = RoomForm(room)
     page.submit.connect_object('clicked',self.submit_room, page)
     self.window.add_page(page)
     return page
@@ -242,7 +242,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar la clase:", room.full_errors()).run()
 
   def refresh_rooms(self, widget, room, created, page):
-    rooms = Room.all()
+    rooms = Room.all().order_by('name ASC')
     page.refresh_list(rooms)
     
 
@@ -256,20 +256,20 @@ class Controller(gobject.GObject):
     page = self.user_form(teacher)
 
   def list_teachers(self, widget):
-    teachers = Teacher.get()
-    page = TeachersList(teachers)
-    current = self.window.get_page_by_label(page.get_tab_label())
+    current = self.window.get_page_by_label(TeachersList.tab_label())
     if current:
       self.window.focus_page(current)
       return current
-    else:
-      self.window.add_page(page)
-      page.connect('teacher-edit', self.edit_teacher)
-      page.connect('teacher-add', self.add_teacher)
-      page.connect('teacher-delete', self.ask_delete_teacher)
-      self.save_signal(self.connect('user-changed', self.refresh_teachers, page), page)
-      self.save_signal(self.connect('teacher-deleted', self.refresh_teachers, None, page), page)
-      return page
+
+    teachers = Teacher.get().order_by('name ASC, lastname ASC')
+    page = TeachersList(teachers)
+    self.window.add_page(page)
+    page.connect('teacher-edit', self.edit_teacher)
+    page.connect('teacher-add', self.add_teacher)
+    page.connect('teacher-delete', self.ask_delete_teacher)
+    self.save_signal(self.connect('user-changed', self.refresh_teachers, page), page)
+    self.save_signal(self.connect('teacher-deleted', self.refresh_teachers, None, page), page)
+    return page
 
   def ask_delete_teacher(self, page, teacher_id):
     teacher = Teacher.find(teacher_id)
@@ -293,7 +293,7 @@ class Controller(gobject.GObject):
     dialog.destroy()
 
   def refresh_teachers(self, widget, teacher, created, page):
-    teachers = Teacher.get()
+    teachers = Teacher.get().order_by('name ASC')
     page.refresh_list(teachers)
 
   def add_teacher_payment(self, page):
@@ -315,13 +315,13 @@ class Controller(gobject.GObject):
     page = self.user_form(student)
 
   def user_form(self, user):
-    page = UserForm(user)
     if user.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
+      current = self.window.get_page_by_object(user)
       if current:
         self.window.focus_page(current)
         return current
-      
+
+    page = UserForm(user)
     page.submit.connect_object('clicked', self.submit_user, page)
     page.open_fb.connect_object('clicked', self.open_fb, page)
     page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
@@ -359,7 +359,7 @@ class Controller(gobject.GObject):
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
   
   def on_student_search(self, page, value):
-    students = Student.search(value)
+    students = Student.search(value).order_by('name ASC, lastname ASC')
     page.update_results(students)
 
   def open_fb(self, page):
@@ -404,14 +404,14 @@ class Controller(gobject.GObject):
     klass = Klass.find(klass_id)
     page = self.klass_form(widget, klass)
   
-  def klass_form(self, widget, klass = None):
-    page = KlassForm(klass)
+  def klass_form(self, widget, klass):
     if klass.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
+      current = self.window.get_page_by_object(klass)
       if current:
         self.window.focus_page(current)
         return current
-      
+
+    page = KlassForm(klass)
     page.submit.connect_object('clicked',self.submit_klass, page)
     page.connect('schedule-edit', self.edit_schedule)
     page.connect('schedule-add', self.add_schedule)
@@ -423,34 +423,34 @@ class Controller(gobject.GObject):
     return page
 
   def show_schedules(self, widget):
+    current = self.window.get_page_by_label(SchedulesTables.tab_label())
+    if current:
+      self.window.focus_page(current)
+      return current
+
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
     page = SchedulesTables(klasses)
-    current = self.window.get_page_by_label(page.get_tab_label())
-    if current:
-      self.window.focus_page(current)
-      return current
-    else:
-      self.window.add_page(page)
-      page.connect('klass-edit', self.edit_klass)
-      page.connect('klass-add', self.add_klass)
-      self.save_signal(self.connect('klass-changed', self.refresh_schedules, page), page)
-      return page
+    self.window.add_page(page)
+    page.connect('klass-edit', self.edit_klass)
+    page.connect('klass-add', self.add_klass)
+    self.save_signal(self.connect('klass-changed', self.refresh_schedules, page), page)
+    return page
 
   def list_klasses(self, widget):
-    klasses = Klass.all()
-    page = KlassesList(klasses)
-    current = self.window.get_page_by_label(page.get_tab_label())
+    current = self.window.get_page_by_label(KlassesList.tab_label())
     if current:
       self.window.focus_page(current)
       return current
-    else:
-      self.window.add_page(page)
-      page.connect('klass-edit', self.edit_klass)
-      page.connect('klass-add', self.add_klass)
-      page.connect('klass-delete', self.ask_delete_klass)
-      self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
-      self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
-      return page
+
+    klasses = Klass.all().order_by('name ASC')
+    page = KlassesList(klasses)
+    self.window.add_page(page)
+    page.connect('klass-edit', self.edit_klass)
+    page.connect('klass-add', self.add_klass)
+    page.connect('klass-delete', self.ask_delete_klass)
+    self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+    self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
+    return page
 
   def refresh_schedules(self, widget, kls, created, page):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
@@ -491,7 +491,7 @@ class Controller(gobject.GObject):
     dialog.destroy()
 
   def show_select_teacher_dialog(self, page):
-    teachers = Teacher.get(exclude = page.object.teacher_ids())
+    teachers = Teacher.get(exclude = page.object.teacher_ids()).order_by('name ASC, lastname ASC')
     dialog = SelectTeacherDialog(teachers)
     dialog.connect('response', self.select_teacher_dialog_response, page)
     dialog.run()
@@ -576,19 +576,19 @@ class Controller(gobject.GObject):
 
   #packages controls
   def show_packages(self, widget):
-    page = PackagesList(Package.all())
-    current = self.window.get_page_by_label(page.get_tab_label())
+    current = self.window.get_page_by_label(PackagesList.tab_label())
     if current:
       self.window.focus_page(current)
       return current
-    else:
-      self.window.add_page(page)
-      page.connect('package-add',self.add_package)
-      page.connect('package-edit', self.edit_package)
-      page.connect('package-delete', self.ask_delete_package)
-      self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
-      self.save_signal(self.connect('package-deleted', self.refresh_packages, None, page), page)
-      return page
+
+    page = PackagesList(Package.all().order_by('name ASC'))
+    self.window.add_page(page)
+    page.connect('package-add',self.add_package)
+    page.connect('package-edit', self.edit_package)
+    page.connect('package-delete', self.ask_delete_package)
+    self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
+    self.save_signal(self.connect('package-deleted', self.refresh_packages, None, page), page)
+    return page
 
   def add_package(self, widget):
     package = Package()
@@ -600,13 +600,13 @@ class Controller(gobject.GObject):
     return self.package_form(package)
 
   def package_form(self, package, klasses = None):
-    page = PackageForm(package, klasses)
     if package.is_not_new_record():
-      current = self.window.get_page_by_label(page.get_tab_label())
+      current = self.window.get_page_by_object(package)
       if current:
         self.window.focus_page(current)
         return current
 
+    page = PackageForm(package, klasses)
     page.submit.connect_object('clicked', self.submit_package, page)
     self.window.add_page(page)
     return page
@@ -622,7 +622,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar el paquete:", package.full_errors()).run()
 
   def refresh_packages(self, widget, package, created, page):
-    packages = Package.all()
+    packages = Package.all().order_by('name ASC')
     page.refresh_list(packages)
 
   def ask_delete_package(self, page, package):
@@ -651,14 +651,14 @@ class Controller(gobject.GObject):
   # memberships
   def new_membership(self, page):
     membership = Membership()
-    klasses = Klass.all()
-    packages = Package.all()
+    klasses = Klass.all().order_by('name ASC')
+    packages = Package.all().order_by('name ASC')
     
-    options = klasses + packages
+    options = klasses.do_get() + packages.do_get()
 
     for m in page.object.memberships:
       for o in options:
-        if m.for_id == o.id and m.for_type == o.__class__.__name__:
+        if m.for_id == o.id and m.for_type == o.cls_name():
           options.remove(o)
 
     if options:
@@ -675,7 +675,7 @@ class Controller(gobject.GObject):
       membership.set_attrs(dialog.form.get_values())
       membership.student_id = page.object.id
       if membership.save():
-        page.object.add_membership(membership)
+        page.object.reload_memberships()
         page.update()
       else:
         ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
@@ -691,7 +691,7 @@ class Controller(gobject.GObject):
 
   def delete_membership(self, dialog, response, membership):
     if response == gtk.RESPONSE_ACCEPT:
-      membership.student.remove_membership(membership)
+      membership.student.reload_memberships()
       membership.delete()
       self.emit('membership-deleted', membership.id)
 
@@ -736,8 +736,7 @@ class Controller(gobject.GObject):
   #payments controls
   def add_payment(self, widget, installment, done, page):
     payment = Payment()
-    if installment:
-      payment.amount = installment.to_pay()
+    if installment: payment.amount = installment.to_pay()
     payment.user = page.object
     payment.done = done
 
@@ -783,7 +782,7 @@ class Controller(gobject.GObject):
   #resports
   def payments_report(self, menu_item):
     today = datetime.datetime.today()
-    page = PaymentsReport(Payment.filter(today,today,False),User.all())
+    page = PaymentsReport(Payment.filter(today,today,False),User.all().order_by('name ASC, lastname ASC'))
     page.export.connect_object('clicked', self.export_payments_report, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)

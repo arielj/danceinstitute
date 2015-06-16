@@ -100,17 +100,13 @@ class User(Model):
 
   @property
   def memberships(self):
-    if self._memberships is None:
-      self._memberships = membership.Membership.for_student(self.id)
+    if self.is_new_record(): self._memberships = []
+    if self._memberships is None: self._memberships = membership.Membership.for_student(self.id)
     return self._memberships
 
-  def add_membership(self, membership):
-    self.memberships.append(membership)
-  
-  def remove_membership(self, membership_id):
-    for m in self.memberships:
-      if m.id and m.id == membership_id:
-        self.memberships.remove(m)
+  def reload_memberships(self):
+    self._memberships = [] if self.is_new_record() else membership.Membership.for_student(self.id)
+    return self._memberships
 
   def to_label(self):
     return ' '.join([self.name,self.lastname])
@@ -133,8 +129,7 @@ class User(Model):
     self.validate_has_many('memberships')
 
   def update_id_on_associations(self):
-    for m in self.memberships:
-      m.student_id = self.id
+    for m in self.memberships: m.student_id = self.id
 
   def to_db(self):
     return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age}
@@ -149,7 +144,6 @@ class User(Model):
 
   def get_payments(self, include_installments = True, done = None):
     return payment.Payment.for_user(self.id, include_installments, done)
-
 
   @classmethod
   def calculate_age(cls,born):

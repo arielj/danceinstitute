@@ -20,6 +20,7 @@ class MembershipsPanel(gtk.VBox):
     self.pack_start(self.enroll_b, False)
 
     self.notebook = gtk.Notebook()
+    self.notebook.set_scrollable(True)
     
     self.add_payments_tabs()
     
@@ -35,7 +36,7 @@ class MembershipsPanel(gtk.VBox):
       t2.add_b.connect('clicked', self.on_add_payment_clicked, None, True)
     
     t = PaymentsTab(self.user)
-    self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.__class__.__name__.lower())))
+    self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
     t.delete_b.connect('clicked', self.on_delete_payment_clicked, t)
     t.add_b.connect('clicked', self.on_add_payment_clicked, None)
 
@@ -56,7 +57,7 @@ class MembershipsPanel(gtk.VBox):
     for tab in children:
       tab.refresh()
     for m in self.user.memberships:
-      if m not in map(lambda t: t.membership, children):
+      if m.id not in [t.membership.id for t in children if t.membership is not None]:
         self.add_tab(m)
     self.notebook.show_all()
 

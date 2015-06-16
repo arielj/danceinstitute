@@ -129,13 +129,13 @@ class Klass(Model):
   @property
   def teachers(self):
     if self._teachers is None:
-      self._teachers = teacher.Teacher.for_klass(self)
+      self._teachers = [] if self.is_new_record() else teacher.Teacher.for_klass(self)
     return self._teachers
 
   @property
   def schedules(self):
     if self._schedules is None:
-      self._schedules = schedule.Schedule.for_klass(self).do_get()
+      self._schedules = [] if self.is_new_record() else schedule.Schedule.for_klass(self).do_get()
     return self._schedules
 
   def add_schedule(self, schedule):

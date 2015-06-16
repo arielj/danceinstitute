@@ -10,15 +10,22 @@ class Query(object):
     self.order = None
     self.offset = None
 
-  def __getitem__(self,index):
-    if self.query_result is None:
+  def _do_query(self, force = False):
+    if self.query_result is None or force is True:
       self.query_result = self.cls.get_many(self.query(), self.values)
-    return self.query_result[index]
+    return self.query_result
+
+  def __getitem__(self,index):
+    return self._do_query()[index]
 
   def __contains__(self,item):
-    if self.query_result is None:
-      self.query_result = self.cls.get_many(self.query(), self.values)
-    found = item.id in map(lambda i: i.id, self.query_result)
+    ids = map(lambda i: i.id, self._do_query())
+    
+    if isinstance(item, list):
+      found = all(map(lambda i: i.id in ids, item))
+    else:
+      found = item.id in ids
+
     self.query_result = None
     return found
 
@@ -30,13 +37,28 @@ class Query(object):
     if self.limit is not None: q = q + ' LIMIT %i' % self.limit
     return q
 
-  def where(self, field, value = None, comparission = '=', placeholder = None):
+  def where(self, field, value=None, comparission=None, placeholder=None):
     self.query_result = None
-    if placeholder is None: placeholder = ':'+field
-    aux_placeholder = placeholder[1:]
+
+    if placeholder is None: placeholder = field
+
     if value is not None:
-      self.wheres.append("%s %s %s" % (field, comparission, placeholder))
-      self.values[aux_placeholder] = value
+      if isinstance(value, dict):
+        self.wheres.append("("+field+")")
+        self.values.update(value)
+      else:
+        if isinstance(value, list):
+          if comparission is None: comparission = 'IN'
+          aux = '(:'+placeholder+')'
+          value = ','.join(map(lambda v: str(v),value))
+
+          
+        else:
+          if comparission is None: comparission = '='
+          aux = ':'+placeholder
+
+        self.wheres.append(field+" "+comparission+" "+aux)
+        self.values[placeholder] = value
     else:
       self.wheres.append(field)
 
@@ -73,5 +95,4 @@ class Query(object):
     return self.count() > 0
 
   def do_get(self):
-    self.query_result = self.cls.get_many(self.query(), self.values)
-    return self.query_result
+    return self._do_query(True)

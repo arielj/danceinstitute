@@ -132,8 +132,9 @@ class PaymentsTab(gtk.VBox):
   def refresh(self):
     self.store.clear()
     
-    for p in self.user.get_payments(include_installments = False, done = self.done):
-      self.store.append((p,p.date,p.description, p.amount))
+    if self.user.is_not_new_record():
+      for p in self.user.get_payments(include_installments = False, done = self.done):
+        self.store.append((p,p.date,p.description, p.amount))
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()

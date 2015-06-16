@@ -127,7 +127,7 @@ class Installment(Model):
   @property
   def payments(self):
     if self._payments is None:
-      self._payments = payment.Payment.for_installment(self.id)
+      self._payments = payment.Payment.for_installment(self.id).do_get()
     return self._payments
 
   def to_db(self):

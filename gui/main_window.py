@@ -13,6 +13,7 @@ class MainWindow(gtk.Window):
     self.v_box.pack_start(self.menu, False)
     
     self.notebook = gtk.Notebook()
+    self.notebook.set_scrollable(True)
     settings = Settings.get_settings()
     pos = gtk.POS_TOP if settings.tabs_position == 'top' else gtk.POS_LEFT
     self.notebook.set_tab_pos(pos)
@@ -56,6 +57,13 @@ class MainWindow(gtk.Window):
     for page in self.notebook.get_children():
       if page.get_tab_label() == label:
         return page
+    return None
+
+  def get_page_by_object(self, obj):
+    for page in self.notebook.get_children():
+      if 'object' in vars(page):
+        if obj.id == page.object.id and obj.cls_name() == page.object.cls_name():
+          return page
     return None
   
   def focus_page(self, page):

@@ -46,8 +46,12 @@ class PackagesList(gtk.ScrolledWindow):
     
     self.show_all()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Paquetes'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def refresh_list(self, packages):
     self.packages_t.update(packages)
@@ -159,8 +163,8 @@ class PackageForm(FormFor):
     if self.object.is_new_record():
       self.fields.pack_start(gtk.Label('Clases'), False)
       columns = 5
-      rows = len(self.klasses)/columns
-      if len(self.klasses)%columns > 0:
+      rows = self.klasses.count()/columns
+      if self.klasses.count()%columns > 0:
         rows += 1
       table = gtk.Table(rows, columns)
       self.klass_checks = []

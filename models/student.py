@@ -10,5 +10,4 @@ class Student(user.User):
 
   @classmethod
   def search(cls, value):
-    return cls.get_many("SELECT * FROM users WHERE is_teacher = 0 AND (name LIKE :value OR lastname LIKE :value OR dni = :dni_value)", {'value': "%"+value+"%", 'dni_value': re.sub(r'\.','',value)})
-
+    return cls.all().where('is_teacher',0).where("name LIKE :name_like OR lastname LIKE :name_like OR dni = :dni_value",{'name_like': "%"+value+"%", 'dni_value': re.sub(r'\.','',value)})

@@ -21,10 +21,14 @@ class PaymenttTests(custom_test_case.CustomTestCase):
     p6 = Factory.create('payment', {'done': 1, 'date': today})
     p7 = Factory.create('payment', {'done': 1, 'date': tomorrow})
 
-    payments = map(lambda p: p.id, payment.Payment.filter(yesterday,yesterday,done = 1))
-    self.assertEqual(payments, [p3.id])
-    payments = map(lambda p: p.id, payment.Payment.filter(today,today,done = 1))
-    self.assertEqual(payments, [p2.id,p6.id])
+    payments = payment.Payment.filter(yesterday,yesterday,done = 1)
+    for p in [p3]: self.assertIn(p,payments)
+    for p in [p1,p2,p4,p5,p6,p7]: self.assertNotIn(p,payments)
+    
+    payments = payment.Payment.filter(today,today,done = 1)
+    for p in [p2,p6]: self.assertIn(p, payments)
+    for p in [p1,p3,p4,p5,p7]: self.assertNotIn(p, payments)
+    
     payments = map(lambda p: p.id, payment.Payment.filter(tomorrow,tomorrow,done = 1))
     self.assertEqual(payments, [p7.id])
     payments = map(lambda p: p.id, payment.Payment.filter(yesterday,today,done = 1))

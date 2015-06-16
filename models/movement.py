@@ -107,5 +107,5 @@ class Movement(Model):
   def by_date(cls, date_f, date_t = None):
     if date_t is None: date_t = date_f
 
-    return Query(cls).where('date', str(date_f), comparission = '>=', placeholder = ':date_f').where('date', str(date_t), comparission = '<=', placeholder = ':date_t')
+    return Query(cls).where('date', str(date_f), comparission = '>=', placeholder = 'date_f').where('date', str(date_t), comparission = '<=', placeholder = 'date_t')
 

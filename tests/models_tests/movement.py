@@ -59,30 +59,54 @@ class MovementTests(custom_test_case.CustomTestCase):
     mv5 = Factory.create('movement', {'direction': 'in', 'date': yesterday})
     mv6 = Factory.create('movement', {'direction': 'out', 'date': today})
     mv7 = Factory.create('movement', {'direction': 'out', 'date': tomorrow})
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(yesterday))
-    self.assertEqual(outgoing, [mv3.id])
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(today))
-    self.assertEqual(outgoing, [mv2.id,mv6.id])
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(tomorrow))
-    self.assertEqual(outgoing, [mv7.id])
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(yesterday,today))
-    self.assertEqual(outgoing, [mv2.id,mv3.id,mv6.id])
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(yesterday,tomorrow))
-    self.assertEqual(outgoing, [mv2.id,mv3.id,mv6.id,mv7.id])
-    outgoing = map(lambda m: m.id, movement.Movement.outgoing(today,tomorrow))
-    self.assertEqual(outgoing, [mv2.id,mv6.id,mv7.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(yesterday))
-    self.assertEqual(incoming, [mv5.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(today))
-    self.assertEqual(incoming, [mv1.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(tomorrow))
-    self.assertEqual(incoming, [mv4.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(yesterday,today))
-    self.assertEqual(incoming, [mv1.id,mv5.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(yesterday,tomorrow))
-    self.assertEqual(incoming, [mv1.id,mv4.id,mv5.id])
-    incoming = map(lambda m: m.id, movement.Movement.incoming(today,tomorrow))
-    self.assertEqual(incoming, [mv1.id,mv4.id])
+
+    outgoing = movement.Movement.outgoing(yesterday)
+    for mv in [mv3]: self.assertIn(mv,outgoing)
+    for mv in [mv1,mv2,mv4,mv5,mv6,mv7]: self.assertNotIn(mv,outgoing)
+
+    outgoing = movement.Movement.outgoing(today)
+    for mv in [mv2,mv6]: self.assertIn(mv,outgoing)
+    for mv in [mv1,mv3,mv4,mv5,mv7]: self.assertNotIn(mv,outgoing)
+    
+    outgoing = movement.Movement.outgoing(tomorrow)
+    for mv in [mv7]: self.assertIn(mv, outgoing)
+    for mv in [mv1,mv2,mv3,mv4,mv5,mv6]: self.assertNotIn(mv,outgoing)
+
+    outgoing = movement.Movement.outgoing(yesterday,today)
+    for mv in [mv2,mv3,mv6]: self.assertIn(mv,outgoing)
+    for mv in [mv1,mv4,mv5,mv7]: self.assertNotIn(mv, outgoing)
+    
+    outgoing = movement.Movement.outgoing(yesterday,tomorrow)
+    for mv in [mv2,mv3,mv6,mv7]: self.assertIn(mv, outgoing)
+    for mv in [mv1,mv4,mv5]: self.assertNotIn(mv, outgoing)
+    
+    outgoing = movement.Movement.outgoing(today,tomorrow)
+    for mv in [mv2,mv6,mv7]: self.assertIn(mv, outgoing)
+    for mv in [mv1,mv3,mv4,mv5]: self.assertNotIn(mv, outgoing)
+    
+    incoming = movement.Movement.incoming(yesterday)
+    for mv in [mv5]: self.assertIn(mv, incoming)
+    for mv in [mv1,mv2,mv3,mv4,mv6,mv7]: self.assertNotIn(mv, incoming)
+    
+    incoming = movement.Movement.incoming(today)
+    for mv in [mv1]: self.assertIn(mv, incoming)
+    for mv in [mv2,mv3,mv4,mv5,mv6,mv7]: self.assertNotIn(mv,incoming)
+
+    incoming = movement.Movement.incoming(tomorrow)
+    for mv in [mv4]: self.assertIn(mv,incoming)
+    for mv in [mv1,mv2,mv3,mv5,mv6,mv7]: self.assertNotIn(mv,incoming)
+    
+    incoming = movement.Movement.incoming(yesterday,today)
+    for mv in [mv1,mv5]: self.assertIn(mv,incoming)
+    for mv in [mv2,mv3,mv4,mv6,mv7]: self.assertNotIn(mv,incoming)
+
+    incoming = movement.Movement.incoming(yesterday,tomorrow)
+    for mv in [mv1,mv4,mv5]: self.assertIn(mv, incoming)
+    for mv in [mv2,mv3,mv6,mv7]: self.assertNotIn(mv, incoming)
+
+    incoming = movement.Movement.incoming(today,tomorrow)
+    for mv in [mv1,mv4]: self.assertIn(mv, incoming)
+    for mv in [mv2,mv3,mv5,mv6,mv7]: self.assertNotIn(mv,incoming)
 
   def test_is_not_valid_if_amount_is_zero(self):
     mov = Factory.build('movement', {'amount': 0})

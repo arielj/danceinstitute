@@ -27,8 +27,12 @@ class Home(gtk.HBox):
     
     self.show_all()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Inicio'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def on_installment_activated(self, tree, path, column):
     model = tree.get_model()

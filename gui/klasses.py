@@ -205,8 +205,12 @@ class SchedulesTables(gtk.ScrolledWindow):
     self.show_all()
     self.mixed_vbox.hide()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Horarios'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def on_row_activated(self, tree, path, column):
     if column.day_idx != -1:
@@ -352,8 +356,12 @@ class KlassesList(gtk.VBox):
     
     self.show_all()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Clases'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def refresh_list(self, klasses):
     self.klasses_t.update(klasses)

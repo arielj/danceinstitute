@@ -446,8 +446,12 @@ class TeachersList(gtk.VBox):
     
     self.show_all()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Profesores/as'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def update_table(self, teachers):
     self.teachers_t.update(teachers)

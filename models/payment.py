@@ -134,7 +134,7 @@ class Payment(Model):
 
   @classmethod
   def for_installment(cls,ins_id):
-    Query(cls).where('installment_id',ins_id)
+    return Query(cls).where('installment_id',ins_id)
 
   @classmethod
   def for_user(cls,u_id,include_installments = True, done = None):
@@ -147,7 +147,7 @@ class Payment(Model):
 
   @classmethod
   def filter(cls, f, t, done = None, user_id = None):
-    q = Query(cls).where('date', str(f), comparission = '>=', placeholder = ':from').where('date', str(t), comparission = '<=', placeholder = ':to')
+    q = Query(cls).where('date', str(f), comparission = '>=', placeholder = 'from').where('date', str(t), comparission = '<=', placeholder = 'to')
     
     if done is not None: q.where('done', int(done))
     if user_id is not None: q.where('user_id', user_id)

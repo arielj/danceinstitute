@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from lib.query_builder import Query
 import user
 import membership
 import payment
@@ -18,7 +19,7 @@ class Teacher(user.User):
   def get(cls, where = '', args = {}, exclude = None):
     q = Query(cls).where('is_teacher', 1)
 
-    if exclude: q.where('id', ','.join(map(lambda i: str(i),exclude)), comparission = 'NOT IN', placeholder = '(:ids)')
+    if exclude: q.where('id', exclude, comparission = 'NOT IN', placeholder = 'ids')
 
     return q
 

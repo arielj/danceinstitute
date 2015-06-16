@@ -46,8 +46,12 @@ class RoomsList(gtk.ScrolledWindow):
     
     self.show_all()
 
-  def get_tab_label(self):
+  @classmethod
+  def tab_label(cls):
     return 'Salas'
+
+  def get_tab_label(self):
+    return self.__class__.tab_label()
 
   def refresh_list(self, rooms):
     self.rooms_t.update(rooms)
