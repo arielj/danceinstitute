@@ -193,7 +193,7 @@ class Installment(Model):
       month = 11
       year = year-1
 
-    return Query(cls).where('status','waiting').where('year', year).where('month',month)
+    return Query(cls).where('status','waiting').where('year', year).where('month',month).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('users.name ASC, users.lastname ASC')
 
   @classmethod
   def _today(cls):
