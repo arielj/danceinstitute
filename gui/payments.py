@@ -62,6 +62,7 @@ class AddPaymentForm(FormFor):
       self.add_field('description', attrs=100)
     else:
       self.ignore_recharge = gtk.CheckButton('Ignorar recargo')
+      self.ignore_recharge.connect('toggled',self.on_ignore_recharge_toggled)
       self.fields.pack_start(self.ignore_recharge, False)
     
     self.pack_start(self.fields, False)
@@ -82,6 +83,9 @@ class AddPaymentForm(FormFor):
     year, month, day = dialog.get_date_values()
     widget.set_text("%s-%s-%s" % (year, month, day))
     dialog.destroy()
+
+  def on_ignore_recharge_toggled(self, widget):
+    self.amount_e.set_text(str(self.object.installment.to_pay(ignore_recharge=widget.get_active())))
 
 class PaymentsTab(gtk.VBox):
   def __init__(self, user, done = False):

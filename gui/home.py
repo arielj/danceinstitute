@@ -127,8 +127,8 @@ class OverdueInstallments(gtk.VBox):
     gtk.VBox.__init__(self)
     self.pack_start(gtk.Label('Cuotas atrasadas'), False)
 
-    #installment, user_id, user_label, year, month
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT,str,str,str)
+    #installment, user_id, user_label, year, month, klass name
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT,str,str,str, str)
     
     self.refresh()
     
@@ -138,6 +138,7 @@ class OverdueInstallments(gtk.VBox):
     self.add_column('Usuario',2)
     self.add_column('Año',3)
     self.add_column('Mes',4)
+    self.add_column('Clase',5)
 
     self.scrolled = gtk.ScrolledWindow()
     viewport = gtk.Viewport()
@@ -152,7 +153,7 @@ class OverdueInstallments(gtk.VBox):
     
     for ins in self.installments:
       u = ins.get_student()
-      self.store.append((ins,u.id,u.to_label(),ins.year,ins.month_name()))
+      self.store.append((ins,u.id,u.to_label(),ins.year,ins.month_name(),ins.membership.klass_or_package.name))
 
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
