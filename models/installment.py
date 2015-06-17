@@ -56,8 +56,11 @@ class Installment(Model):
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
 
-  def total(self):
-    return self.amount+self.get_recharge()
+  def total(self, ignore_recharge = False):
+    if ignore_recharge:
+      return self.amount
+    else:
+      return self.amount+self.get_recharge()
 
   def get_recharge(self, after_day = None, recharge_value = None):
     sets = settings.Settings.get_settings()
@@ -96,8 +99,8 @@ class Installment(Model):
 
     return '$'+str(self.amount)+recharge
 
-  def to_pay(self):
-    return self.total()-self.paid()
+  def to_pay(self, ignore_recharge = False):
+    return self.total(ignore_recharge)-self.paid()
   
   def month_name(self):
     return _t('months')[self.month]
@@ -133,15 +136,15 @@ class Installment(Model):
     self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
     self.validate_numericallity_of('amount', great_than_or_equal = 0, only_integer = False)
 
-  def add_payment(self, date, amount):
+  def add_payment(self, date, amount, ignore_recharge = False):
     amount = Decimal(amount)
-    if amount <= self.to_pay():
+    if amount <= self.to_pay(ignore_recharge):
       p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id})
       p.user = self.get_student()
       if p.save():
         self.payments.append(p)
-        if self.to_pay() == 0:
-          if self.get_recharge() > 0:
+        if self.to_pay(ignore_recharge) == 0:
+          if self.get_recharge() > 0 and ignore_recharge is False:
             self._status = 'paid_with_interests'
           else:
             self._status = 'paid'

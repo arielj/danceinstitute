@@ -736,7 +736,9 @@ class Controller(gobject.GObject):
   #payments controls
   def add_payment(self, widget, installment, done, page):
     payment = Payment()
-    if installment: payment.amount = installment.to_pay()
+    if installment:
+      payment.amount = installment.to_pay()
+      payment.installment = installment
     payment.user = page.object
     payment.done = done
 
@@ -749,7 +751,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       data = dialog.form.get_values()
       if installment is not None:
-        added = installment.add_payment(date = data['date'], amount = data['amount'])
+        added = installment.add_payment(date = data['date'], amount = data['amount'], ignore_recharge = data['ignore_recharge'])
       else:
         payment = dialog.payment
         payment.set_attrs(data)

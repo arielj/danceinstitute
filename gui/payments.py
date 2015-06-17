@@ -60,6 +60,9 @@ class AddPaymentForm(FormFor):
     
     if payment.installment is None:
       self.add_field('description', attrs=100)
+    else:
+      self.ignore_recharge = gtk.CheckButton('Ignorar recargo')
+      self.fields.pack_start(self.ignore_recharge, False)
     
     self.pack_start(self.fields, False)
 
@@ -67,6 +70,9 @@ class AddPaymentForm(FormFor):
     data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text()}
     if self.object.installment is None:
       data['description'] = self.description_e.get_text()
+    else:
+      data['ignore_recharge'] = self.ignore_recharge.get_active()
+
     return data
 
   def show_calendar(self, widget, event):
