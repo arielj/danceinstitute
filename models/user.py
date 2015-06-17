@@ -20,8 +20,8 @@ def titleize(value):
 
 class User(Model):
   table = 'users'
-  fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',
-                     'address','male','email','is_teacher','comments','facebook_uid','age']
+  fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',           'address','male','email','is_teacher','comments','facebook_uid','age']
+  default_order = 'name ASC, lastname ASC'
 
   def __init__(self, data = {}):
     self._name = ''

@@ -14,6 +14,7 @@ import settings
 class Installment(Model):
   table = 'installments'
   fields_for_save = ['year','month','membership_id','amount', 'status']
+  default_order = 'year ASC, month ASC'
 
   def __init__(self, data = {}):
     self._year = datetime.today().year

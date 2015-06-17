@@ -12,6 +12,7 @@ from lib.query_builder import Query
 class Payment(Model):
   table = 'payments'
   fields_for_save = ['amount','installment_id','user_id','user_type','date','description', 'done']
+  default_order = 'date ASC'
 
   def __init__(self, attrs = {}):
     self._amount = 0
@@ -152,4 +153,4 @@ class Payment(Model):
     if done is not None: q.where('done', int(done))
     if user_id is not None: q.where('user_id', user_id)
 
-    return q.order_by('date ASC')
+    return q

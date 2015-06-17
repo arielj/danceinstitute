@@ -13,6 +13,7 @@ class Klass(Model):
   table = 'klasses'
   fields_for_save = ['name', 'normal_fee', 'half_fee', 'once_fee',
                      'inscription_fee', 'min_age', 'max_age', 'quota', 'info']
+  default_order = 'name ASC'
   
   def __init__(self, data = {}):
     self.name = ''

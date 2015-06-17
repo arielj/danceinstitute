@@ -8,6 +8,8 @@ import re
 from lib.query_builder import Query
 
 class Model(object):
+  default_order = None
+
   def __init__(self, attrs = {}):
     self.id = None
     self.errors = {}

@@ -7,7 +7,7 @@ class Query(object):
     self.values = {}
     self.query_result = None
     self.limit = None
-    self.order = None
+    self.order = cls.default_order
     self.offset = None
     self.select_str = cls.table+'.*'
     self.from_str = cls.table

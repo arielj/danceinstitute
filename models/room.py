@@ -3,6 +3,7 @@ from model import Model
 class Room(Model):
   table = 'rooms'
   fields_for_save = ['name']
+  default_order = 'name ASC'
 
   def __init__(self,data={}):
     self.name = ''

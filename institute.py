@@ -204,7 +204,7 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
     else:
-      rooms = Room.all().order_by('name ASC')
+      rooms = Room.all()
       page = RoomsList(rooms)
       self.window.add_page(page)
       page.connect('room-edit', self.edit_room)
@@ -242,7 +242,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar la clase:", room.full_errors()).run()
 
   def refresh_rooms(self, widget, room, created, page):
-    rooms = Room.all().order_by('name ASC')
+    rooms = Room.all()
     page.refresh_list(rooms)
     
 
@@ -261,7 +261,7 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
 
-    teachers = Teacher.get().order_by('name ASC, lastname ASC')
+    teachers = Teacher.get()
     page = TeachersList(teachers)
     self.window.add_page(page)
     page.connect('teacher-edit', self.edit_teacher)
@@ -293,7 +293,7 @@ class Controller(gobject.GObject):
     dialog.destroy()
 
   def refresh_teachers(self, widget, teacher, created, page):
-    teachers = Teacher.get().order_by('name ASC')
+    teachers = Teacher.get()
     page.refresh_list(teachers)
 
   def add_teacher_payment(self, page):
@@ -359,7 +359,7 @@ class Controller(gobject.GObject):
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
   
   def on_student_search(self, page, value):
-    students = Student.search(value).order_by('name ASC, lastname ASC')
+    students = Student.search(value)
     page.update_results(students)
 
   def open_fb(self, page):
@@ -442,7 +442,7 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
 
-    klasses = Klass.all().order_by('name ASC')
+    klasses = Klass.all()
     page = KlassesList(klasses)
     self.window.add_page(page)
     page.connect('klass-edit', self.edit_klass)
@@ -491,7 +491,7 @@ class Controller(gobject.GObject):
     dialog.destroy()
 
   def show_select_teacher_dialog(self, page):
-    teachers = Teacher.get(exclude = page.object.teacher_ids()).order_by('name ASC, lastname ASC')
+    teachers = Teacher.get(exclude = page.object.teacher_ids())
     dialog = SelectTeacherDialog(teachers)
     dialog.connect('response', self.select_teacher_dialog_response, page)
     dialog.run()
@@ -581,7 +581,7 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
 
-    page = PackagesList(Package.all().order_by('name ASC'))
+    page = PackagesList(Package.all())
     self.window.add_page(page)
     page.connect('package-add',self.add_package)
     page.connect('package-edit', self.edit_package)
@@ -622,7 +622,7 @@ class Controller(gobject.GObject):
       ErrorMessage("No se puede guardar el paquete:", package.full_errors()).run()
 
   def refresh_packages(self, widget, package, created, page):
-    packages = Package.all().order_by('name ASC')
+    packages = Package.all()
     page.refresh_list(packages)
 
   def ask_delete_package(self, page, package):
@@ -651,8 +651,8 @@ class Controller(gobject.GObject):
   # memberships
   def new_membership(self, page):
     membership = Membership()
-    klasses = Klass.all().order_by('name ASC')
-    packages = Package.all().order_by('name ASC')
+    klasses = Klass.all()
+    packages = Package.all()
     
     options = klasses.do_get() + packages.do_get()
 
@@ -782,7 +782,7 @@ class Controller(gobject.GObject):
   #resports
   def payments_report(self, menu_item):
     today = datetime.datetime.today()
-    page = PaymentsReport(Payment.filter(today,today,False),User.all().order_by('name ASC, lastname ASC'))
+    page = PaymentsReport(Payment.filter(today,today,False),User.all())
     page.export.connect_object('clicked', self.export_payments_report, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)

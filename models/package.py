@@ -10,6 +10,7 @@ import klass
 class Package(Model):
   table = 'packages'
   fields_for_save = ['name','fee','alt_fee']
+  default_order = 'name ASC'
   
   def __init__(self, attrs = {}):
     self.name = ''
