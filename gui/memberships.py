@@ -275,7 +275,7 @@ class AddInstallmentsForm(gtk.VBox):
     cell = gtk.CellRendererText()
     self.initial_month_e.pack_start(cell, True)
     self.initial_month_e.add_attribute(cell, 'text', 1)
-    self.initial_month_e.set_active(0)
+    self.initial_month_e.set_active(datetime.datetime.today().month-1)
     field.pack_start(self.initial_month_l, False)
     field.pack_start(self.initial_month_e, False)
     self.pack_start(field, False)
