@@ -17,7 +17,7 @@ class Teacher(user.User):
 
   @classmethod
   def get(cls, where = '', args = {}, exclude = None):
-    q = Query(cls).where('is_teacher', 1)
+    q = cls.where('is_teacher', 1)
 
     if exclude: q.where('id', exclude, comparission = 'NOT IN', placeholder = 'ids')
 

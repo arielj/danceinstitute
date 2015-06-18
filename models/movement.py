@@ -91,17 +91,13 @@ class Movement(Model):
 
   @classmethod
   def incoming(cls, date_f = None, date_t = None):
-    if date_f or date_t:
-      return cls.by_date(date_f, date_t).where('done', 0)
-    else:
-      return cls.where('done',0)
+    q = cls.by_date(date_f, date_t) if date_f or date_t else Query(cls)
+    return q.where('done', 0)
 
   @classmethod
   def outgoing(cls, date_f = None, date_t = None):
-    if date_f or date_t:
-      return cls.by_date(date_f, date_t).where('done', 1)
-    else:
-      return cls.where('done',1)
+    q = cls.by_date(date_f, date_t) if date_f or date_t else Query(cls)
+    return q.where('done', 1)
 
   @classmethod
   def by_date(cls, date_f, date_t = None):

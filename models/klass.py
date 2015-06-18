@@ -67,15 +67,13 @@ class Klass(Model):
     self._teachers_remove = []
 
     for t in self.teachers:
-      if Query(self.__class__).set_from('klasses_teachers').where('klass_id', self.id).where('teacher_id',t.id).count() == 0:
-        args = {'klass_id': self.id, 'teacher_id': t.id}
+      args = {'klass_id': self.id, 'teacher_id': t.id}
+      if Query(self.__class__).set_from('klasses_teachers').where(args).empty():
         self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
     
-    for s in self._schedules_remove:
-      s.delete()
-
-    for sch in self.schedules:
-      sch.save(validate = False)
+    for s in self._schedules_remove: s.delete()
+    self._schedules_remove = []
+    for sch in self.schedules: sch.save(validate = False)
 
   def update_id_on_associations(self):
     for sch in self.schedules:
@@ -168,7 +166,7 @@ class Klass(Model):
 
   @classmethod
   def for_package(cls,package_id):
-    return Query(cls).set_from('klasses_packages').set_join('LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id').where('package_id',package_id)
+    return cls.set_from('klasses_packages').set_join('LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id').where('package_id',package_id)
 
   def get_students(self):
     ms = membership.Membership.for_klass_or_package(self).do_get()

@@ -32,6 +32,9 @@ class Query(object):
     self.query_result = None
     return found
 
+  def __getattr__(self,name):
+    return getattr(self.cls,name)
+
   def query(self):
     q = 'SELECT '+self.select_str+' FROM ' + self.from_str
     if self.join_str: q = q + ' ' + self.join_str
@@ -42,27 +45,31 @@ class Query(object):
     return q
 
   def where(self, field, value=None, comparission=None, placeholder=None):
-    self.query_result = None
-
-    if placeholder is None: placeholder = field
-
-    if value is not None:
-      if isinstance(value, dict):
-        self.wheres.append("("+field+")")
-        self.values.update(value)
-      else:
-        if isinstance(value, list):
-          if comparission is None: comparission = 'IN'
-          aux = '(:'+placeholder+')'
-          value = ','.join(map(lambda v: str(v),value))
-        else:
-          if comparission is None: comparission = '='
-          aux = ':'+placeholder
-
-        self.wheres.append(field+" "+comparission+" "+aux)
-        self.values[placeholder] = value
+    if isinstance(field,dict):
+      for f in field:
+        self.where(f,field[f])
     else:
-      self.wheres.append(field)
+      self.query_result = None
+
+      if placeholder is None: placeholder = field
+
+      if value is not None:
+        if isinstance(value, dict):
+          self.wheres.append("("+field+")")
+          self.values.update(value)
+        else:
+          if isinstance(value, list):
+            if comparission is None: comparission = 'IN'
+            aux = '(:'+placeholder+')'
+            value = ','.join(map(lambda v: str(v),value))
+          else:
+            if comparission is None: comparission = '='
+            aux = ':'+placeholder
+
+          self.wheres.append(field+" "+comparission+" "+aux)
+          self.values[placeholder] = value
+      else:
+        self.wheres.append(field)
 
     return self
 
@@ -111,6 +118,9 @@ class Query(object):
 
   def anything(self):
     return self.count() > 0
+
+  def empty(self):
+    return self.count() == 0
 
   def do_get(self):
     return self._do_query(True)

@@ -57,18 +57,14 @@ class Installment(Model):
     return sum(map(lambda p: p.amount, self.payments),0)
 
   def total(self, ignore_recharge = False):
-    if ignore_recharge:
-      return self.amount
-    else:
-      return self.amount+self.get_recharge()
+    recharge = 0 if ignore_recharge else self.get_recharge()
+    return self.amoun+recharge
 
   def get_recharge(self, after_day = None, recharge_value = None):
     sets = settings.Settings.get_settings()
     
-    if after_day is None:
-      after_day = sets.recharge_after
-    if recharge_value is None:
-      recharge_value = sets.recharge_value
+    if after_day is None: after_day = sets.recharge_after
+    if recharge_value is None: recharge_value = sets.recharge_value
 
     recharge = 0
     
@@ -173,7 +169,7 @@ class Installment(Model):
 
   @classmethod
   def for_membership(cls,membership_id):
-    return Query(cls).where('membership_id', membership_id)
+    return cls.where('membership_id', membership_id)
 
   def before_delete(self):
     for p in self.payments:
@@ -193,7 +189,7 @@ class Installment(Model):
       month = 11
       year = year-1
 
-    return Query(cls).where('status','waiting').where('year', year).where('month',month).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('users.name ASC, users.lastname ASC')
+    return cls.where({'status': 'waiting', 'year': year, 'month': month}).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('users.name ASC, users.lastname ASC')
 
   @classmethod
   def _today(cls):

@@ -66,9 +66,10 @@ class Membership(Model):
 
   @property
   def installments(self):
-    if self._installments is None:
-      self._installments = installment.Installment.for_membership(self.id)
-    return self._installments
+    return installment.Installment.for_membership(self.id)
+    #if self._installments is None:
+    #  self._installments = installment.Installment.for_membership(self.id)
+    #return self._installments
 
   def reload_installments(self):
     self._installments = None
@@ -85,11 +86,12 @@ class Membership(Model):
           if fee > 0:
             ins = []
             for m in range(initial_month, final_month+1):
-              i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
-              if i.save():
-                self.reload_installments()
-              else:
-                return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
+              if self.installments.where({'month': m, 'year': year}).empty():
+                i = installment.Installment({'year': year, 'month': m, 'amount': fee, 'membership_id': self.id, 'student_id': self.student_id})
+                if i.save():
+                  self.reload_installments()
+                else:
+                  return "Al menos una de las cuotas no se puede agregar: " + i.full_errors()
             return True
           else:
             return "El precio debe ser mayor a 0."
@@ -123,4 +125,4 @@ class Membership(Model):
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):
-    return Query(cls).where('for_id', k_or_p.id).where('for_type', k_or_p.cls_name())
+    return Query(cls).where({'for_id': k_or_p.id, 'for_type': k_or_p.cls_name()})

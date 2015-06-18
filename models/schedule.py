@@ -130,4 +130,4 @@ class Schedule(Model):
 
   @classmethod
   def for_klass(cls,kls):
-    return Query(cls).where('klass_id',kls.id)
+    return cls.where('klass_id',kls.id)
