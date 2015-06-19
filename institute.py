@@ -78,6 +78,7 @@ class Controller(gobject.GObject):
     self.window.menu.search_student.connect('activate', self.search_student)
     self.window.menu.payments.connect('activate', self.payments_report)
     self.window.menu.daily_cash.connect('activate', self.daily_cash)
+    self.window.menu.overdue_installments.connect('activate', self.overdue_installments)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
@@ -818,6 +819,16 @@ class Controller(gobject.GObject):
     page.update(payments = payments, movements = movements)
 
   def export_daily_cash(self, page):
+    self.export(page.to_html())
+
+  def overdue_installments(self, menu_item):
+    page = OverdueInstallments(Installment.overdues())
+    page.export.connect_object('clicked', self.export_overdue_installments_report, page)
+    page.connect('student-edit', self.edit_student)
+    self.window.add_page(page)
+    return page
+
+  def export_overdue_installments_report(self, page):
     self.export(page.to_html())
 
 

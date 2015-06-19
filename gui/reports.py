@@ -166,6 +166,8 @@ class PaymentsList(gtk.TreeView):
   def default_to_row(self, p):
     return (p,p.user.to_label(),str(p.date),str(p.amount), p.description)
 
+
+
 class KlassStudents(gtk.VBox):
   def __init__(self, klass, students = {}):
     self.klass = klass
@@ -343,3 +345,91 @@ class MovementsList(gtk.TreeView):
 
   def default_to_row(self, m):
     return (m,str(m.date),str(m.amount), m.description)
+
+
+
+class OverdueInstallments(gtk.VBox):
+  def __init__(self, installments):
+    self.installments = installments
+    gtk.VBox.__init__(self, False, 5)
+    
+    self.headings = ['Alumno', 'Año', 'Mes', 'Clase']
+    
+    self.list = InstallmentsList(installments, self.headings)
+    self.list.connect('row-activated', self.on_row_activated)
+    
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.list)
+    
+    self.pack_start(self.scroll, True)
+    
+    self.export = gtk.Button('Exportar')
+    self.pack_start(self.export, False)
+    
+    self.show_all()
+
+  def get_tab_label(self):
+    return "Cuotas atrasadas"
+
+  def to_html(self):
+    title = "<h1>Cuotas atrasadas</h1>"
+    rows = map(lambda i: self.values_for_html(i), self.installments)
+
+    return exporter.html_wrapper(title+exporter.html_table(self.headings,rows))
+    
+  def values_for_html(self,i):
+    return [i.membership.student.to_label(),str(i.year),i.month_name(),i.membership.klass_or_package.name]
+
+  def update(self, payments = None):
+    if installments is not None:
+      self.installments = installments
+    self.list.update(self.installments)
+
+  def on_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    installment = model.get_value(itr, 0)
+    self.emit('student-edit', installment.membership.student_id)
+
+gobject.type_register(OverdueInstallments)
+gobject.signal_new('student-edit', \
+                   OverdueInstallments, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+
+class InstallmentsList(gtk.TreeView):
+  def __init__(self, installments, headings, to_row = None):
+    if to_row is not None:
+      self.to_row = to_row
+    else:
+      self.to_row = self.default_to_row
+
+    self.create_store(installments)
+    
+    gtk.TreeView.__init__(self, self.store)
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+    
+    for idx, heading in enumerate(headings, 1):
+      self.add_column(heading,idx)
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.append_column(col)
+    return col
+
+  def create_store(self, installments):
+    # installments, user name, year, month name, klass
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
+    self.update(installments)
+
+  def update(self, installments):
+    self.store.clear()
+    self.set_model(installments)
+  
+  def set_model(self, installments):
+    for i in installments: self.store.append(self.to_row(i))
+
+  def default_to_row(self, i):
+    return (i,i.membership.student.to_label(),str(i.year),i.month_name(), i.membership.klass_or_package.name)

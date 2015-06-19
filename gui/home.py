@@ -16,13 +16,9 @@ class Home(gtk.HBox):
     self.notes = Notes(notes)
     left.pack_start(self.notes, True)
     
-    self.installments = OverdueInstallments(installments)
-    self.installments.list.connect('row-activated', self.on_installment_activated)
-
     self.daily_cash = DailyCash(payments,movements)
     
     self.pack_start(left)
-    self.pack_start(self.installments)
     self.pack_start(self.daily_cash)
     
     self.show_all()
@@ -33,13 +29,6 @@ class Home(gtk.HBox):
 
   def get_tab_label(self):
     return self.__class__.tab_label()
-
-  def on_installment_activated(self, tree, path, column):
-    model = tree.get_model()
-    itr = model.get_iter(path)
-    user_id = model.get_value(itr, 1)
-    if user_id:
-      self.emit('user-edit', user_id)
 
   def get_notes(self):
     buff = self.notes.entry.get_buffer()

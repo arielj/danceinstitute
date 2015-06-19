@@ -82,9 +82,11 @@ class MainMenu(gtk.MenuBar):
     self.reports_menu = gtk.Menu()
     self.payments = gtk.MenuItem('Pagos')
     self.daily_cash = gtk.MenuItem('Caja Diaria')
+    self.overdue_installments = gtk.MenuItem('Cuotas Atrasadas')
     
     self.reports_menu.append(self.payments)
     self.reports_menu.append(self.daily_cash)
+    self.reports_menu.append(self.overdue_installments)
     
     self.reports.set_submenu(self.reports_menu)
     
