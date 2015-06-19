@@ -67,9 +67,6 @@ class Membership(Model):
   @property
   def installments(self):
     return installment.Installment.for_membership(self.id)
-    #if self._installments is None:
-    #  self._installments = installment.Installment.for_membership(self.id)
-    #return self._installments
 
   def reload_installments(self):
     self._installments = None
@@ -121,8 +118,8 @@ class Membership(Model):
 
   @classmethod
   def for_student(cls,st_id):
-    return Query(cls).where('student_id', st_id)
+    return cls.where('student_id', st_id)
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):
-    return Query(cls).where({'for_id': k_or_p.id, 'for_type': k_or_p.cls_name()})
+    return cls.where({'for_id': k_or_p.id, 'for_type': k_or_p.cls_name()})

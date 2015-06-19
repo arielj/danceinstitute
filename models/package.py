@@ -59,7 +59,7 @@ class Package(Model):
   def after_save(self):
     c = self.__class__.get_conn()
     for k in self.klasses:
-      if Query(self.__class__).set_from('klasses_packages').where('klass_id', k.id).where('package_id', self.id).count() == 0:
+      if self.__class__.set_from('klasses_packages').where('klass_id', k.id).where('package_id', self.id).count() == 0:
         args = {'klass_id': k.id, 'package_id': self.id}
         self.__class__.get_conn().execute('INSERT INTO klasses_packages (klass_id,package_id) VALUES (:klass_id,:package_id)', args)
 
@@ -71,7 +71,7 @@ class Package(Model):
 
   @classmethod
   def with_klass(cls,klass):
-    return Query(cls).set_from('klasses_packages').set_join('LEFT JOIN packages ON klasses_packages.package_id = packages.id').where('klasses_packages.klass_id', klass.id, placeholder='klass_id')
+    return cls.set_from('klasses_packages').set_join('LEFT JOIN packages ON klasses_packages.package_id = packages.id').where('klasses_packages.klass_id', klass.id, placeholder='klass_id')
 
   def can_delete(self):
     if membership.Membership.for_klass_or_package(self).anything():

@@ -7,7 +7,18 @@ from decimal import Decimal
 import re
 from lib.query_builder import Query
 
+class MetaModel(type):
+  def __getattr__(cls,name):
+    if name in ['all','where','empty','anything','set_offset',
+                'order_by','set_limit','set_join','set_select',
+                'set_from','count','exists','first']:
+      return getattr(Query(cls),name)
+    else:
+      raise AttributeError
+
 class Model(object):
+  __metaclass__ = MetaModel
+
   default_order = None
 
   def __init__(self, attrs = {}):
@@ -126,15 +137,6 @@ class Model(object):
   def cls_name(self):
     return self.__class__.__name__
 
-  @classmethod
-  def find(cls, id):
-    return cls.find_by('id',id)
-
-  @classmethod
-  def find_by(cls, field, value):
-    res = Conn.execute('SELECT * FROM ' + cls.table + ' WHERE ' + field + ' = ?', (value, )).fetchone()
-    return cls(res) if res else False
-
   def save(self, validate = True):
     if not validate or self.is_valid():
       if self.before_save() is True:
@@ -204,20 +206,10 @@ class Model(object):
     r = Conn.execute(query,params).fetchone()
     return cls(r) if r else False
 
-
+  @classmethod
+  def find(cls, id):
+    return cls.find_by('id',id)
 
   @classmethod
-  def all(cls):
-    return Query(cls)
-
-  @classmethod
-  def where(cls,field, value, comparission = '=', placeholder = None):
-    return Query(cls).where(field,value,comparission,placeholder)
-
-  @classmethod
-  def count(cls):
-    return Query(cls).count()
-
-  @classmethod
-  def exists(cls):
-    return Query(cls).exists()
+  def find_by(cls, field, value):
+    return Query(cls).where(field,value).first()

@@ -58,7 +58,7 @@ class Installment(Model):
 
   def total(self, ignore_recharge = False):
     recharge = 0 if ignore_recharge else self.get_recharge()
-    return self.amoun+recharge
+    return self.amount+recharge
 
   def get_recharge(self, after_day = None, recharge_value = None):
     sets = settings.Settings.get_settings()
@@ -80,9 +80,8 @@ class Installment(Model):
     
     return recharge
 
-  def date(self, after_day):
-    if after_day is None:
-      after_day = settings.Settings.get_settings().recharge_after
+  def date(self, after_day = None):
+    if after_day is None: after_day = settings.Settings.get_settings().recharge_after
 
     return datetime.strptime(str(self.year)+"-"+str(self.month+1)+"-"+str(after_day),'%Y-%m-%d').date()
 

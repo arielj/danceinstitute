@@ -13,7 +13,7 @@ class Teacher(user.User):
 
   @classmethod
   def for_klass(cls,kls):
-    return Query(cls).set_from('klasses_teachers').set_join('LEFT JOIN users ON klasses_teachers.teacher_id = users.id').where('klass_id',kls.id)
+    return cls.set_from('klasses_teachers').set_join('LEFT JOIN users ON klasses_teachers.teacher_id = users.id').where('klass_id',kls.id)
 
   @classmethod
   def get(cls, where = '', args = {}, exclude = None):

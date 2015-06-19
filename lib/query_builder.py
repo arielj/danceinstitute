@@ -73,7 +73,7 @@ class Query(object):
 
     return self
 
-  def offset(self, off):
+  def set_offset(self, off):
     self.query_result = None
     self.offset = off
     return self
@@ -83,7 +83,7 @@ class Query(object):
     self.order = order
     return self
 
-  def limit(self, limit):
+  def set_limit(self, limit):
     self.query_result = None
     self.limit = limit
     return self
@@ -124,3 +124,9 @@ class Query(object):
 
   def do_get(self):
     return self._do_query(True)
+
+  def all(self):
+    return self
+
+  def first(self):
+    return self.cls.get_one(self.query(), self.values)
