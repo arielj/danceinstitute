@@ -11,24 +11,22 @@ class FormFor(gtk.HBox):
     self.set_border_width(4)
     
   def add_field(self, method, label = None, field_type = 'entry', attrs = None, box = None, list_store = None, getter = None):
-    if getter is None:
-      getter = method
+    if getter is None: getter = method
 
-    if not label:
-      label = _a(self.object.__class__.__name__.lower(), method)
+    value = getattr(self.object,getter)
+
+    if not label: label = _a(self.object.__class__.__name__.lower(), method)
     l = gtk.Label(label)
     vars(self)[method + "_l"] = l
 
     if field_type == 'entry':
       e = gtk.Entry(attrs)
-      v = getattr(self.object,getter)
-      v = v if v is not None else ''
-      e.set_text(str(v))
+      e.set_text(str(value or ''))
       vars(self)[method + "_e"] = e
     elif field_type == 'text':
       entry = gtk.TextView()
       entry.set_editable(True)
-      entry.get_buffer().set_text(getattr(self.object,method))
+      entry.get_buffer().set_text(str(value or ''))
       entry.set_wrap_mode(gtk.WRAP_WORD)
       e = gtk.ScrolledWindow()
       e.add(entry)

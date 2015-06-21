@@ -11,7 +11,7 @@ from lib.query_builder import Query
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount','installment_id','user_id','user_type','date','description', 'done']
+  fields_for_save = ['amount','installment_id','user_id','user_type','date','description', 'done','receipt_number']
   default_order = 'date ASC'
 
   def __init__(self, attrs = {}):
@@ -23,7 +23,8 @@ class Payment(Model):
     self._user = None
     self._date = datetime.datetime.now().date()
     self._description = ''
-    self.done = False
+    self._done = False
+    self._receipt_number = None
     Model.__init__(self, attrs)
 
   @property
@@ -47,7 +48,7 @@ class Payment(Model):
     ins = self.installment
     if ins:
       descs.append(ins.membership.klass_or_package.name + ' ' + ins.month_name() + ' ' + str(ins.year))
-    return ' '.join(descs)
+    return '. '.join(descs)
 
   @description.setter
   def description(self, value):
@@ -124,14 +125,28 @@ class Payment(Model):
   def done(self,value):
     self._done = bool(value)
 
+  @property
+  def receipt_number(self):
+    return self._receipt_number
+  
+  @receipt_number.setter
+  def receipt_number(self, value):
+    try:
+      self._receipt_number = int(value)
+    except:
+      self._receipt_number = None
+
   def _is_valid(self):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done)}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number}
 
   def to_s(self):
-    return str(self.date) + ": $" + str(self.amount)
+    s = str(self.date) + ": $" + str(self.amount)
+    if self._description: s += ' ('+self._description+')'
+    if self.receipt_number is not None: s += ' (R.N°:'+str(self.receipt_number)+')'
+    return s
 
   @classmethod
   def for_installment(cls,ins_id):

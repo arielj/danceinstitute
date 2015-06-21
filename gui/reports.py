@@ -47,7 +47,7 @@ class PaymentsReport(gtk.VBox):
     
     self.pack_start(self.form, False)
     
-    self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle']
+    self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle', 'Recibo N°']
     
     self.list = PaymentsList(payments, self.headings)
     self.list.connect('row-activated', self.on_row_activated)
@@ -82,7 +82,7 @@ class PaymentsReport(gtk.VBox):
     return exporter.html_wrapper(title+exporter.html_table(self.headings,rows,caption))
     
   def values_for_html(self,p):
-    return [p.user.to_label(),str(p.date),str(p.amount),str(p.description)]
+    return [p.user.to_label(),str(p.date),'$'+str(p.amount),str(p.description), str(p.receipt_number or '')]
 
   def get_from(self):
     return self.from_e.get_text()
@@ -151,8 +151,8 @@ class PaymentsList(gtk.TreeView):
     return col
 
   def create_store(self, payments):
-    # payment, user name, date, amount, description
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
+    # payment, user name, date, amount, description, receipt_number
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str)
     self.update(payments)
 
   def update(self, payments):
@@ -164,7 +164,7 @@ class PaymentsList(gtk.TreeView):
       self.store.append(self.to_row(p))
 
   def default_to_row(self, p):
-    return (p,p.user.to_label(),str(p.date),str(p.amount), p.description)
+    return (p,p.user.to_label(),str(p.date),'$'+str(p.amount), p.description, str(p.receipt_number or ''))
 
 
 

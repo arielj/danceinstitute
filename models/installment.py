@@ -131,10 +131,12 @@ class Installment(Model):
     self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
     self.validate_numericallity_of('amount', great_than_or_equal = 0, only_integer = False)
 
-  def add_payment(self, date, amount, ignore_recharge = False):
-    amount = Decimal(amount)
+  def add_payment(self, data):
+    amount = Decimal(data['amount'])
+    ignore_recharge = data['ignore_recharge']
     if amount <= self.to_pay(ignore_recharge):
-      p = payment.Payment({'date': date, 'amount': amount, 'installment_id': self.id})
+      data['installment_id'] = self.id
+      p = payment.Payment(data)
       p.user = self.get_student()
       if p.save():
         self.payments.append(p)

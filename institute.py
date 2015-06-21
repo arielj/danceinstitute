@@ -752,7 +752,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       data = dialog.form.get_values()
       if installment is not None:
-        added = installment.add_payment(date = data['date'], amount = data['amount'], ignore_recharge = data['ignore_recharge'])
+        added = installment.add_payment(data)
       else:
         payment = dialog.payment
         payment.set_attrs(data)

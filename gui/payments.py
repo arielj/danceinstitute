@@ -17,6 +17,7 @@ class PaymentsTable(gtk.TreeView):
     self.add_column('Fecha',1)
     self.add_column('Descripción',2)
     self.add_column('Monto',3)
+    self.add_column('Recibo N°',4)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
@@ -25,8 +26,8 @@ class PaymentsTable(gtk.TreeView):
     return col
   
   def create_store(self, payments):
-    # payment, name, lastname, dni, email, address, cellphone
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str)
+    # payment, date, description, amount, receipt_number
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
     self.set_model(payments)
 
   def update(self, payments):
@@ -35,7 +36,7 @@ class PaymentsTable(gtk.TreeView):
   
   def set_model(self, payments):
     for p in payments:
-      self.store.append((p,p.date,p.description,'$'+str(p.amount)))
+      self.store.append((p,p.date,p.description,'$'+str(p.amount),str(p.receipt_number or '')))
 
 
 class AddPaymentDialog(gtk.Dialog):
@@ -57,22 +58,20 @@ class AddPaymentForm(FormFor):
     self.add_field('date', attrs=10)
     self.date_e.connect('button-press-event', self.show_calendar)
     self.add_field('amount', attrs=6)
-    
-    if payment.installment is None:
-      self.add_field('description', attrs=100)
-    else:
-      self.ignore_recharge = gtk.CheckButton('Ignorar recargo')
-      self.ignore_recharge.connect('toggled',self.on_ignore_recharge_toggled)
-      self.fields.pack_start(self.ignore_recharge, False)
+    self.add_field('receipt_number', attrs=15)
+    self.add_field('description', attrs=100, getter='_description')
+
+    if payment.installment is not None:
+      if payment.installment.get_recharge() > 0:
+        self.ignore_recharge = gtk.CheckButton('Ignorar recargo')
+        self.ignore_recharge.connect('toggled',self.on_ignore_recharge_toggled)
+        self.fields.pack_start(self.ignore_recharge, False)
     
     self.pack_start(self.fields, False)
 
   def get_values(self):
-    data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text()}
-    if self.object.installment is None:
-      data['description'] = self.description_e.get_text()
-    else:
-      data['ignore_recharge'] = self.ignore_recharge.get_active()
+    data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text(), 'receipt_number': self.receipt_number_e.get_text(), 'description': self.description_e.get_text(), 'ignore_recharge': True}
+    if ('ignore_recharge' in vars(self)): data['ignore_recharge'] = self.ignore_recharge.get_active()
 
     return data
 
@@ -100,8 +99,8 @@ class PaymentsTab(gtk.VBox):
 
     self.pack_start(self.info_vbox, False)
 
-    #payment, date, description, amount
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str)
+    #payment, date, description, amount, receipt_number
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
     
     self.refresh()
     
@@ -113,6 +112,7 @@ class PaymentsTab(gtk.VBox):
     self.add_column('Fecha',1)
     self.add_column('Descripción',2)
     self.add_column('Monto',3)
+    self.add_column('Recibo N°',4)
 
     self.scrolled = gtk.ScrolledWindow()
     viewport = gtk.Viewport()
@@ -144,7 +144,7 @@ class PaymentsTab(gtk.VBox):
     
     if self.user.is_not_new_record():
       for p in self.user.get_payments(include_installments = False, done = self.done):
-        self.store.append((p,p.date,p.description, p.amount))
+        self.store.append((p,p.date,p.description, '$'+str(p.amount), str(p.receipt_number or '')))
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()

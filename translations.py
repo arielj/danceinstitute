@@ -80,7 +80,8 @@ class I18n():
       'payment': {
         'date': ['Date','Fecha'],
         'amount': ['Amount','Monto'],
-        'description': ['Description','Descripción']
+        'description': ['Description','Descripción'],
+        'receipt_number': ['Receipt Number','Recibo N°']
       },
       'movement': {
         'date': ['Date','Fecha'],

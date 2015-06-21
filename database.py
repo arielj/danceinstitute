@@ -103,17 +103,21 @@ class Conn(object):
     
     if version == '0.2':
       cls.execute('INSERT INTO settings (key, value) VALUES ("notes", "")')
-      cls.set_version('0.3')
-      version = '0.3'
+      version = cls.set_version('0.3')
     
     if version == '0.3':
       cls.create('movements')
-      cls.set_version('0.4')
-      version = '0.4'
+      version = cls.set_version('0.4')
+    
+    if version == '0.4':
+      cls.execute('ALTER TABLE payments ADD COLUMN receipt_number integer;')
+      version = cls.set_version('0.5')
+      
 
   @classmethod
   def set_version(cls,version):
     cls.execute('UPDATE settings SET value = :version WHERE key = "version"',{'version': version})
+    return version
 
   @classmethod
   def dev_data(cls):
