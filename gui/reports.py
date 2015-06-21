@@ -8,9 +8,10 @@ import widgets
 import exporter
 
 class PaymentsReport(gtk.VBox):
-  def __init__(self, payments, users):
+  def __init__(self, payments, users, klasses):
     self.payments = payments
     self.users = users
+    self.klasses = klasses
     gtk.VBox.__init__(self, False, 5)
     
     self.from_e = gtk.Entry(10)
@@ -38,7 +39,19 @@ class PaymentsReport(gtk.VBox):
     completion.set_text_column(1)
     completion.connect('match-selected', self.on_user_match_selected)
     self.user.child.set_completion(completion)
+
+    klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    klasses_model.append((None,'Todas'))
+    for klass in self.klasses:
+      klasses_model.append((klass, klass.name))
     
+    self.klass = gtk.ComboBoxEntry(klasses_model,1)
+    completion = gtk.EntryCompletion()
+    completion.set_model(klasses_model)
+    completion.set_text_column(1)
+    completion.connect('match-selected', self.on_klass_match_selected)
+    self.klass.child.set_completion(completion)
+
     self.filter = gtk.Button('Buscar')
     
     self.form = gtk.HBox(False, 5)
@@ -49,6 +62,7 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.done_rb, False)
     self.form.pack_start(self.received_rb, False)
     self.form.pack_start(self.user, False)
+    self.form.pack_start(self.klass, False)
     self.form.pack_start(self.filter, False)
     
     self.pack_start(self.form, False)
@@ -106,6 +120,13 @@ class PaymentsReport(gtk.VBox):
     else:
       return None
 
+  def get_selected_klass(self):
+    itr = self.klass.get_active_iter()
+    if itr is not None:
+      return self.klass.get_model().get_value(itr,0)
+    else:
+      return None
+
   def update(self, payments = None):
     if payments is not None:
       self.payments = payments
@@ -147,6 +168,25 @@ class PaymentsReport(gtk.VBox):
       self.user.set_active_iter(found)
     else:
       self.user.set_active_iter(users_model.get_iter_first())
+
+  def on_klass_match_selected(self, completion, model, itr):
+    klass = model.get_value(itr,0)
+    klasses_model = self.klass.get_model()
+    found = None
+
+    if klass is not None:
+      model_iter = klasses_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_klass = klasses_model.get_value(model_iter,0)
+        if iter_klass is not None and iter_klass.id == klass.id:
+          found = model_iter
+        else:
+          model_iter = klasses_model.iter_next(model_iter)
+
+    if found is not None:
+      self.klass.set_active_iter(found)
+    else:
+      self.klass.set_active_iter(klasses_model.get_iter_first())
 
 gobject.type_register(PaymentsReport)
 gobject.signal_new('student-edit', \

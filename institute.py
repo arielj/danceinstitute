@@ -785,7 +785,7 @@ class Controller(gobject.GObject):
   #resports
   def payments_report(self, menu_item):
     today = datetime.datetime.today()
-    page = PaymentsReport(Payment.filter(today,today,False),User.all())
+    page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all())
     page.export.connect_object('clicked', self.export_payments_report, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)
@@ -797,8 +797,8 @@ class Controller(gobject.GObject):
     t = page.get_to()
     received = page.get_done_or_received()
     user = page.get_selected_user()
-    u_id = user.id if user is not None else None
-    payments = Payment.filter(f,t,received,u_id)
+    klass = page.get_selected_klass()
+    payments = Payment.filter(f,t,received,user,klass)
     page.update(payments)
 
   def export_payments_report(self, page):
