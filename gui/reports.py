@@ -93,8 +93,14 @@ class PaymentsReport(gtk.VBox):
 
   def to_html(self):
     done_or_received = 'hechos' if self.done_rb.get_active() else 'recibidos'
-    title = "<h1>Pagos %s entre %s y %s</h1>" % (done_or_received, str(self.get_from()), str(self.get_to()))
-
+    h1_content = "Pagos %s entre %s y %s" % (done_or_received, str(self.get_from()), str(self.get_to()))
+    
+    u = self.get_selected_user()
+    k = self.get_selected_klass()
+    if u is not None: h1_content += ' del alumno %s' % u.to_label()
+    if k is not None: h1_content += ' de la clase %s' % k.name
+    
+    title = '<h1>%s</h1>' % h1_content
     rows = map(lambda p: self.values_for_html(p), self.payments)
     total = sum(map(lambda p: p.amount, self.payments))
     caption = 'Total: <b>$'+str(total)+'</b>'
