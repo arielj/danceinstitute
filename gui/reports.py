@@ -33,6 +33,12 @@ class PaymentsReport(gtk.VBox):
       users_model.append((user, user.to_label()))
     
     self.user = gtk.ComboBoxEntry(users_model,1)
+    completion = gtk.EntryCompletion()
+    completion.set_model(users_model)
+    completion.set_text_column(1)
+    completion.connect('match-selected', self.on_user_match_selected)
+    self.user.child.set_completion(completion)
+    
     self.filter = gtk.Button('Buscar')
     
     self.form = gtk.HBox(False, 5)
@@ -122,6 +128,25 @@ class PaymentsReport(gtk.VBox):
     itr = model.get_iter(path)
     payment = model.get_value(itr, 0)
     self.emit('student-edit', payment.user_id)
+
+  def on_user_match_selected(self, completion, model, itr):
+    user = model.get_value(itr,0)
+    users_model = self.user.get_model()
+    found = None
+
+    if user is not None:
+      model_iter = users_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_user = users_model.get_value(model_iter,0)
+        if iter_user is not None and iter_user.id == user.id:
+          found = model_iter
+        else:
+          model_iter = users_model.iter_next(model_iter)
+
+    if found is not None:
+      self.user.set_active_iter(found)
+    else:
+      self.user.set_active_iter(users_model.get_iter_first())
 
 gobject.type_register(PaymentsReport)
 gobject.signal_new('student-edit', \
