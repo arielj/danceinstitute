@@ -13,6 +13,15 @@ class Settings(object):
     self.recharge_after = 0
     self.recharge_value = 0
     self.notes = ''
+    self._export_path = ''
+
+  @property
+  def export_path(self):
+    return self._export_path or None
+
+  @export_path.setter
+  def export_path(self, value):
+    self._export_path = value
 
   def get_opening_h(self):
     return int(self.opening.split(':')[0])

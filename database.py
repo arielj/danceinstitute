@@ -112,7 +112,10 @@ class Conn(object):
     if version == '0.4':
       cls.execute('ALTER TABLE payments ADD COLUMN receipt_number integer;')
       version = cls.set_version('0.5')
-      
+
+    if version == '0.5':
+      cls.execute('INSERT INTO settings (key, value) VALUES ("export_path", "")')
+      version = cls.set_version('0.6')
 
   @classmethod
   def set_version(cls,version):

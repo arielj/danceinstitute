@@ -168,7 +168,7 @@ class DailyCash(gtk.VBox):
 class PaymentsList(gtk.VBox):
   def __init__(self, payments):
     gtk.VBox.__init__(self, False, 5)
-    self.headings = ['Alumno/Profesor', 'Entrada', 'Salida', 'Descripción']
+    self.headings = ['Entrada', 'Salida', 'Descripción', 'Alumno/Profesor']
     
     self.table = PaymentsTable(payments, self.headings)
     
@@ -204,7 +204,7 @@ class PaymentsTable(gtk.TreeView):
     return col
 
   def create_store(self, payments):
-    # payment, user name, amount in, amount out, description
+    # payment, amount in, amount out, description, user name
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
     self.update(payments)
 
@@ -220,7 +220,7 @@ class PaymentsTable(gtk.TreeView):
       else:
         amount_in = p.amount
         amount_out = ''
-      self.store.append((p, p.user.to_label(), str(amount_in), str(amount_out), p.description))
+      self.store.append((p, str(amount_in), str(amount_out), p.description, p.user.to_label()))
 
 class MovementsList(gtk.VBox):
   def __init__(self, movements):

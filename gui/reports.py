@@ -83,8 +83,12 @@ class PaymentsReport(gtk.VBox):
     total_hbox.pack_start(self.total_label, False)
     self.pack_start(total_hbox, False)
     
-    self.export = gtk.Button('Exportar')
-    self.pack_start(self.export, False)
+    self.actions = gtk.HBox(False, 5)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
+    self.pack_start(self.actions, False)
     
     self.show_all()
 
@@ -109,6 +113,22 @@ class PaymentsReport(gtk.VBox):
     
   def values_for_html(self,p):
     return [p.user.to_label(),str(p.date),'$'+str(p.amount),str(p.description), str(p.receipt_number or '')]
+
+  def to_csv(self):
+    st = ';'.join(self.headings)+"\n"
+    st += "\n".join(map(lambda p: ';'.join(self.values_for_html(p)), self.payments))
+    return st
+
+  def csv_filename(self):
+    done_or_received = 'hechos' if self.done_rb.get_active() else 'recibidos'
+    name = 'pagos_%s_entre_%s_y_%s' % (done_or_received, str(self.get_from()), str(self.get_to()))
+
+    u = self.get_selected_user()
+    k = self.get_selected_klass()
+    if u is not None: name += '_alumno_%s' % u.to_label()
+    if k is not None: name += '_clase_%s' % k.name
+    
+    return name+'.csv'
 
   def get_from(self):
     return self.from_e.get_text()
@@ -270,7 +290,7 @@ class DailyCashReport(gtk.VBox):
     
     self.tables = gtk.HBox(True, 6)
     p_table = gtk.VBox()
-    self.payment_headings = ['Alumno/Profesor', 'Detalle', 'Entrada', 'Salida']
+    self.payment_headings = ['Detalle', 'Entrada', 'Salida', 'Alumno/Profesor']
     
     self.p_list = PaymentsList(payments, self.payment_headings, self.p_to_row)
     
@@ -306,8 +326,13 @@ class DailyCashReport(gtk.VBox):
 
     self.pack_start(self.tables)
 
-    self.export = gtk.Button('Exportar')
-    self.pack_start(self.export, False)
+    self.actions = gtk.HBox(False, 5)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
+    self.pack_start(self.actions, False)
+
     
     self.show_all()
 
@@ -317,7 +342,7 @@ class DailyCashReport(gtk.VBox):
   def to_html(self):
     title = "<h1>Movimientos del día %s</h1>" % str(self.get_date())
 
-    rows = map(lambda p: list(self.p_to_row(p))[1:], self.payments)
+    rows = map(lambda p: list(self.p_to_row(p))[1:-1], self.payments)
     caption = self.payment_totals(self.payments)
     
     p_table = exporter.html_table(self.payment_headings,rows,caption)
@@ -332,12 +357,22 @@ class DailyCashReport(gtk.VBox):
   def p_to_row(self,p):
     amount_in = p.amount if not p.done else ''
     amount_out = p.amount if p.done else ''
-    return (p,p.user.to_label(),str(p.description),str(amount_in),str(amount_out))
+    return (p,str(p.description),str(amount_in),str(amount_out),p.user.to_label(),str(p.receipt_number or ''))
 
   def m_to_row(self,m):
     amount_in = m.amount if m.is_incoming() else ''
     amount_out = m.amount if m.is_outgoing() else ''
     return (m,str(m.description),str(amount_in),str(amount_out))
+
+  def to_csv(self):
+    st = ';'.join(self.payment_headings)+"\n"
+    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:]), self.payments))
+    st += "\n"
+    st += "\n".join(map(lambda m: ';'.join(list(self.m_to_row(m))[1:]), self.movements))
+    return st
+
+  def csv_filename(self):
+    return 'movimientos_%s.csv' % str(self.get_date())
 
   def get_date(self):
     return self.date.get_text()
@@ -435,8 +470,12 @@ class OverdueInstallments(gtk.VBox):
     
     self.pack_start(self.scroll, True)
     
-    self.export = gtk.Button('Exportar')
-    self.pack_start(self.export, False)
+    self.actions = gtk.HBox(False, 5)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
+    self.pack_start(self.actions, False)
     
     self.show_all()
 
@@ -448,7 +487,15 @@ class OverdueInstallments(gtk.VBox):
     rows = map(lambda i: self.values_for_html(i), self.installments)
 
     return exporter.html_wrapper(title+exporter.html_table(self.headings,rows))
-    
+
+  def to_csv(self):
+    st = ';'.join(self.headings)+"\n"
+    st += "\n".join(map(lambda i: ';'.join(self.values_for_html(i)), self.installments))
+    return st
+
+  def csv_filename(self):
+    return 'cuotas_atrasadas.csv'
+
   def values_for_html(self,i):
     return [i.membership.student.to_label(),str(i.year),i.month_name(),i.membership.klass_or_package.name]
 

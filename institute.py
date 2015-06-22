@@ -786,7 +786,8 @@ class Controller(gobject.GObject):
   def payments_report(self, menu_item):
     today = datetime.datetime.today()
     page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all())
-    page.export.connect_object('clicked', self.export_payments_report, page)
+    page.export_html.connect_object('clicked', self.export_payments_report_html, page)
+    page.export_csv.connect_object('clicked', self.export_payments_report_csv, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
@@ -801,13 +802,18 @@ class Controller(gobject.GObject):
     payments = Payment.filter(f,t,received,user,klass)
     page.update(payments)
 
-  def export_payments_report(self, page):
-    self.export(page.to_html())
+  def export_payments_report_html(self, page):
+    self.export_html(page.to_html())
+    
+  def export_payments_report_csv(self, page):
+    self.export_csv(page.to_csv(), page.csv_filename())
+      
 
   def daily_cash(self, menu_item):
     today = datetime.datetime.today().date()
     page = DailyCashReport(Payment.filter(today,today,None), Movement.by_date(today))
-    page.export.connect_object('clicked', self.export_daily_cash, page)
+    page.export_html.connect_object('clicked', self.export_daily_cash_html, page)
+    page.export_csv.connect_object('clicked', self.export_daily_cash_csv, page)
     page.filter.connect_object('clicked', self.filter_daily_cash, page)
     self.window.add_page(page)
     return page
@@ -818,19 +824,26 @@ class Controller(gobject.GObject):
     movements = Movement.by_date(date)
     page.update(payments = payments, movements = movements)
 
-  def export_daily_cash(self, page):
-    self.export(page.to_html())
+  def export_daily_cash_html(self, page):
+    self.export_html(page.to_html())
+
+  def export_daily_cash_csv(self, page):
+    self.export_csv(page.to_csv(),page.csv_filename())
+
 
   def overdue_installments(self, menu_item):
     page = OverdueInstallments(Installment.overdues())
-    page.export.connect_object('clicked', self.export_overdue_installments_report, page)
+    page.export_html.connect_object('clicked', self.export_overdue_installments_report_html, page)
+    page.export_csv.connect_object('clicked', self.export_overdue_installments_report_csv, page)
     page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
 
-  def export_overdue_installments_report(self, page):
-    self.export(page.to_html())
+  def export_overdue_installments_report_html(self, page):
+    self.export_html(page.to_html())
 
+  def export_overdue_installments_report_csv(self, page):
+    self.export_csv(page.to_csv(), page.csv_filename())
 
   #save a reference of signals connected
   def save_signal(self, h_id, obj):
@@ -844,12 +857,32 @@ class Controller(gobject.GObject):
         self.disconnect(h_id)
       del self.connected_signals[obj]
 
-  def export(self, html):
+  def export_html(self, html):
     f, path = tempfile.mkstemp('.html')
     f = open(path,'w')
     f.write(html)
     f.close
     webbrowser.open_new_tab(path)
+
+  def export_csv(self, csv_content, csv_filename = None):
+    dialog = gtk.FileChooserDialog(title='Guardar como...', action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+    if csv_filename is not None: dialog.set_current_name(csv_filename)
+    if self.settings.export_path is not None: dialog.set_current_folder(self.settings.export_path)
+    dialog.connect('response', self.on_export_csv_file, csv_content)
+    dialog.set_do_overwrite_confirmation(True)
+    dialog.run()
+  
+  def on_export_csv_file(self, dialog, response, csv_content):
+    if response == gtk.RESPONSE_OK:
+      self.settings.export_path = dialog.get_current_folder()
+      self.settings.save()
+      path = dialog.get_filename()
+      f = open(path, 'w')
+      f.write(csv_content)
+      f.close()
+    
+    dialog.destroy()
+
 
   def current_page(self):
     return self.window.current_page()
