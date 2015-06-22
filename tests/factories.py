@@ -12,7 +12,7 @@ class Factory():
           'membership': {},
           'schedule': {'from_time': '1800', 'to_time': '1900'},
           'room': {'name': 'Sala1'},
-          'installment': {'amount': 250}}
+          'installment': {'amount': 250, 'status': 'waiting'}}
   CREATED = {}
   
   @classmethod
