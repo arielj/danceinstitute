@@ -10,7 +10,7 @@ class Settings(object):
     self.closing = '24:00'
     self.name = ''
     self.tabs_position = 'top'
-    self.recharge_after = 0
+    self._recharge_after = 0
     self.recharge_value = 0
     self.notes = ''
     self._export_path = ''
@@ -22,6 +22,17 @@ class Settings(object):
   @export_path.setter
   def export_path(self, value):
     self._export_path = value
+
+  @property
+  def recharge_after(self):
+    return self._recharge_after
+
+  @recharge_after.setter
+  def recharge_after(self, value):
+    try:
+      self._recharge_after = int(value)
+    except:
+      self._recharge_after = 10
 
   def get_opening_h(self):
     return int(self.opening.split(':')[0])
