@@ -6,6 +6,13 @@ import gobject
 import datetime
 import widgets
 import exporter
+import string
+
+valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+
+def str_to_filename(strng):
+  strng = strng.replace(' ','_').lower()
+  return ''.join(c for c in strng if c in valid_chars)
 
 class PaymentsReport(gtk.VBox):
   def __init__(self, payments, users, klasses):
@@ -29,7 +36,7 @@ class PaymentsReport(gtk.VBox):
     self.received_rb.set_active(True)
     
     users_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    users_model.append((None,'Todos'))
+    users_model.append((None,'Todos los alumnos'))
     for user in self.users:
       users_model.append((user, user.to_label()))
     
@@ -39,9 +46,10 @@ class PaymentsReport(gtk.VBox):
     completion.set_text_column(1)
     completion.connect('match-selected', self.on_user_match_selected)
     self.user.child.set_completion(completion)
+    self.user.set_active(0)
 
     klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    klasses_model.append((None,'Todas'))
+    klasses_model.append((None,'Todas las clases'))
     for klass in self.klasses:
       klasses_model.append((klass, klass.name))
     
@@ -51,6 +59,7 @@ class PaymentsReport(gtk.VBox):
     completion.set_text_column(1)
     completion.connect('match-selected', self.on_klass_match_selected)
     self.klass.child.set_completion(completion)
+    self.klass.set_active(0)
 
     self.filter = gtk.Button('Buscar')
     
@@ -125,8 +134,8 @@ class PaymentsReport(gtk.VBox):
 
     u = self.get_selected_user()
     k = self.get_selected_klass()
-    if u is not None: name += '_alumno_%s' % u.to_label()
-    if k is not None: name += '_clase_%s' % k.name
+    if u is not None: name += '_alumno_%s' % str_to_filename(u.to_label())
+    if k is not None: name += '_clase_%s' % str_to_filename(k.name)
     
     return name+'.csv'
 
@@ -332,7 +341,6 @@ class DailyCashReport(gtk.VBox):
     self.actions.pack_start(self.export_html, False)
     self.actions.pack_start(self.export_csv, False)
     self.pack_start(self.actions, False)
-
     
     self.show_all()
 
@@ -455,9 +463,30 @@ class MovementsList(gtk.TreeView):
 
 
 class OverdueInstallments(gtk.VBox):
-  def __init__(self, installments):
+  def __init__(self, installments, klasses):
     self.installments = installments
     gtk.VBox.__init__(self, False, 5)
+    
+    klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    klasses_model.append((None,'Todas las clases'))
+    for klass in klasses:
+      klasses_model.append((klass, klass.name))
+    
+    self.klass = gtk.ComboBoxEntry(klasses_model,1)
+    completion = gtk.EntryCompletion()
+    completion.set_model(klasses_model)
+    completion.set_text_column(1)
+    completion.connect('match-selected', self.on_klass_match_selected)
+    self.klass.child.set_completion(completion)
+    self.klass.set_active(0)
+
+    self.filter = gtk.Button('Buscar')
+    
+    self.form = gtk.HBox(False, 5)
+    self.form.pack_start(self.klass, False)
+    self.form.pack_start(self.filter, False)
+    
+    self.pack_start(self.form, False)
     
     self.headings = ['Alumno', 'Año', 'Mes', 'Clase']
     
@@ -483,7 +512,11 @@ class OverdueInstallments(gtk.VBox):
     return "Cuotas atrasadas"
 
   def to_html(self):
-    title = "<h1>Cuotas atrasadas</h1>"
+    h1_content = "Cuotas atrasadas"
+    k = self.get_selected_klass()
+    if k is not None: h1_content += ' de la clase %s' % k.name
+    
+    title = "<h1>%s</h1>" % h1_content
     rows = map(lambda i: self.values_for_html(i), self.installments)
 
     return exporter.html_wrapper(title+exporter.html_table(self.headings,rows))
@@ -494,12 +527,15 @@ class OverdueInstallments(gtk.VBox):
     return st
 
   def csv_filename(self):
-    return 'cuotas_atrasadas.csv'
+    f = 'cuotas_atrasadas'
+    k = self.get_selected_klass()
+    if k is not None: f += '_clase_%s' % str_to_filename(k.name)
+    return f+'.csv'
 
   def values_for_html(self,i):
     return [i.membership.student.to_label(),str(i.year),i.month_name(),i.membership.klass_or_package.name]
 
-  def update(self, payments = None):
+  def update(self, installments = None):
     if installments is not None:
       self.installments = installments
     self.list.update(self.installments)
@@ -509,6 +545,32 @@ class OverdueInstallments(gtk.VBox):
     itr = model.get_iter(path)
     installment = model.get_value(itr, 0)
     self.emit('student-edit', installment.membership.student_id)
+
+  def get_selected_klass(self):
+    itr = self.klass.get_active_iter()
+    if itr is not None:
+      return self.klass.get_model().get_value(itr,0)
+    else:
+      return None
+
+  def on_klass_match_selected(self, completion, model, itr):
+    klass = model.get_value(itr,0)
+    klasses_model = self.klass.get_model()
+    found = None
+
+    if klass is not None:
+      model_iter = klasses_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_klass = klasses_model.get_value(model_iter,0)
+        if iter_klass is not None and iter_klass.id == klass.id:
+          found = model_iter
+        else:
+          model_iter = klasses_model.iter_next(model_iter)
+
+    if found is not None:
+      self.klass.set_active_iter(found)
+    else:
+      self.klass.set_active_iter(klasses_model.get_iter_first())
 
 gobject.type_register(OverdueInstallments)
 gobject.signal_new('student-edit', \

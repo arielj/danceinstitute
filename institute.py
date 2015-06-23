@@ -832,12 +832,18 @@ class Controller(gobject.GObject):
 
 
   def overdue_installments(self, menu_item):
-    page = OverdueInstallments(Installment.overdues())
+    page = OverdueInstallments(Installment.overdues(), Klass.all())
+    page.filter.connect_object('clicked', self.filter_overdues, page)
     page.export_html.connect_object('clicked', self.export_overdue_installments_report_html, page)
     page.export_csv.connect_object('clicked', self.export_overdue_installments_report_csv, page)
     page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
+
+  def filter_overdues(self, page):
+    klass = page.get_selected_klass()
+    installments = Installment.overdues(klass=klass)
+    page.update(installments)
 
   def export_overdue_installments_report_html(self, page):
     self.export_html(page.to_html())
