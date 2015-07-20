@@ -2,6 +2,8 @@ from database import Conn
 
 class Settings(object):
   _settings = None
+  
+  SAVE_FIELDS = ['language','startup_size','opening','closing','name','tabs_position','recharge_after','recharge_value','notes','export_path']
 
   def __init__(self):
     self.language = 'en'
@@ -56,6 +58,6 @@ class Settings(object):
       setattr(self,k,data[k])
 
   def save(self):
-    for k in vars(self):
+    for k in self.SAVE_FIELDS:
       Conn.execute('UPDATE settings SET value=:value WHERE key=:key', {'key': k, 'value': getattr(self,k)})
     return True
