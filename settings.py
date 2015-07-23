@@ -57,5 +57,6 @@ class Settings(object):
 
   def save(self):
     for k in vars(self):
-      Conn.execute('UPDATE settings SET value=:value WHERE key=:key', {'key': k, 'value': getattr(self,k)})
+      if k.startswith('_'): k = k.replace('_','',1)
+      Conn.execute('UPDATE settings SET value=:value WHERE `key`=:key', {'key': k, 'value': getattr(self,k)})
     return True

@@ -111,7 +111,7 @@ class Query(object):
     if self.join_str: q = q + ' ' + self.join_str
     if self.wheres: q = q + self.get_wheres()
 
-    return Conn.execute(q, self.values).fetchone()[0]
+    return Conn.execute_plain(q, self.values).fetchone()[0]
 
   def exists(self):
     return self.cls.get_one(self.query(),self.values) != None

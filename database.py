@@ -1,16 +1,27 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+try:
+  import mysql.connector
+  from mysql.connector import errorcode
+  HAS_MYSQL = True
+except ImportError:
+  print "Sin soporte para MySQL"
+  HAS_MYSQL = False
 import sqlite3
 import datetime
 import os
+import re
 
+CONFIG_FILE = 'database.config'
 FILENAME = 'data.db'
 
 class Conn(object):
   _conn = None
+  _cursor = None
+  _adapter = 'sqlite'
 
-  CREATE = {'settings': '''CREATE TABLE settings (key text, value text)''',
+  CREATE = {'sqlite': {'settings': '''CREATE TABLE settings (key text, value text)''',
             'installments': '''CREATE TABLE installments (id integer primary key, year integer, month integer, membership_id integer, amount integer, status text default '')''',
             'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, user_id integer, user_type text default '',description text default '', done integer default 0)''',
             'rooms': '''CREATE TABLE rooms (id integer primary key, name text)''',
@@ -22,7 +33,22 @@ class Conn(object):
             'packages': '''CREATE TABLE packages (id integer primary key, name text, fee integer, alt_fee integer)''',
             'klasses_packages': '''CREATE TABLE klasses_packages (klass_id integer, package_id integer)''',
             'movements': '''CREATE TABLE movements (id integer primary key, date date, amount integer, description text default '', done integer default 0)'''
+           },
+            'mysql': {'settings': '''CREATE TABLE settings (`key` VARCHAR(255), `value` TEXT);''',
+            'installments': '''CREATE TABLE installments (id INT UNSIGNED NOT NULL AUTO_INCREMENT, year INT, month INT, membership_id INT UNSIGNED, amount INT, status VARCHAR(100) default '', PRIMARY KEY (id))''',
+            'payments': '''CREATE TABLE payments (id INT UNSIGNED NOT NULL AUTO_INCREMENT, date DATE, amount INT, installment_id INT UNSIGNED, user_id INT UNSIGNED, user_type VARCHAR(20) default '', description VARCHAR(255) default '', done BOOLEAN default 0, PRIMARY KEY (id))''',
+            'rooms': '''CREATE TABLE rooms (id INT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(255), PRIMARY KEY (id))''',
+            'memberships': '''CREATE TABLE memberships (id INT UNSIGNED NOT NULL AUTO_INCREMENT, student_id INT UNSIGNED, for_id INT UNSIGNED, for_type VARCHAR(255), info MEDIUMTEXT, PRIMARY KEY (id))''',
+            'schedules': '''CREATE TABLE schedules (id INT UNSIGNED NOT NULL AUTO_INCREMENT, klass_id INT UNSIGNED, from_time INT, to_time INT, room_id INT UNSIGNED, day MEDIUMINT UNSIGNED, PRIMARY KEY (id))''',
+            'users': '''CREATE TABLE users (id INT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(255), lastname VARCHAR(255), dni VARCHAR(15), cellphone VARCHAR(20), alt_phone VARCHAR(20), birthday DATE, address VARCHAR(255), male BOOLEAN, email VARCHAR(255), is_teacher BOOLEAN, comments MEDIUMTEXT default '', facebook_uid MEDIUMTEXT default '', PRIMARY KEY (id))''',
+            'klasses': '''CREATE TABLE klasses (id INT UNSIGNED NOT NULL AUTO_INCREMENT, name MEDIUMTEXT, normal_fee INT UNSIGNED, half_fee INT UNSIGNED, once_fee INT UNSIGNED, inscription_fee INT UNSIGNED, min_age INT UNSIGNED, max_age INT UNSIGNED, quota INT UNSIGNED, info TEXT, PRIMARY KEY (id))''',
+            'klasses_teachers': '''CREATE TABLE klasses_teachers (klass_id INT UNSIGNED, teacher_id INT UNSIGNED)''',
+            'packages': '''CREATE TABLE packages (id INT UNSIGNED NOT NULL AUTO_INCREMENT, name MEDIUMTEXT, fee INT UNSIGNED, alt_fee INT UNSIGNED, PRIMARY KEY (id))''',
+            'klasses_packages': '''CREATE TABLE klasses_packages (klass_id INT UNSIGNED, package_id INT UNSIGNED)''',
+            'movements': '''CREATE TABLE movements (id INT UNSIGNED NOT NULL AUTO_INCREMENT, date DATE, amount INT UNSIGNED, description MEDIUMTEXT default '', done BOOLEAN default 0, PRIMARY KEY (id))'''
+             
            }
+          }
 
   @classmethod
   def start_connection(cls,env):
@@ -33,28 +59,62 @@ class Conn(object):
       check_version = False
       if env == 'test' or env == 'dev':
         cls._conn = sqlite3.connect(":memory:")
+        cls._conn.row_factory = sqlite3.Row
+        cls._conn.text_factory = str
         create_db = True
         dev_data = env == 'dev'
       else:
-        if not os.path.isfile(FILENAME):
-          create_db = True
-          seed_db = True
-          open(FILENAME,'a').close()
-        cls._conn = sqlite3.connect(FILENAME)
+        if os.path.isfile(CONFIG_FILE):
+          d = {}
+          with open(CONFIG_FILE) as f:
+            for line in f:
+              (key, val) = line.split(':')
+              val = val.strip()
+              key = key.strip()
+              d[key] = val
+          if d['adapter'] == 'sqlite':
+            cls._conn = sqlite3.connect(d['filename'])
+            cls._conn.row_factory = sqlite3.Row
+            cls._conn.text_factory = str
+          elif d['adapter'] == 'mysql' and HAS_MYSQL:
+            try:
+              cls._conn = mysql.connector.connect(user=d['user'],
+                                                  password=d['password'],
+                                                  host=d['host'],
+                                                  database=d['database'])
+              cls._adapter = 'mysql'
+              
+              res = cls.execute_plain("SELECT COUNT(DISTINCT `table_name`) FROM `information_schema`.`columns` WHERE `table_schema` = '" + d['database'] + "'").fetchone()[0]
+              if res == 0:
+                create_db = True
+                seed_db = True
 
-      if create_db:
-        cls.create_tables()
+            except mysql.connector.Error as err:
+              if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Something is wrong with your user name or password")
+              elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Database does not exist")
+              else:
+                print(cls._conn.cursor().fetchall())
+                print(err)
+        
+        if cls._conn is None:
+          if not os.path.isfile(FILENAME):
+            create_db = True
+            seed_db = True
+            open(FILENAME,'a').close()
+          cls._conn = sqlite3.connect(FILENAME)
+          cls._conn.row_factory = sqlite3.Row
+          cls._conn.text_factory = str
+
+      if create_db: cls.create_tables()
 
       cls.check_version()
       
-      if seed_db:
-        cls.seed()
+      if seed_db: cls.seed()
       
-      if dev_data:
-        cls.dev_data()
-
-      cls._conn.row_factory = sqlite3.Row
-      cls._conn.text_factory = str
+      if dev_data: cls.dev_data()
+      
 
   @classmethod
   def create_tables(cls):
@@ -73,24 +133,24 @@ class Conn(object):
 
   @classmethod
   def create(cls, table):
-    cls._conn.execute(cls.CREATE[table])
+    cls.execute(cls.CREATE[cls._adapter][table])
 
   @classmethod
   def seed(cls):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Sala 1')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('name','Nombre')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('opening','18:00')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('closing','24:00')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_after','10')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_value','50')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('startup_size','')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('name','Nombre')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('opening',:time)''',{'time': '18:00'})
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('closing',:time)''',{'time': '24:00'})
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('recharge_after','10')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('recharge_value','50')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('startup_size','')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('language','es')''')
+    cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('tabs_position','top')''')
     cls.commit()
 
   @classmethod
   def check_version(cls):
-    result = cls.execute('''SELECT value FROM settings WHERE key = "version";''').fetchone()
+    result = cls.execute_plain('''SELECT value FROM settings WHERE `key` = "version";''').fetchone()
     if result:
       version = result[0]
     else:
@@ -98,11 +158,11 @@ class Conn(object):
     
     if version == '0.1':
       cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
-      cls.execute('INSERT INTO settings (key, value) VALUES ("version","0.2")')
+      cls.execute('INSERT INTO settings (`key`, value) VALUES ("version","0.2")')
       version = '0.2'
     
     if version == '0.2':
-      cls.execute('INSERT INTO settings (key, value) VALUES ("notes", "")')
+      cls.execute('INSERT INTO settings (`key`, value) VALUES ("notes", "")')
       version = cls.set_version('0.3')
     
     if version == '0.3':
@@ -114,12 +174,12 @@ class Conn(object):
       version = cls.set_version('0.5')
 
     if version == '0.5':
-      cls.execute('INSERT INTO settings (key, value) VALUES ("export_path", "")')
+      cls.execute('INSERT INTO settings (`key`, value) VALUES ("export_path", "")')
       version = cls.set_version('0.6')
 
   @classmethod
   def set_version(cls,version):
-    cls.execute('UPDATE settings SET value = :version WHERE key = "version"',{'version': version})
+    cls.execute('UPDATE settings SET value = :version WHERE `key` = "version"',{'version': version})
     return version
 
   @classmethod
@@ -150,14 +210,14 @@ class Conn(object):
     cls.execute('''INSERT INTO packages (name, fee, alt_fee) VALUES ('Paquete A', 500, 350)''')
     cls.execute('''INSERT INTO klasses_packages (klass_id, package_id) VALUES (1,1)''')
     cls.execute('''INSERT INTO klasses_packages (klass_id, package_id) VALUES (2,1)''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('name','Instituto Superior de Danzas Sharife')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('opening','18:00')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('closing','24:00')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_after','10')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('recharge_value','50')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('startup_size','')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('language','es')''')
-    cls.execute('''INSERT INTO settings (key, value) VALUES ('tabs_position','top')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('name','Instituto Superior de Danzas Sharife')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('opening','18:00')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('closing','24:00')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_after','10')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_value','50')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('startup_size','')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('language','es')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('tabs_position','top')''')
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
     cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 50, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
     cls.commit()
@@ -168,8 +228,33 @@ class Conn(object):
 
   @classmethod
   def execute(cls, q, p = ()):
-    cur = cls._conn.execute(q, p)
+    cur = cls._get_cursor(is_dict=True)
+    return cls._execute(cur,q,p)
+
+  @classmethod
+  def execute_plain(cls, q, p = ()):
+    cur = cls._get_cursor(is_dict=False)
+    return cls._execute(cur,q,p)
+
+  @classmethod
+  def _execute(cls, cursor, q, p):
+    if cls._adapter == 'mysql':
+      # convert ":field" syntax from sqlit to "%(field)s" syntax of mysql.connector
+      q = re.sub(r'\:(?P<field>[a-z_]+)', r'%(\g<field>)s',q)
+
+    try:
+      cursor.execute(q, p)
+    except:
+      print cursor.statement
     cls.commit()
+    return cursor
+
+  @classmethod
+  def _get_cursor(cls, is_dict):
+    if cls._adapter == 'mysql':
+      cur = cls._conn.cursor(buffered=True, dictionary=is_dict)
+    else:
+      cur = cls._conn.cursor()
     return cur
 
   @classmethod

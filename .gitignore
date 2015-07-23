@@ -1,5 +1,6 @@
 TODO
 data.db
+database.config
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
