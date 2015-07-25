@@ -219,7 +219,14 @@ class MembershipForm(FormFor):
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
     for o in options:
       store.append((o.id,o.name,o))
-    self.add_field('klass_or_package', field_type = 'combo', list_store = store)
+    self.klass_or_package_e = gtk.ComboBoxEntry(store,1)
+    completion = gtk.EntryCompletion()
+    completion.set_model(store)
+    completion.set_text_column(1)
+    completion.connect('match-selected', self.on_klass_match_selected)
+    self.klass_or_package_e.child.set_completion(completion)
+    self.klass_or_package_e.set_active(0)
+    self.fields.pack_start(self.klass_or_package_e, False)
     
     self.add_field('info', attrs = 250)
     
@@ -239,6 +246,25 @@ class MembershipForm(FormFor):
     itr = self.klass_or_package_e.get_active_iter()
     if itr is not None:
       return m.get_value(itr,2)
+
+  def on_klass_match_selected(self, completion, model, itr):
+    klass = model.get_value(itr,0)
+    klasses_model = self.klass_or_package_e.get_model()
+    found = None
+
+    if klass is not None:
+      model_iter = klasses_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_klass = klasses_model.get_value(model_iter,0)
+        if iter_klass is not None and iter_klass == klass:
+          found = model_iter
+        else:
+          model_iter = klasses_model.iter_next(model_iter)
+
+    if found is not None:
+      self.klass_or_package_e.set_active_iter(found)
+    else:
+      self.klass_or_package_e.set_active_iter(klasses_model.get_iter_first())
 
 
 class AddInstallmentsDialog(gtk.Dialog):

@@ -679,15 +679,19 @@ class Controller(gobject.GObject):
   def on_new_membership(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
-      membership = dialog.form.object
-      membership.set_attrs(dialog.form.get_values())
-      membership.student_id = page.object.id
-      if membership.save():
-        page.object.reload_memberships()
-        page.update()
-      else:
-        ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
+      if dialog.form.get_selected_klass_or_package() is None:
+        ErrorMessage("No se puede guardar la inscripción:", "La clase (o paquete) ingresada no es válida.").run()
         destroy_dialog = False
+      else:
+        membership = dialog.form.object
+        membership.set_attrs(dialog.form.get_values())
+        membership.student_id = page.object.id
+        if membership.save():
+          page.object.reload_memberships()
+          page.update()
+        else:
+          ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
+          destroy_dialog = False
 
     if destroy_dialog:
       dialog.destroy()
