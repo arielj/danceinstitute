@@ -37,6 +37,9 @@ class Home(gtk.HBox):
   def update_movements(self, movements):
     self.daily_cash.update_movements(movements)
 
+  def update_payments(self, payments):
+    self.daily_cash.update_payments(payments)
+
 gobject.type_register(Home)
 gobject.signal_new('user-edit', \
                    Home, \
@@ -165,6 +168,10 @@ class DailyCash(gtk.VBox):
     self.movements = movements
     self.movements_l.update_table(movements)
 
+  def update_payments(self, payments):
+    self.payments = payments
+    self.payments_l.update_table(payments)
+
 class PaymentsList(gtk.VBox):
   def __init__(self, payments):
     gtk.VBox.__init__(self, False, 5)
@@ -177,6 +184,14 @@ class PaymentsList(gtk.VBox):
     self.scroll.add(self.table)
     self.pack_start(self.scroll, True)
     
+    self.totals = gtk.Label(self.get_total_text(payments))
+    self.pack_start(self.totals, False)
+
+  def update_table(self, payments):
+    self.table.update(payments)
+    self.totals.set_text(self.get_total_text(payments))
+
+  def get_total_text(self, payments):
     total_in = 0
     total_out = 0
     for p in payments:
@@ -184,8 +199,7 @@ class PaymentsList(gtk.VBox):
         total_out += p.amount
       else:
         total_in += p.amount
-    self.totals = gtk.Label('Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out))
-    self.pack_start(self.totals, False)
+    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
     
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments, headings):

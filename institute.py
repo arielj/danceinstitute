@@ -123,7 +123,9 @@ class Controller(gobject.GObject):
     page.notes.save.connect_object('clicked',self.save_notes, page)
     page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
     page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
-    self.save_signal(self.connect_object('movement-deleted', self.update_movements, page), page)
+    self.save_signal(self.connect_object('movement-deleted', self.update_home_movements, page), page)
+    self.save_signal(self.connect_object('payment-deleted', self.update_home_payments, page), page)
+    self.save_signal(self.connect_object('payment-changed', self.update_home_payments, page), page)
     self.window.add_page(page)
     return page
 
@@ -165,8 +167,13 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
-  def update_movements(self, page, extra = None):
+  def update_home_movements(self, page, *args):
     page.update_movements(movement.Movement.by_date(datetime.datetime.today().date()))
+
+  def update_home_payments(self, page, *args):
+    today = datetime.datetime.today().date()
+    payments = payment.Payment.filter(today,today)
+    page.update_payments(payments)
 
   def save_notes(self, page):
     self.settings.notes = page.get_notes()
@@ -760,6 +767,7 @@ class Controller(gobject.GObject):
         if added is False:
           added = payment.full_errors()
       if added is True:
+        self.emit('payment-changed', payment, True)
         page.update()
       else:
         ErrorMessage('No se pudo cargar el pago:', added).run()
@@ -904,19 +912,25 @@ gobject.signal_new('klass-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
-                   #klass object, creation(True value means the user just got created)
+                   #klass object, creation(True value means the klass just got created)
                    
 gobject.signal_new('package-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
-                   #package object, creation(True value means the user just got created)
+                   #package object, creation(True value means the package just got created)
 
 gobject.signal_new('room-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
-                   #room object, creation(True value means the user just got created)
+                   #room object, creation(True value means the room just got created)
+
+gobject.signal_new('payment-changed', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
+                   #payment object, creation(True value means the payment just got created)
 
 gobject.signal_new('klass-deleted', \
                    Controller, \
