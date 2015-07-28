@@ -15,10 +15,11 @@ def str_to_filename(strng):
   return ''.join(c for c in strng if c in valid_chars)
 
 class PaymentsReport(gtk.VBox):
-  def __init__(self, payments, users, klasses):
+  def __init__(self, payments, users, klasses, packages):
     self.payments = payments
     self.users = users
     self.klasses = klasses
+    self.packages = packages
     gtk.VBox.__init__(self, False, 5)
     
     self.from_e = gtk.Entry(10)
@@ -48,18 +49,20 @@ class PaymentsReport(gtk.VBox):
     self.user.child.set_completion(completion)
     self.user.set_active(0)
 
-    klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    klasses_model.append((None,'Todas las clases'))
+    k_or_p_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    k_or_p_model.append((None,'Todas las clases o paquetes'))
     for klass in self.klasses:
-      klasses_model.append((klass, klass.name))
+      k_or_p_model.append((klass, klass.name))
+    for package in self.packages:
+      k_or_p_model.append((package, package.name))
     
-    self.klass = gtk.ComboBoxEntry(klasses_model,1)
+    self.klass_or_package = gtk.ComboBoxEntry(k_or_p_model,1)
     completion = gtk.EntryCompletion()
-    completion.set_model(klasses_model)
+    completion.set_model(k_or_p_model)
     completion.set_text_column(1)
     completion.connect('match-selected', self.on_klass_match_selected)
-    self.klass.child.set_completion(completion)
-    self.klass.set_active(0)
+    self.klass_or_package.child.set_completion(completion)
+    self.klass_or_package.set_active(0)
 
     self.filter = gtk.Button('Buscar')
     
@@ -71,7 +74,7 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.done_rb, False)
     self.form.pack_start(self.received_rb, False)
     self.form.pack_start(self.user, False)
-    self.form.pack_start(self.klass, False)
+    self.form.pack_start(self.klass_or_package, False)
     self.form.pack_start(self.filter, False)
     
     self.pack_start(self.form, False)
@@ -155,10 +158,10 @@ class PaymentsReport(gtk.VBox):
     else:
       return None
 
-  def get_selected_klass(self):
-    itr = self.klass.get_active_iter()
+  def get_selected_klass_or_package(self):
+    itr = self.klass_or_package.get_active_iter()
     if itr is not None:
-      return self.klass.get_model().get_value(itr,0)
+      return self.klass_or_package.get_model().get_value(itr,0)
     else:
       return None
 
@@ -205,23 +208,23 @@ class PaymentsReport(gtk.VBox):
       self.user.set_active_iter(users_model.get_iter_first())
 
   def on_klass_match_selected(self, completion, model, itr):
-    klass = model.get_value(itr,0)
-    klasses_model = self.klass.get_model()
+    k_or_p = model.get_value(itr,0)
+    k_or_p_model = self.klass_or_package.get_model()
     found = None
 
-    if klass is not None:
-      model_iter = klasses_model.get_iter_first()
+    if k_or_p is not None:
+      model_iter = k_or_p_model.get_iter_first()
       while model_iter is not None and found is None:
-        iter_klass = klasses_model.get_value(model_iter,0)
-        if iter_klass is not None and iter_klass.id == klass.id:
+        iter_k_or_p = k_or_p_model.get_value(model_iter,0)
+        if iter_k_or_p is not None and iter_k_or_p.id == k_or_p.id and iter_k_or_p.__class__ == k_or_p._class:
           found = model_iter
         else:
-          model_iter = klasses_model.iter_next(model_iter)
+          model_iter = k_or_p_model.iter_next(model_iter)
 
     if found is not None:
-      self.klass.set_active_iter(found)
+      self.klass_or_package.set_active_iter(found)
     else:
-      self.klass.set_active_iter(klasses_model.get_iter_first())
+      self.klass_or_package.set_active_iter(k_or_p_model.get_iter_first())
 
 gobject.type_register(PaymentsReport)
 gobject.signal_new('student-edit', \

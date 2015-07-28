@@ -6,6 +6,7 @@ from model import Model
 import datetime
 import installment
 import package
+import klass
 import student
 import teacher
 from lib.query_builder import Query
@@ -163,19 +164,24 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, klass = None):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None):
     q = cls.where('date', str(f), comparission = '>=', placeholder = 'from').where('date', str(t), comparission = '<=', placeholder = 'to')
     
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
-    if klass is not None:
-      where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'
-      args = {'klass_id': klass.id}
-      packages = package.Package.with_klass(klass)
-      if packages.anything():
-        where = '('+where+') OR (memberships.for_id IN (:p_ids) AND memberships.for_type = "Package")'
-        args['p_ids'] = ','.join(map(lambda p: str(p.id), packages))
+    if k_or_p is not None:
+      if isinstance(k_or_p, klass.Klass):
+        where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'
+        args = {'klass_id': k_or_p.id}
+        packages = package.Package.with_klass(k_or_p)
+        if packages.anything():
+          where = '('+where+') OR (memberships.for_id IN (%s) AND memberships.for_type = "Package")' % ','.join(map(lambda p: str(p.id), packages))
 
+      elif isinstance(k_or_p, package.Package):
+        where = 'memberships.for_id = :package_id AND memberships.for_type = "Package"'
+        args = {'package_id': k_or_p.id}
+        where = '('+where+') OR (memberships.for_id IN (%s) AND memberships.for_type = "Klass")' % ','.join(map(lambda k: str(k.id), k_or_p.klasses))
+          
       q.set_join('LEFT JOIN installments ON installments.id = payments.installment_id LEFT JOIN memberships ON installments.membership_id = memberships.id').where(where,args)
 
     return q

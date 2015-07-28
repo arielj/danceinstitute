@@ -147,7 +147,7 @@ class Installment(Model):
           else:
             self._status = 'paid'
           self.save(validate = False)
-        return True
+        return p
       else:
         return p.full_errors()
     else:

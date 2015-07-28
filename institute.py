@@ -770,8 +770,10 @@ class Controller(gobject.GObject):
         added = payment.save()
         if added is False:
           added = payment.full_errors()
-      if added is True:
-        self.emit('payment-changed', payment, True)
+        else:
+          added = payment
+      if added:
+        if isinstance(added, Payment): self.emit('payment-changed', added, True)
         page.update()
       else:
         ErrorMessage('No se pudo cargar el pago:', added).run()
@@ -796,8 +798,8 @@ class Controller(gobject.GObject):
 
   #resports
   def payments_report(self, menu_item):
-    today = datetime.datetime.today()
-    page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all())
+    today = datetime.datetime.today().date()
+    page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all(), Package.all())
     page.export_html.connect_object('clicked', self.export_payments_report_html, page)
     page.export_csv.connect_object('clicked', self.export_payments_report_csv, page)
     page.filter.connect_object('clicked', self.filter_payments, page)
@@ -810,8 +812,8 @@ class Controller(gobject.GObject):
     t = page.get_to()
     received = page.get_done_or_received()
     user = page.get_selected_user()
-    klass = page.get_selected_klass()
-    payments = Payment.filter(f,t,received,user,klass)
+    k_or_p = page.get_selected_klass_or_package()
+    payments = Payment.filter(f,t,received,user,k_or_p)
     page.update(payments)
 
   def export_payments_report_html(self, page):
