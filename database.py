@@ -13,10 +13,6 @@ import datetime
 import os
 import re
 
-def adapt_list(l):
-  return l
-sqlite3.register_adapter(list, adapt_list)
-
 CONFIG_FILE = 'database.config'
 FILENAME = 'data.db'
 
