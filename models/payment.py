@@ -140,6 +140,7 @@ class Payment(Model):
 
   def _is_valid(self):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)
+    self.validate_presence_of('date')
 
   def to_db(self):
     return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number}

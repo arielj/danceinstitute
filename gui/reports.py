@@ -112,7 +112,7 @@ class PaymentsReport(gtk.VBox):
     h1_content = "Pagos %s entre %s y %s" % (done_or_received, str(self.get_from()), str(self.get_to()))
     
     u = self.get_selected_user()
-    k = self.get_selected_klass()
+    k = self.get_selected_klass_or_package()
     if u is not None: h1_content += ' del alumno %s' % u.to_label()
     if k is not None: h1_content += ' de la clase %s' % k.name
     
@@ -136,7 +136,7 @@ class PaymentsReport(gtk.VBox):
     name = 'pagos_%s_entre_%s_y_%s' % (done_or_received, str(self.get_from()), str(self.get_to()))
 
     u = self.get_selected_user()
-    k = self.get_selected_klass()
+    k = self.get_selected_klass_or_package()
     if u is not None: name += '_alumno_%s' % str_to_filename(u.to_label())
     if k is not None: name += '_clase_%s' % str_to_filename(k.name)
     

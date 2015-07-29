@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
+from datetime import datetime
 
 class ErrorMessage(gtk.MessageDialog):
   def __init__(self, header, message):
@@ -30,7 +31,10 @@ class CalendarPopup(gtk.Dialog):
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                        ())
     
-    year, month, day = date.split('-')
+    try:
+      year, month, day = date.split('-')
+    except ValueError:
+      year, month, day = [datetime.today().year, datetime.today().month, datetime.today().day]
     self.calendar = gtk.Calendar()
     self.calendar.select_month(int(month)-1, int(year))
     self.calendar.select_day(int(day))

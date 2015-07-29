@@ -145,7 +145,7 @@ class Controller(gobject.GObject):
       if added is False:
         added = movement.full_errors()
       if added is True:
-        self.update_movements(page)
+        self.update_home_movements(page)
       else:
         ErrorMessage('No se pudo cargar el movimiento:', added).run()
         destroy_dialog = False
