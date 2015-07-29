@@ -54,7 +54,7 @@ class Package(Model):
     return ', '.join(map(lambda x: x.name, self.klasses))
 
   def to_db(self):
-    return {'name': self.name, 'fee': self._fee, 'alt_fee': self._alt_fee}
+    return {'name': self.name, 'fee': self.fee, 'alt_fee': self.alt_fee}
 
   def after_save(self):
     c = self.__class__.get_conn()
