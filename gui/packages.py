@@ -5,22 +5,32 @@ import gtk
 import gobject
 from forms import FormFor
 
-class PackagesList(gtk.ScrolledWindow):
+class PackagesList(gtk.VBox):
   def __init__(self, packages, with_actions = True):
-    gtk.ScrolledWindow.__init__(self)
+    gtk.VBox.__init__(self)
     self.set_border_width(4)
-    self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.packages = packages
     self.with_actions = with_actions
     
-    self.vbox = gtk.VBox()
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+    store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
+    for p in packages: store.append((p.id,p.name,p))
+    self.package_e = gtk.Entry(255)
     
+    hbox = gtk.HBox(False, 5)
+    hbox.pack_start(gtk.Label('Buscar:'), False)
+    hbox.pack_start(self.package_e, False)
+    self.pack_start(hbox, False)
+
     self.packages_t = PackagesTable(packages)
     self.packages_t.connect('row-activated', self.on_row_activated)
     self.t_selection = self.packages_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
     
-    self.vbox.pack_start(self.packages_t, True)
+    self.scroll.add(self.packages_t)
+    self.pack_start(self.scroll, True)
     
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
@@ -37,12 +47,7 @@ class PackagesList(gtk.ScrolledWindow):
       self.actions.pack_start(self.edit_b, False)
       self.actions.pack_start(self.delete_b, False)
       
-      self.vbox.pack_start(self.actions, False)
-    
-    viewport = gtk.Viewport()
-    viewport.set_shadow_type(gtk.SHADOW_NONE)
-    viewport.add(self.vbox)
-    self.add(viewport)
+      self.pack_start(self.actions, False)
     
     self.show_all()
 

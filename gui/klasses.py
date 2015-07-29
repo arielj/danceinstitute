@@ -328,6 +328,15 @@ class KlassesList(gtk.VBox):
     
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    
+    store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
+    for k in klasses: store.append((k.id,k.name,k))
+    self.klass_e = gtk.Entry(255)
+    
+    hbox = gtk.HBox(False, 5)
+    hbox.pack_start(gtk.Label('Buscar:'), False)
+    hbox.pack_start(self.klass_e, False)
+    self.pack_start(hbox, False)
 
     self.klasses_t = KlassesTable(klasses)
     self.klasses_t.connect('row-activated', self.on_row_activated)

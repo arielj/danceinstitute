@@ -456,9 +456,17 @@ class Controller(gobject.GObject):
     page.connect('klass-edit', self.edit_klass)
     page.connect('klass-add', self.add_klass)
     page.connect('klass-delete', self.ask_delete_klass)
+    page.klass_e.connect('changed',self.filter_klasses, page)
     self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
     self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
     return page
+
+  def filter_klasses(self, entry, page):
+    t = entry.get_text().strip()
+    klasses = Klass.all()
+    if t != '':
+      klasses = klasses.where('name LIKE :name',{'name': '%'+entry.get_text()+'%'})
+    page.refresh_list(klasses)
 
   def refresh_schedules(self, widget, kls, created, page):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
@@ -594,9 +602,17 @@ class Controller(gobject.GObject):
     page.connect('package-add',self.add_package)
     page.connect('package-edit', self.edit_package)
     page.connect('package-delete', self.ask_delete_package)
+    page.package_e.connect('changed',self.filter_packages, page)
     self.save_signal(self.connect('package-changed', self.refresh_packages, page), page)
     self.save_signal(self.connect('package-deleted', self.refresh_packages, None, page), page)
     return page
+
+  def filter_packages(self, entry, page):
+    t = entry.get_text().strip()
+    packages = Package.all()
+    if t != '':
+      packages = packages.where('name LIKE :name',{'name': '%'+entry.get_text()+'%'})
+    page.refresh_list(packages)
 
   def add_package(self, widget):
     package = Package()
