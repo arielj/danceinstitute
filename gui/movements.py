@@ -5,6 +5,8 @@ import gtk
 import gobject
 from forms import FormFor
 import widgets
+from settings import Settings
+import datetime
 
 class AddMovementDialog(gtk.Dialog):
   def __init__(self,movement):
@@ -23,6 +25,7 @@ class AddMovementForm(FormFor):
     
     self.fields = gtk.VBox()
     self.add_field('date', attrs=10)
+    self.date_e.set_text(movement.date.strftime(Settings.get_settings().date_format))
     self.date_e.connect('button-press-event', self.show_calendar)
     self.add_field('amount', attrs=6)
     self.add_field('description', attrs=100)
@@ -46,5 +49,6 @@ class AddMovementForm(FormFor):
 
   def on_date_selected(self, calendar, widget, dialog):
     year, month, day = dialog.get_date_values()
-    widget.set_text("%s-%s-%s" % (year, month, day))
+    d = datetime.date(int(year),int(month),int(day))
+    widget.set_text(d.strftime(Settings.get_settings().date_format))
     dialog.destroy()

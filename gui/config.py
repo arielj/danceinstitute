@@ -44,6 +44,9 @@ class Config(gtk.ScrolledWindow):
     self.startup_size_e = self.add_field('Tamaño inicial (formato: 1024x768)', attrs=15)
     self.startup_size_e.set_text(str(getattr(self.settings,'startup_size')))
 
+    self.date_format_e = self.add_field('Formato de fechas', attrs=15)
+    self.date_format_e.set_text(str(getattr(self.settings,'date_format')))
+
     self.submit = gtk.Button('Guardar')
     
     self.vbox.pack_start(self.submit, False)
@@ -64,4 +67,4 @@ class Config(gtk.ScrolledWindow):
     return "Configuración"
 
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text()}
+    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text()}

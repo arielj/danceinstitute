@@ -176,6 +176,10 @@ class Conn(object):
     if version == '0.5':
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("export_path", "")')
       version = cls.set_version('0.6')
+    
+    if version == '0.6':
+      cls.execute('INSERT INTO settings (`key`, value) VALUES ("date_format", "%Y-%m-%d")')
+      version = cls.set_version('0.7')
 
   @classmethod
   def set_version(cls,version):

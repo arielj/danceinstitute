@@ -5,6 +5,8 @@ import gtk
 import gobject
 from forms import FormFor
 import widgets
+from settings import Settings
+import datetime
 
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments):
@@ -36,7 +38,7 @@ class PaymentsTable(gtk.TreeView):
   
   def set_model(self, payments):
     for p in payments:
-      self.store.append((p,p.date,p.description,'$'+str(p.amount),str(p.receipt_number or '')))
+      self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description,'$'+str(p.amount),str(p.receipt_number or '')))
 
 
 class AddPaymentDialog(gtk.Dialog):
@@ -56,6 +58,7 @@ class AddPaymentForm(FormFor):
     
     self.fields = gtk.VBox()
     self.add_field('date', attrs=10)
+    self.date_e.set_text(payment.date.strftime(Settings.get_settings().date_format))
     self.date_e.connect('button-press-event', self.show_calendar)
     self.add_field('amount', attrs=6)
     self.add_field('receipt_number', attrs=15)
@@ -80,7 +83,8 @@ class AddPaymentForm(FormFor):
 
   def on_date_selected(self, calendar, widget, dialog):
     year, month, day = dialog.get_date_values()
-    widget.set_text("%s-%s-%s" % (year, month, day))
+    d = datetime.date(int(year),int(month),int(day))
+    widget.set_text(d.strftime(Settings.get_settings().date_format))
     dialog.destroy()
 
   def on_ignore_recharge_toggled(self, widget):
@@ -144,7 +148,7 @@ class PaymentsTab(gtk.VBox):
     
     if self.user.is_not_new_record():
       for p in self.user.get_payments(include_installments = False, done = self.done):
-        self.store.append((p,p.date,p.description, '$'+str(p.amount), str(p.receipt_number or '')))
+        self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+str(p.amount), str(p.receipt_number or '')))
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()

@@ -10,6 +10,7 @@ import klass
 import student
 import teacher
 from lib.query_builder import Query
+from settings import Settings
 
 class Payment(Model):
   table = 'payments'
@@ -146,7 +147,7 @@ class Payment(Model):
     return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number}
 
   def to_s(self):
-    s = str(self.date) + ": $" + str(self.amount)
+    s = self.date.strftime(Settings.get_settings().date_format) + ": $" + str(self.amount)
     if self._description: s += ' ('+self._description+')'
     if self.receipt_number is not None: s += ' (R.N°:'+str(self.receipt_number)+')'
     return s
@@ -166,7 +167,9 @@ class Payment(Model):
 
   @classmethod
   def filter(cls, f, t, done = None, user = None, k_or_p = None):
-    q = cls.where('date', str(f), comparission = '>=', placeholder = 'from').where('date', str(t), comparission = '<=', placeholder = 'to')
+    if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
+    if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
+    q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
     
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)

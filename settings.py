@@ -14,6 +14,7 @@ class Settings(object):
     self.recharge_value = 0
     self.notes = ''
     self._export_path = ''
+    self.date_format = '%Y-%m-%d'
 
   @property
   def export_path(self):

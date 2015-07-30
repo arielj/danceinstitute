@@ -7,6 +7,7 @@ import datetime
 import widgets
 import exporter
 import string
+from settings import Settings
 
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -23,12 +24,12 @@ class PaymentsReport(gtk.VBox):
     gtk.VBox.__init__(self, False, 5)
     
     self.from_e = gtk.Entry(10)
-    self.from_e.set_text(str(datetime.datetime.today()))
+    self.from_e.set_text(datetime.date.today().strftime(Settings.get_settings().date_format))
     self.from_e.connect('button-press-event', self.show_calendar)
     self.from_e.set_property("editable", False)
     self.from_e.set_can_focus(False)
     self.to_e = gtk.Entry(10)
-    self.to_e.set_text(str(datetime.datetime.today()))
+    self.to_e.set_text(datetime.date.today().strftime(Settings.get_settings().date_format))
     self.to_e.connect('button-press-event', self.show_calendar)
     self.to_e.set_property("editable", False)
     self.to_e.set_can_focus(False)
@@ -109,7 +110,7 @@ class PaymentsReport(gtk.VBox):
 
   def to_html(self):
     done_or_received = 'hechos' if self.done_rb.get_active() else 'recibidos'
-    h1_content = "Pagos %s entre %s y %s" % (done_or_received, str(self.get_from()), str(self.get_to()))
+    h1_content = "Pagos %s entre %s y %s" % (done_or_received, self.get_from().strftime(Settings.get_settings().date_format), self.get_to().strftime(Settings.get_settings().date_format))
     
     u = self.get_selected_user()
     k = self.get_selected_klass_or_package()
@@ -124,7 +125,7 @@ class PaymentsReport(gtk.VBox):
     return exporter.html_wrapper(title+exporter.html_table(self.headings,rows,caption))
     
   def values_for_html(self,p):
-    return [p.user.to_label(),str(p.date),'$'+str(p.amount),str(p.description), str(p.receipt_number or '')]
+    return [p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount),str(p.description), str(p.receipt_number or '')]
 
   def to_csv(self):
     st = ';'.join(self.headings)+"\n"
@@ -133,7 +134,7 @@ class PaymentsReport(gtk.VBox):
 
   def csv_filename(self):
     done_or_received = 'hechos' if self.done_rb.get_active() else 'recibidos'
-    name = 'pagos_%s_entre_%s_y_%s' % (done_or_received, str(self.get_from()), str(self.get_to()))
+    name = 'pagos_%s_entre_%s_y_%s' % (done_or_received, self.get_from().strftime(Settings.get_settings().date_format), self.get_to().strftime(Settings.get_settings().date_format))
 
     u = self.get_selected_user()
     k = self.get_selected_klass_or_package()
@@ -143,10 +144,10 @@ class PaymentsReport(gtk.VBox):
     return name+'.csv'
 
   def get_from(self):
-    return self.from_e.get_text()
+    return datetime.datetime.strptime(self.from_e.get_text(),Settings.get_settings().date_format)
 
   def get_to(self):
-    return self.to_e.get_text()
+    return datetime.datetime.strptime(self.to_e.get_text(),Settings.get_settings().date_format)
 
   def get_done_or_received(self):
     return self.done_rb.get_active()
@@ -179,7 +180,8 @@ class PaymentsReport(gtk.VBox):
 
   def on_date_selected(self, calendar, widget, dialog):
     year, month, day = dialog.get_date_values()
-    widget.set_text("%s-%s-%s" % (year, month, day))
+    d = datetime.date(int(year),int(month),int(day))
+    widget.set_text(d.strftime(Settings.get_settings().date_format))
     dialog.destroy()
 
   def on_row_activated(self, tree, path, column):
@@ -267,7 +269,7 @@ class PaymentsList(gtk.TreeView):
       self.store.append(self.to_row(p))
 
   def default_to_row(self, p):
-    return (p,p.user.to_label(),str(p.date),'$'+str(p.amount), p.description, str(p.receipt_number or ''))
+    return (p,p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount), p.description, str(p.receipt_number or ''))
 
 
 
@@ -287,7 +289,7 @@ class DailyCashReport(gtk.VBox):
     gtk.VBox.__init__(self, False, 5)
 
     self.date = gtk.Entry(10)
-    self.date.set_text(str(datetime.datetime.today()))
+    self.date.set_text(datetime.datetime.today().strftime(Settings.get_settings().date_format))
     self.date.connect('button-press-event', self.show_calendar)
     self.date.set_property("editable", False)
     self.date.set_can_focus(False)
@@ -351,7 +353,7 @@ class DailyCashReport(gtk.VBox):
     return "Caja diaria"
 
   def to_html(self):
-    title = "<h1>Movimientos del día %s</h1>" % str(self.get_date())
+    title = "<h1>Movimientos del día %s</h1>" % self.get_date().strftime(Settings.get_settings().date_format)
 
     rows = map(lambda p: list(self.p_to_row(p))[1:-1], self.payments)
     caption = self.payment_totals(self.payments)
@@ -383,10 +385,10 @@ class DailyCashReport(gtk.VBox):
     return st
 
   def csv_filename(self):
-    return 'movimientos_%s.csv' % str(self.get_date())
+    return 'movimientos_%s.csv' % self.get_date().strftime(Settings.get_settings().date_format)
 
   def get_date(self):
-    return self.date.get_text()
+    return datetime.datetime.strptime(self.date.get_text(),Settings.get_settings().date_format)
 
   def update(self, payments = None, movements = None):
     if payments is not None:
@@ -423,7 +425,8 @@ class DailyCashReport(gtk.VBox):
 
   def on_date_selected(self, calendar, widget, dialog):
     year, month, day = dialog.get_date_values()
-    widget.set_text("%s-%s-%s" % (year, month, day))
+    d = datetime.date(int(year),int(month),int(day))
+    widget.set_text(d.strftime(Settings.get_settings().date_format))
     dialog.destroy()
 
 class MovementsList(gtk.TreeView):

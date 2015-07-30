@@ -3,6 +3,7 @@
 
 import gtk
 from datetime import datetime
+from settings import Settings
 
 class ErrorMessage(gtk.MessageDialog):
   def __init__(self, header, message):
@@ -32,8 +33,9 @@ class CalendarPopup(gtk.Dialog):
                        ())
     
     try:
-      year, month, day = date.split('-')
-    except ValueError:
+      d = datetime.strptime(date,Settings.get_settings().date_format)
+      year, month, day = [d.year, d.month, d.day]
+    except Exception:
       year, month, day = [datetime.today().year, datetime.today().month, datetime.today().day]
     self.calendar = gtk.Calendar()
     self.calendar.select_month(int(month)-1, int(year))

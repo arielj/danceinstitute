@@ -102,7 +102,8 @@ class Movement(Model):
 
   @classmethod
   def by_date(cls, date_f, date_t = None):
+    if isinstance(date_f, datetime.datetime): date_f = date_f.strftime('%Y-%m-%d')
     if date_t is None: date_t = date_f
 
-    return cls.where('date', str(date_f), comparission = '>=', placeholder = 'date_f').where('date', str(date_t), comparission = '<=', placeholder = 'date_t')
+    return cls.where('date', date_f, comparission = '>=', placeholder = 'date_f').where('date', date_t, comparission = '<=', placeholder = 'date_t')
 
