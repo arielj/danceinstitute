@@ -338,11 +338,28 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('add-payment', self.add_payment, page)
     page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
     page.memberships_panel.connect('delete-installment', self.ask_delete_installment, page)
+    page.add_family.connect('clicked', self.on_add_family_clicked, page)
+    page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
     self.save_signal(self.connect('installment-deleted', page.on_installment_deleted), page)
     self.window.add_page(page)
     return page
+
+  def on_add_family_clicked(self, widget, page):
+    dialog = AddFamilyDialog(User.where('(family IS NULL OR family != :family) AND id != :id', {'family': page.object.family, 'id': page.object.id}))
+    dialog.connect('response', self.on_add_family_response, page)
+    dialog.run()
+  
+  def on_add_family_response(self, dialog, response, page):
+    if response == gtk.RESPONSE_ACCEPT:
+      page.object.add_family_member(dialog.get_selected_user())
+      page.refresh_family()
+    dialog.destroy()
+  
+  def on_remove_family_clicked(self, widget, page):
+    page.object.remove_family_member(page.get_selected_family_member())
+    page.refresh_family()
 
   def submit_user(self, form):
     user = form.object

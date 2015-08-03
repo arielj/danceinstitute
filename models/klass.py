@@ -110,7 +110,8 @@ class Klass(Model):
       for sch in kls.schedules:
         if sch.day_abbr() == _t('abbr_days','en')[day]:
           for interval in sch.get_intervals():
-            klasses[interval][sch.room.name] = kls
+            if interval in klasses:
+              klasses[interval][sch.room.name] = kls
     
     return klasses
 

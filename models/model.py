@@ -20,6 +20,12 @@ class Model(object):
   __metaclass__ = MetaModel
 
   default_order = None
+  
+  def __str__(self):
+    h = {}
+    for att in vars(self):
+      h[att] = getattr(self,att)
+    return str(h)
 
   def __init__(self, attrs = {}):
     self.id = None

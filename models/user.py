@@ -3,6 +3,7 @@
 
 import re
 from model import Model
+from database import Conn
 import payment
 import membership
 import datetime
@@ -38,6 +39,7 @@ class User(Model):
     self.comments = ''
     self.facebook_uid = ''
     self._memberships = None
+    self.family = None
     
     Model.__init__(self,data)
 
@@ -132,7 +134,7 @@ class User(Model):
     for m in self.memberships: m.student_id = self.id
 
   def to_db(self):
-    return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age}
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age, 'family': self.family}
 
   def _is_valid(self):
     self.validate_presence_of('name')
@@ -144,6 +146,29 @@ class User(Model):
 
   def get_payments(self, include_installments = True, done = None):
     return payment.Payment.for_user(self.id, include_installments, done)
+
+  def family_members(self):
+    if self.family is not None:
+      return self.__class__.where('family',self.family).where('id',self.id,comparission='!=')
+    else:
+      return self.__class__.where('1 = 0')
+
+  def add_family_member(self, user):
+    if self.id != user.id:
+      if user.family is None:
+        family_id = self.family or self.id
+        self.family = family_id
+        user.family = family_id
+        Conn.execute('UPDATE users SET family = :family WHERE id IN (:id1, :id2)', {'family': family_id, 'id1': self.id, 'id2': user.id})
+  
+  def remove_family_member(self, user):
+    if self.id != user.id:
+      if user.family == self.family and self.family is not None:
+        user.family = None
+        Conn.execute('UPDATE users SET family = :family WHERE id = :id', {'family': None, 'id': user.id})
+        if self.family_members().count() == 0:
+          self.family = None
+          Conn.execute('UPDATE users SET family = :family WHERE id = :id', {'family': None, 'id': self.id})
 
   @classmethod
   def calculate_age(cls,born):

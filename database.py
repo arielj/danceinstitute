@@ -157,7 +157,10 @@ class Conn(object):
       version = '0.1'
     
     if version == '0.1':
-      cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
+      if cls._adapter == 'sqlite':
+        cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
+      else:
+        cls.execute('''ALTER TABLE users ADD COLUMN age INT;''')
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("version","0.2")')
       version = '0.2'
     
@@ -170,7 +173,10 @@ class Conn(object):
       version = cls.set_version('0.4')
     
     if version == '0.4':
-      cls.execute('ALTER TABLE payments ADD COLUMN receipt_number integer;')
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE payments ADD COLUMN receipt_number integer;')
+      else:
+        cls.execute('ALTER TABLE payments ADD COLUMN receipt_number INT;')
       version = cls.set_version('0.5')
 
     if version == '0.5':
@@ -180,6 +186,13 @@ class Conn(object):
     if version == '0.6':
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("date_format", "%Y-%m-%d")')
       version = cls.set_version('0.7')
+    
+    if version == '0.7':
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE users ADD COLUMN family integer;')
+      else:
+        cls.execute('ALTER TABLE users ADD COLUMN family INT;')
+      version = cls.set_version('0.8')
 
   @classmethod
   def set_version(cls,version):

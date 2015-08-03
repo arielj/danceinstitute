@@ -17,6 +17,8 @@ class UserForm(FormFor):
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit,False)
     
+    self.add_family_block()
+    
     self.memberships_panel = MembershipsPanel(self.object)
     self.memberships_panel.set_sensitive(not self.object.is_new_record())
 
@@ -104,11 +106,32 @@ class UserForm(FormFor):
 
     self.fields.pack_start(hbox, False)
     
-    
     f, l, e = self.add_field('comments', field_type = 'text')
-    e.set_size_request(-1,200)
+    e.set_size_request(-1,140)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
     self.fields.set_child_packing(e,True,True,0,gtk.PACK_START)
+
+  def add_family_block(self):
+    self.family_vbox = gtk.VBox()
+
+    label = gtk.Label('Familia')
+    self.family_list = StudentsList(self.object.family_members())
+    
+    self.actions = gtk.HBox(False, 4)
+    self.add_family = gtk.Button('Agregar')
+    self.remove_family = gtk.Button('Quitar')
+    self.remove_family.set_sensitive(False)
+    self.family_list.students_t.get_selection().connect('changed', self.on_family_selection_changed)
+    
+    self.actions.pack_start(self.add_family, False)
+    self.actions.pack_start(self.remove_family, False)
+    
+    self.family_vbox.pack_start(label, False)
+    self.family_vbox.pack_start(self.family_list, True)
+    self.family_vbox.pack_start(self.actions, False)
+    
+    self.fields.pack_start(self.family_vbox, True)
+    self.family_vbox.set_sensitive(not self.object.is_new_record())
 
   def get_comments_text(self):
     buff = self.comments_e.get_buffer()
@@ -119,6 +142,7 @@ class UserForm(FormFor):
 
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)
+    self.family_vbox.set_sensitive(True)
 
   def update(self):
     self.memberships_panel.update()
@@ -137,6 +161,16 @@ class UserForm(FormFor):
     age = self.object.__class__.calculate_age(date)
     if age:
       self.age_e.set_text(str(age))
+
+  def on_family_selection_changed(self, selection):
+    model, iter = selection.get_selected()
+    self.remove_family.set_sensitive(iter is not None)
+  
+  def get_selected_family_member(self):
+    return self.family_list.get_selected()
+
+  def refresh_family(self):
+    self.family_list.update_table(self.object.family_members())
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):
@@ -575,3 +609,36 @@ class SelectTeacherDialog(gtk.Dialog):
     t = self.get_selected_teacher()
     self.emit('response', gtk.RESPONSE_ACCEPT)
 
+class AddFamilyDialog(gtk.Dialog):
+  def __init__(self, users):
+    gtk.Dialog.__init__(self, 'Seleccioná un alumo/profesor', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                       (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+    self.users = users
+    
+    self.add_not_family_list()
+  
+    self.vbox.show_all()
+
+  def add_not_family_list(self):
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    self.list = gtk.TreeView(self.store)
+    col = gtk.TreeViewColumn('Apellido, Nombre', gtk.CellRendererText(), text=1)
+    col.set_expand(True)
+    self.list.append_column(col)
+    for u in self.users:
+      self.store.append((u, u.lastname + ', ' + u.name))
+    
+    self.vbox.pack_start(self.list, True)
+    
+    self.list.connect('row-activated', self.on_row_activated)
+
+  def get_selected_user(self):
+    model, iter = self.list.get_selection().get_selected()
+    return model.get_value(iter,0) if iter is not None else None
+
+  def on_row_activated(self, tree, path, column):
+    t = self.get_selected_user()
+    self.emit('response', gtk.RESPONSE_ACCEPT)

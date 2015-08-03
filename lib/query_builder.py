@@ -35,6 +35,11 @@ class Query(object):
   def __getattr__(self,name):
     return getattr(self.cls,name)
 
+  def __str__(self):
+    st = str(map(lambda m: str(m), self._do_query()))
+    self.query_result = None
+    return st
+
   def query(self):
     q = 'SELECT '+self.select_str+' FROM ' + self.from_str
     if self.join_str: q = q + ' ' + self.join_str
