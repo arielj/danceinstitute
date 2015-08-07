@@ -18,6 +18,7 @@ class KlassForm(FormFor):
     self.relationships_hbox = gtk.HBox(False, 8)
     self.fields.pack_start(self.relationships_hbox, True)
     self.add_schedules_table()
+    self.relationships_hbox.pack_start(gtk.VSeparator(),False)
     self.add_teachers_table()
     
     self.submit = gtk.Button('Guardar')

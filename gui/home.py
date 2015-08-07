@@ -12,13 +12,14 @@ class Home(gtk.HBox):
     left = gtk.VBox(False, 10)
     self.klasses = TodayKlasses(klasses)
     left.pack_start(self.klasses, False)
-
+    left.pack_start(gtk.HSeparator(), False)
     self.notes = Notes(notes)
     left.pack_start(self.notes, True)
     
     self.daily_cash = DailyCash(payments,movements)
     
     self.pack_start(left)
+    self.pack_start(gtk.VSeparator(), False)
     self.pack_start(self.daily_cash)
     
     self.show_all()
@@ -161,16 +162,38 @@ class DailyCash(gtk.VBox):
     self.payments_l = PaymentsList(self.payments)
     self.movements_l = MovementsList(self.movements)
 
-    self.pack_start(self.payments_l, True)
-    self.pack_start(self.movements_l, True)
+    total_in, total_out = self.get_totals()    
+    self.totals = gtk.Label(self.get_totals_text(total_in, total_out))
 
+    self.pack_start(self.payments_l, True)
+    self.pack_start(gtk.HSeparator(), False)
+    self.pack_start(self.movements_l, True)
+    self.pack_start(gtk.HSeparator(), False)
+    self.pack_start(self.totals, False)
+    
   def update_movements(self, movements):
     self.movements = movements
     self.movements_l.update_table(movements)
+    self.update_totals()
 
   def update_payments(self, payments):
     self.payments = payments
     self.payments_l.update_table(payments)
+    self.update_totals()
+
+  def update_totals(self):
+    total_in, total_out = self.get_totals()
+    self.totals.set_text(self.get_totals_text(total_in, total_out))
+
+  def get_totals_text(self, total_in, total_out):
+    total = total_in-total_out
+    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)+' ; Total: $'+str(total)
+
+  def get_totals(self):
+    total_in_p, total_out_p = self.payments_l.get_totals(self.payments)
+    total_in_m, total_out_m = self.movements_l.get_totals(self.movements)
+    return (total_in_p+total_in_m, total_out_p+total_out_m)
+
 
 class PaymentsList(gtk.VBox):
   def __init__(self, payments):
@@ -192,6 +215,10 @@ class PaymentsList(gtk.VBox):
     self.totals.set_text(self.get_total_text(payments))
 
   def get_total_text(self, payments):
+    total_in, total_out = self.get_totals(payments)
+    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
+
+  def get_totals(self, payments):
     total_in = 0
     total_out = 0
     for p in payments:
@@ -199,7 +226,7 @@ class PaymentsList(gtk.VBox):
         total_out += p.amount
       else:
         total_in += p.amount
-    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
+    return [total_in, total_out]
     
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments, headings):
@@ -267,6 +294,10 @@ class MovementsList(gtk.VBox):
     self.totals.set_text(self.get_total_text(movements))
 
   def get_total_text(self, movements):
+    total_in, total_out = self.get_totals(movements)
+    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
+
+  def get_totals(self, movements):
     total_in = 0
     total_out = 0
     for m in movements:
@@ -274,7 +305,7 @@ class MovementsList(gtk.VBox):
         total_out += m.amount
       else:
         total_in += m.amount
-    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
+    return [total_in, total_out]
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()
