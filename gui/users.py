@@ -307,6 +307,9 @@ class StudentsList(gtk.VBox):
   def to_html(self):
     return self.students_t.to_html()
 
+  def to_csv(self):
+    return self.students_t.to_csv()
+
 gobject.type_register(StudentsList)
 gobject.signal_new('student-activated', \
                    StudentsList, \
@@ -352,6 +355,13 @@ class StudentsTable(gtk.TreeView):
     rows = map(lambda s: [s.name, s.lastname, s.dni, s.email, s.address, s.cellphone], self.students)
     return exporter.html_table(self.headings, rows)
 
+  def to_csv(self):
+    h = list(self.headings)
+    h.insert(2,'Nombre y apellido')
+    st = ';'.join(h)+"\n"
+    st += "\n".join(map(lambda s: ';'.join([s.name, s.lastname, s.to_label(), s.dni, s.email, s.address, s.cellphone]), self.students))
+    return st
+
 class StudentsListDialog(gtk.Dialog):
   def __init__(self, klass):
     gtk.Dialog.__init__(self, 'Alumnos de la clase '+klass.name, None,
@@ -359,9 +369,13 @@ class StudentsListDialog(gtk.Dialog):
                         ())
     self.set_size_request(700,400)
     self.list = StudentsList(klass.get_students())
-    self.export = gtk.Button('Exportar')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.export_html = gtk.Button('Exportar HTML')
+    exports = gtk.HBox()
+    exports.pack_start(self.export_csv, True)
+    exports.pack_start(self.export_html, True)
     self.vbox.pack_start(self.list, True)
-    self.vbox.pack_start(self.export, False)
+    self.vbox.pack_start(exports, False)
     
     self.show_all()
 

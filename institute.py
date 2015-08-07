@@ -550,7 +550,8 @@ class Controller(gobject.GObject):
   def on_list_students(self, page):
     dialog = StudentsListDialog(page.object)
     dialog.list.connect_object('student-activated', self.on_student_activated, dialog)
-    dialog.export.connect_object('clicked', self.export_klass_students, dialog, page.object)
+    dialog.export_csv.connect_object('clicked', self.export_klass_students_csv, dialog, page.object)
+    dialog.export_html.connect_object('clicked', self.export_klass_students_html, dialog, page.object)
     dialog.connect('response', self.students_list_dialog_response)
     dialog.run()
 
@@ -561,10 +562,15 @@ class Controller(gobject.GObject):
     dialog.destroy()
     self.edit_student(dialog,student.id)
 
-  def export_klass_students(self, dialog, klass):
+  def export_klass_students_html(self, dialog, klass):
     table_html = dialog.list.to_html()
     title = '<h1>Alumnos de la clase: '+klass.name+'</h1>'
-    self.export(exporter.html_wrapper(title+table_html))
+    self.export_html(exporter.html_wrapper(title+table_html))
+
+  def export_klass_students_csv(self, dialog, klass):
+    table_csv = dialog.list.to_csv()
+    filename = 'alumnos_'+klass.name+'.csv'
+    self.export_csv(table_csv,filename)
 
 
 
