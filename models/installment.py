@@ -25,6 +25,7 @@ class Installment(Model):
     self._amount = 0
     self._payments = None
     self._status = 'waiting'
+    self.ignore_recharge = False
     
     Model.__init__(self, data)
 
@@ -57,8 +58,9 @@ class Installment(Model):
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
 
-  def total(self, ignore_recharge = False):
-    recharge = 0 if ignore_recharge else self.get_recharge()
+  def total(self, ignore_recharge = None):
+    if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
+    recharge = 0 if self.ignore_recharge else self.get_recharge()
     return self.amount+recharge
 
   def get_recharge(self, after_day = None, recharge_value = None):
@@ -95,8 +97,9 @@ class Installment(Model):
 
     return '$'+str(self.amount)+recharge
 
-  def to_pay(self, ignore_recharge = False):
-    return self.total(ignore_recharge)-self.paid()
+  def to_pay(self, ignore_recharge = None):
+    if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
+    return self.total(self.ignore_recharge)-self.paid()
   
   def month_name(self):
     return _t('months')[self.month]
@@ -132,17 +135,20 @@ class Installment(Model):
     self.validate_numericallity_of('month', great_than_or_equal = 0, less_than_or_equal = 11)
     self.validate_numericallity_of('amount', great_than_or_equal = 0, only_integer = False)
 
-  def add_payment(self, data):
+  def add_payment(self, data = None):
+    if data is None: data = {}
+    if 'ignore_recharge' in data: self.ignore_recharge = data['ignore_recharge']
+    if 'amount' not in data: data['amount'] = self.to_pay()
     amount = Decimal(data['amount'])
-    ignore_recharge = data['ignore_recharge']
-    if amount <= self.to_pay(ignore_recharge):
+    
+    if amount <= self.to_pay():
       data['installment_id'] = self.id
       p = payment.Payment(data)
       p.user = self.get_student()
       if p.save():
         self.payments.append(p)
-        if self.to_pay(ignore_recharge) == 0:
-          if self.get_recharge() > 0 and ignore_recharge is False:
+        if self.to_pay() == 0:
+          if self.get_recharge() > 0 and self.ignore_recharge is False:
             self._status = 'paid_with_interests'
           else:
             self._status = 'paid'
@@ -205,6 +211,14 @@ class Installment(Model):
       q.where(where,args)
     
     return q
+
+  @classmethod
+  def to_pay_for(cls,user):
+    today = cls._today()
+    w = 'status = "waiting" AND (memberships.student_id = :student_id OR users.family = :family)'
+    args = {'student_id': user.id, 'family': user.family}
+    
+    return cls.where(w,args).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('year ASC, month ASC')
 
   @classmethod
   def _today(cls):

@@ -52,6 +52,76 @@ class AddPaymentDialog(gtk.Dialog):
     self.vbox.pack_start(self.form, False)
     self.vbox.show_all()
 
+class AddPaymentsDialog(gtk.Dialog):
+  def __init__(self,installments):
+    gtk.Dialog.__init__(self, 'Agregar pagos', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    self.installments = installments
+    self.add_installments_table()
+    self.amount_e = gtk.Entry(10)
+    self.vbox.pack_start(self.amount_e, False)
+    self.update_total()
+    self.vbox.show_all()
+  
+  def add_installments_table(self):
+    scroll = gtk.ScrolledWindow()
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,bool,bool)
+    for i in self.installments:
+      do_check = i.year == datetime.date.today().year and i.month == datetime.date.today().month-1
+      self.store.append([i,i.get_student().to_label(),i.month_name(),str(i.year),i.detailed_total(),do_check, False])
+    
+    self.table = gtk.TreeView(self.store)
+    self.add_column('Alumno', 1)
+    self.add_column('Año', 2)
+    self.add_column('Mes', 3)
+    self.add_column('Monto', 4)
+    
+    check_renderer = gtk.CellRendererToggle()
+    check_renderer.set_activatable(True)
+    check_renderer.connect('toggled', self.on_payment_toggled)
+    col = gtk.TreeViewColumn('Seleccionar', check_renderer)
+    col.add_attribute(check_renderer, "active", 5)
+    self.table.append_column(col)
+    check_renderer = gtk.CellRendererToggle()
+    check_renderer.set_activatable(True)
+    check_renderer.connect('toggled', self.on_ignore_recharge_toggled)
+    col = gtk.TreeViewColumn('Ignorar recargo', check_renderer)
+    col.add_attribute(check_renderer, "active", 6)
+    self.table.append_column(col)
+    
+    scroll.set_size_request(400,400)
+    scroll.add(self.table)
+    self.vbox.pack_start(scroll, True)
+
+  def on_payment_toggled(self, renderer, path):
+    self.store[path][5] = not self.store[path][5]
+    self.update_total()
+
+  def on_ignore_recharge_toggled(self, renderer, path):
+    self.store[path][6] = not self.store[path][6]
+    self.store[path][0].ignore_recharge = self.store[path][6]
+    self.update_total()
+
+  def update_total(self):
+    total = 0
+    for r in self.store:
+      if r[5] is True: total += r[0].to_pay()
+    self.amount_e.set_text(str(total))
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.table.append_column(col)
+    return col
+
+  def get_selected_installments(self):
+    return [x[0] for x in self.store if x[5] is True]
+
+  def get_amount(self):
+    return int(self.amount_e.get_text())
+
 class AddPaymentForm(FormFor):
   def __init__(self, payment):
     FormFor.__init__(self, payment)

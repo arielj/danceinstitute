@@ -163,7 +163,7 @@ class Controller(gobject.GObject):
   def delete_movement(self, dialog, response, movement):
     if response == gtk.RESPONSE_ACCEPT:
       movement.delete()
-      self.emit('movement-deleted', movement.id)
+      self.emit('movement-deleted', movement)
 
     dialog.destroy()
 
@@ -260,7 +260,8 @@ class Controller(gobject.GObject):
     teacher = Teacher()
     page = self.user_form(teacher)
 
-  def edit_teacher(self, widget, teacher):
+  def edit_teacher(self, widget, teacher_id):
+    teacher = Teacher.find(teacher_id)
     page = self.user_form(teacher)
 
   def list_teachers(self, widget):
@@ -294,7 +295,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       deleted = teacher.delete()
       if deleted is True:
-        self.emit('teacher-deleted', teacher.id)
+        self.emit('teacher-deleted', teacher)
       else:
         print deleted
         ErrorMessage("No se puede borrar al profesor:", deleted).run()
@@ -336,6 +337,7 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
     page.memberships_panel.connect('add-installments', self.add_installments, page)
     page.memberships_panel.connect('add-payment', self.add_payment, page)
+    page.memberships_panel.connect('add-payments', self.add_payments, page)
     page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
     page.memberships_panel.connect('delete-installment', self.ask_delete_installment, page)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
@@ -411,7 +413,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       deleted = student.delete()
       if deleted is True:
-        self.emit('student-deleted', student.id)
+        self.emit('student-deleted', student)
       else:
         ErrorMessage("No se puede borrar al alumno:", deleted).run()
     dialog.destroy()
@@ -518,7 +520,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       deleted = klass.delete()
       if deleted is True:
-        self.emit('klass-deleted', klass.id)
+        self.emit('klass-deleted', klass)
       else:
         ErrorMessage("No se puede borrar la clase:", deleted).run()
     dialog.destroy()
@@ -687,7 +689,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       deleted = package.delete()
       if deleted is True:
-        self.emit('package-deleted', package.id)
+        self.emit('package-deleted', package)
       else:
         ErrorMessage("No se puede borrar el paquete:", deleted).run()
     dialog.destroy()
@@ -744,7 +746,7 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       membership.student.reload_memberships()
       membership.delete()
-      self.emit('membership-deleted', membership.id)
+      self.emit('membership-deleted', membership)
 
     dialog.destroy()
 
@@ -776,7 +778,7 @@ class Controller(gobject.GObject):
   def delete_installment(self, dialog, response, installment):
     if response == gtk.RESPONSE_ACCEPT:
       installment.delete()
-      self.emit('installment-deleted', installment.id)
+      self.emit('installment-deleted', installment)
 
     dialog.destroy()
 
@@ -785,16 +787,20 @@ class Controller(gobject.GObject):
 
 
   #payments controls
-  def add_payment(self, widget, installment, done, page):
+  def add_payment(self, widget, done, page):
     payment = Payment()
-    if installment:
-      payment.amount = installment.to_pay()
-      payment.installment = installment
     payment.user = page.object
     payment.done = done
 
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page, installment)
+    dialog.run()
+    
+  def add_payments(self, widget, page):
+    installments = Installment.to_pay_for(page.object)
+
+    dialog = AddPaymentsDialog(installments)
+    dialog.connect('response', self.on_add_payments, page)
     dialog.run()
   
   def on_add_payment(self, dialog, response, page, installment = None):
@@ -821,6 +827,38 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
+  def on_add_payments(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      installments = dialog.get_selected_installments()
+      if installments:
+        if installments.count == 1:
+          added = installment.add_payment({'amount': dialog.get_amount()})
+          if added:
+            if isinstance(added, Payment): self.emit('payment-changed', added, True)
+            page.update()
+          else:
+            ErrorMessage('No se pudo cargar el pago:', added).run()
+            destroy_dialog = False
+        else:
+          total = 0;
+          for i in installments: total += i.to_pay()
+          
+          if total != dialog.get_amount():
+            ErrorMessage('No se pueden cargar los pagos:', 'El monto ingresado es diferente al total de las cuotas seleccionadas.').run()
+            destroy_dialog = False
+          else:
+            for i in installments:
+              res = i.add_payment()
+            self.emit('payment-changed', None, True)
+            page.update()
+      else:
+        ErrorMessage('No se pueden cargar los pagos:', 'No se seleccionó ninguna cuota.').run()
+        destroy_dialog = False
+
+    if destroy_dialog:
+      dialog.destroy()
+
   def ask_delete_payment(self, widget, payment, page):
     dialog = ConfirmDialog('Vas a borrar el pago: '+payment.description+"\n¿Estás seguro?")
     dialog.connect('response', self.delete_payment, payment)
@@ -829,7 +867,7 @@ class Controller(gobject.GObject):
   def delete_payment(self, dialog, response, payment):
     if response == gtk.RESPONSE_ACCEPT:
       payment.delete()
-      self.emit('payment-deleted', payment.id)
+      self.emit('payment-deleted', payment)
 
     dialog.destroy()
 
@@ -980,49 +1018,49 @@ gobject.signal_new('payment-changed', \
 gobject.signal_new('klass-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #klass id
 
 gobject.signal_new('teacher-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #teacher id
 
 gobject.signal_new('student-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #student id
 
 gobject.signal_new('installment-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #installment id
 
 gobject.signal_new('membership-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #membership id
 
 gobject.signal_new('package-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #package id
 
 gobject.signal_new('payment-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #payment id
 
 gobject.signal_new('movement-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (int,))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
                    #payment id
 
 

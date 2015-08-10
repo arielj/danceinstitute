@@ -24,10 +24,12 @@ class Teacher(user.User):
     return q
 
   def can_delete(self):
-    if membership.Membership.for_student(self.id):
+    if not membership.Membership.for_student(self.id):
       return "El profesor está inscripto en una o más clases."
-    if payment.Payment.for_user(self.id):
+    if not payment.Payment.for_user(self.id):
       return "El profesor tiene pagos hechos o recibidos."
+    if self.get_conn().execute('SELECT COUNT(*) FROM klasses_teachers WHERE klasses_teachers.teacher_id = :teacher_id', {'teacher_id': self.id}).fetchone()[0] != 0:
+      return "El profesor está asignado a una o más clases."
     return True
  
   def before_delete(self):

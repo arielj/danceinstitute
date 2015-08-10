@@ -259,10 +259,11 @@ class Conn(object):
       # convert ":field" syntax from sqlit to "%(field)s" syntax of mysql.connector
       q = re.sub(r'\:(?P<field>[a-z_]+)', r'%(\g<field>)s',q)
 
-    try:
-      cursor.execute(q, p)
-    except:
-      print cursor.statement
+    #try:
+    cursor.execute(q, p)
+    #except Exception as e:
+    #  print e
+    #  print cursor.statement
     cls.commit()
     return cursor
 

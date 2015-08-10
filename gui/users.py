@@ -508,7 +508,7 @@ class TeachersList(gtk.VBox):
     model = tree.get_model()
     itr = model.get_iter(path)
     teacher = model.get_value(itr, 0)
-    self.emit('teacher-edit', teacher)
+    self.emit('teacher-edit', teacher.id)
 
   def on_selection_changed(self, selection):
     if self.with_actions:
@@ -523,7 +523,7 @@ class TeachersList(gtk.VBox):
   def on_edit_clicked(self, btn):
     teacher = self.get_selected()
     if teacher is not None:
-      self.emit('teacher-edit', teacher)
+      self.emit('teacher-edit', teacher.id)
 
   def on_delete_clicked(self, btn):
     teacher = self.get_selected()
@@ -541,7 +541,7 @@ gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+                   gobject.TYPE_NONE, (int, ))
 gobject.signal_new('teacher-delete', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \

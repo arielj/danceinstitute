@@ -149,14 +149,15 @@ class User(Model):
 
   def family_members(self):
     if self.family is not None:
-      return self.__class__.where('family',self.family).where('id',self.id,comparission='!=')
+      q = self.__class__.where('family',self.family).where('id',self.id,comparission='!=')
     else:
-      return self.__class__.where('1 = 0')
+      q = self.__class__.where('1 = 0')
+    return q
 
   def add_family_member(self, user):
     if self.id != user.id:
-      if user.family is None:
-        family_id = self.family or self.id
+      if user.family is None or self.family is None:
+        family_id = self.family or user.family or self.id
         self.family = family_id
         user.family = family_id
         Conn.execute('UPDATE users SET family = :family WHERE id IN (:id1, :id2)', {'family': family_id, 'id1': self.id, 'id2': user.id})

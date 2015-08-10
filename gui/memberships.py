@@ -49,7 +49,7 @@ class MembershipsPanel(gtk.VBox):
     self.notebook.append_page(t,gtk.Label(m.klass_or_package.name))
     t.delete_b.connect('clicked', self.on_delete_clicked, m)
     t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
-    t.add_payment_b.connect('clicked', self.on_add_payment_clicked, t)
+    t.add_payments_b.connect('clicked', self.on_add_payments_clicked, t)
     t.delete_installment_b.connect('clicked', self.on_delete_installment_clicked, t)
 
   def update(self):
@@ -88,10 +88,10 @@ class MembershipsPanel(gtk.VBox):
     self.emit('add-installments', membership)
 
   def on_add_payment_clicked(self, widget, tab, done = False):
-    if isinstance(tab,MembershipTab):
-      self.emit('add-payment', tab.get_selected_installment(), done)
-    else:
-      self.emit('add-payment', None, done)
+    self.emit('add-payment', done)
+
+  def on_add_payments_clicked(self, widget, tab):
+    self.emit('add-payments')
 
   def on_delete_payment_clicked(self, widget, tab):
     self.emit('delete-payment', tab.get_selected_payment())
@@ -111,7 +111,11 @@ gobject.signal_new('add-installments', \
 gobject.signal_new('add-payment', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool))
+                   gobject.TYPE_NONE, (bool,))
+gobject.signal_new('add-payments', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 gobject.signal_new('delete-payment', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
@@ -162,14 +166,13 @@ class MembershipTab(gtk.VBox):
     self.actions = gtk.HBox(True, 5)
     
     self.add_installments_b = gtk.Button('Agregar Cuotas')
-    self.add_payment_b = gtk.Button('Agregar Pago')
-    self.add_payment_b.set_sensitive(False)
+    self.add_payments_b = gtk.Button('Agregar Pagos')
     self.delete_installment_b = gtk.Button('Eliminar Cuota')
     self.delete_installment_b.set_sensitive(False)
     self.delete_b = gtk.Button('Eliminar inscripción')
     
     self.actions.pack_start(self.add_installments_b, False)
-    self.actions.pack_start(self.add_payment_b, False)
+    self.actions.pack_start(self.add_payments_b, False)
     self.actions.pack_start(self.delete_installment_b, False)
     self.actions.pack_start(self.delete_b, False)
     
@@ -189,9 +192,7 @@ class MembershipTab(gtk.VBox):
 
   def on_selection_changed(self, selection):
     model, iter = selection.get_selected()
-    self.add_payment_b.set_sensitive(iter is not None)
     self.delete_installment_b.set_sensitive(iter is not None)
-    #self.emit('selection-changed', selection)
 
   def get_selected_installment(self):
     model, iter = self.selection.get_selected()
