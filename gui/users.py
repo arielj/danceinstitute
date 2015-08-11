@@ -638,21 +638,41 @@ class AddFamilyDialog(gtk.Dialog):
 
   def add_not_family_list(self):
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    self.list = gtk.TreeView(self.store)
-    col = gtk.TreeViewColumn('Apellido, Nombre', gtk.CellRendererText(), text=1)
-    col.set_expand(True)
-    self.list.append_column(col)
-    for u in self.users:
-      self.store.append((u, u.lastname + ', ' + u.name))
+    for user in self.users:
+      self.store.append((user, user.to_label()))
     
-    self.vbox.pack_start(self.list, True)
+    self.user = gtk.ComboBoxEntry(self.store,1)
+    completion = gtk.EntryCompletion()
+    completion.set_model(self.store)
+    completion.set_text_column(1)
+    completion.connect('match-selected', self.on_user_match_selected)
+    self.user.child.set_completion(completion)
+    self.user.set_active(0)
     
-    self.list.connect('row-activated', self.on_row_activated)
+    self.vbox.pack_start(self.user, True)
 
   def get_selected_user(self):
-    model, iter = self.list.get_selection().get_selected()
-    return model.get_value(iter,0) if iter is not None else None
+    itr = self.user.get_active_iter()
+    if itr is not None:
+      return self.user.get_model().get_value(itr,0)
+    else:
+      return None
 
-  def on_row_activated(self, tree, path, column):
-    t = self.get_selected_user()
-    self.emit('response', gtk.RESPONSE_ACCEPT)
+  def on_user_match_selected(self, completion, model, itr):
+    user = model.get_value(itr,0)
+    users_model = self.user.get_model()
+    found = None
+
+    if user is not None:
+      model_iter = users_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_user = users_model.get_value(model_iter,0)
+        if iter_user is not None and iter_user.id == user.id:
+          found = model_iter
+        else:
+          model_iter = users_model.iter_next(model_iter)
+
+    if found is not None:
+      self.user.set_active_iter(found)
+    else:
+      self.user.set_active_iter(users_model.get_iter_first())
