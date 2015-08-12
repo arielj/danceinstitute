@@ -67,47 +67,50 @@ class AddPaymentsDialog(gtk.Dialog):
   
   def add_installments_table(self):
     scroll = gtk.ScrolledWindow()
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,bool,bool)
+    #installment, student label, month, year, total, paid, select, ignore_recharge
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str,bool,bool)
     for i in self.installments:
       do_check = i.year == datetime.date.today().year and i.month == datetime.date.today().month-1
-      self.store.append([i,i.get_student().to_label(),i.month_name(),str(i.year),i.detailed_total(),do_check, False])
+      self.store.append([i,i.get_student().to_label(),i.month_name(),str(i.year),i.detailed_total(),i.detailed_to_pay(), do_check, False])
     
     self.table = gtk.TreeView(self.store)
     self.add_column('Alumno', 1)
     self.add_column('Año', 2)
     self.add_column('Mes', 3)
     self.add_column('Monto', 4)
+    self.add_column('Saldo', 5)
     
     check_renderer = gtk.CellRendererToggle()
     check_renderer.set_activatable(True)
     check_renderer.connect('toggled', self.on_payment_toggled)
     col = gtk.TreeViewColumn('Seleccionar', check_renderer)
-    col.add_attribute(check_renderer, "active", 5)
+    col.add_attribute(check_renderer, "active", 6)
     self.table.append_column(col)
     check_renderer = gtk.CellRendererToggle()
     check_renderer.set_activatable(True)
     check_renderer.connect('toggled', self.on_ignore_recharge_toggled)
     col = gtk.TreeViewColumn('Ignorar recargo', check_renderer)
-    col.add_attribute(check_renderer, "active", 6)
+    col.add_attribute(check_renderer, "active", 7)
     self.table.append_column(col)
     
-    scroll.set_size_request(400,400)
+    scroll.set_size_request(500,400)
     scroll.add(self.table)
     self.vbox.pack_start(scroll, True)
 
   def on_payment_toggled(self, renderer, path):
-    self.store[path][5] = not self.store[path][5]
+    self.store[path][6] = not self.store[path][6]
     self.update_total()
 
   def on_ignore_recharge_toggled(self, renderer, path):
-    self.store[path][6] = not self.store[path][6]
-    self.store[path][0].ignore_recharge = self.store[path][6]
+    self.store[path][7] = not self.store[path][7]
+    self.store[path][0].ignore_recharge = self.store[path][7]
+    self.store[path][5] = self.store[path][0].detailed_to_pay()
     self.update_total()
 
   def update_total(self):
     total = 0
     for r in self.store:
-      if r[5] is True: total += r[0].to_pay()
+      if r[6] is True: total += r[0].to_pay()
     self.amount_e.set_text(str(total))
 
   def add_column(self, label, text_idx):
@@ -117,7 +120,7 @@ class AddPaymentsDialog(gtk.Dialog):
     return col
 
   def get_selected_installments(self):
-    return [x[0] for x in self.store if x[5] is True]
+    return [x[0] for x in self.store if x[6] is True]
 
   def get_amount(self):
     return int(self.amount_e.get_text())

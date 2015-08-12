@@ -97,6 +97,9 @@ class Installment(Model):
 
     return '$'+str(self.amount)+recharge
 
+  def detailed_to_pay(self):
+    return '$'+str(self.to_pay())
+
   def to_pay(self, ignore_recharge = None):
     if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
     return self.total(self.ignore_recharge)-self.paid()

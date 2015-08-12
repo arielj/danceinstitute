@@ -787,10 +787,11 @@ class Controller(gobject.GObject):
 
 
   #payments controls
-  def add_payment(self, widget, done, page):
+  def add_payment(self, widget, installment, done, page):
     payment = Payment()
     payment.user = page.object
     payment.done = done
+    if isinstance(installment, Installment): payment.amount = installment.to_pay()
 
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page, installment)
@@ -807,7 +808,7 @@ class Controller(gobject.GObject):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       data = dialog.form.get_values()
-      if installment is not None:
+      if isinstance(installment, Installment):
         added = installment.add_payment(data)
       else:
         payment = dialog.payment
@@ -832,7 +833,8 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       installments = dialog.get_selected_installments()
       if installments:
-        if installments.count == 1:
+        if len(installments) == 1:
+          installment = installments[0]
           added = installment.add_payment({'amount': dialog.get_amount()})
           if added:
             if isinstance(added, Payment): self.emit('payment-changed', added, True)
