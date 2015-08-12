@@ -791,7 +791,9 @@ class Controller(gobject.GObject):
     payment = Payment()
     payment.user = page.object
     payment.done = done
-    if isinstance(installment, Installment): payment.amount = installment.to_pay()
+    if isinstance(installment, Installment):
+      payment.installment = installment
+      payment.amount = installment.to_pay()
 
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page, installment)
