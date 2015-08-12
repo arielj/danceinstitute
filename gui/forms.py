@@ -6,7 +6,7 @@ from translations import _a
 
 class FormFor(gtk.HBox):
   def __init__(self, obj):
-    gtk.HBox.__init__(self, True, 8)
+    gtk.HBox.__init__(self, False, 8)
     self.object = obj
     self.set_border_width(4)
     

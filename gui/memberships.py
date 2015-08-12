@@ -167,7 +167,7 @@ class MembershipTab(gtk.VBox):
     
     self.pack_start(self.scrolled, True)
     
-    self.actions = gtk.HBox(True, 5)
+    self.actions = gtk.HBox(True, 2)
     
     self.add_installments_b = gtk.Button('Agregar Cuotas')
     self.add_payments_b = gtk.Button('Agregar Pagos')
