@@ -127,3 +127,6 @@ def html_caption(caption):
     return '<div id="caption">'+caption+'</div>'
   else:
     return ''
+
+def string_to_csv_filename(s):
+  return s.lower().replace('"','').replace(" ",'_')

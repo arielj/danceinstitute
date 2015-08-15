@@ -571,7 +571,7 @@ class Controller(gobject.GObject):
 
   def export_klass_students_csv(self, dialog, klass):
     table_csv = dialog.list.to_csv()
-    filename = 'alumnos_'+klass.name+'.csv'
+    filename = 'alumnos_'+exporter.string_to_csv_filename(klass.name)+'.csv'
     self.export_csv(table_csv,filename)
 
 
