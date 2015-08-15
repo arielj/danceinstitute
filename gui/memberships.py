@@ -52,6 +52,7 @@ class MembershipsPanel(gtk.VBox):
     t.add_payments_b.connect('clicked', self.on_add_payments_clicked, t)
     t.add_payment_b.connect('clicked', self.on_add_payment_clicked, t)
     t.delete_installment_b.connect('clicked', self.on_delete_installment_clicked, t)
+    t.list.connect('row-activated', self.on_row_activated)
 
   def update(self):
     children = self.notebook.get_children()
@@ -102,6 +103,12 @@ class MembershipsPanel(gtk.VBox):
 
   def on_delete_installment_clicked(self, widget, tab):
     self.emit('delete-installment', tab.get_selected_installment())
+
+  def on_row_activated(self, tree, path, view_column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    installment = model.get_value(itr, 0)
+    self.emit('add-payment', installment, False)
 
 gobject.type_register(MembershipsPanel)
 gobject.signal_new('ask-delete-membership', \
@@ -208,6 +215,7 @@ class MembershipTab(gtk.VBox):
       return None
     else:
       return model.get_value(iter,0)
+    
 
 class MembershipDialog(gtk.Dialog):
   def __init__(self, membership, options):

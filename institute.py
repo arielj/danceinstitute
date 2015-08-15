@@ -788,23 +788,29 @@ class Controller(gobject.GObject):
 
   #payments controls
   def add_payment(self, widget, installment, done, page):
-    payment = Payment()
-    payment.user = page.object
-    payment.done = done
-    if isinstance(installment, Installment):
-      payment.installment = installment
-      payment.amount = installment.to_pay()
+    if installment.to_pay() == 0:
+      ErrorMessage('No se pueden cargar pagos:', 'La cuota seleccionada ya está pagada.').run()
+    else:
+      payment = Payment()
+      payment.user = page.object
+      payment.done = done
+      if isinstance(installment, Installment):
+        payment.installment = installment
+        payment.amount = installment.to_pay()
 
-    dialog = AddPaymentDialog(payment)
-    dialog.connect('response', self.on_add_payment, page, installment)
-    dialog.run()
+      dialog = AddPaymentDialog(payment)
+      dialog.connect('response', self.on_add_payment, page, installment)
+      dialog.run()
     
   def add_payments(self, widget, page):
     installments = Installment.to_pay_for(page.object)
-
-    dialog = AddPaymentsDialog(installments)
-    dialog.connect('response', self.on_add_payments, page)
-    dialog.run()
+    
+    if len(installments) == 0:
+      ErrorMessage('No se pueden cargar pagos:', 'No hay cuotas para pagar.').run()
+    else:
+      dialog = AddPaymentsDialog(installments)
+      dialog.connect('response', self.on_add_payments, page)
+      dialog.run()
   
   def on_add_payment(self, dialog, response, page, installment = None):
     destroy_dialog = True

@@ -40,6 +40,9 @@ class Query(object):
     self.query_result = None
     return st
 
+  def __len__(self):
+    return len(self._do_query())
+
   def query(self):
     q = 'SELECT '+self.select_str+' FROM ' + self.from_str
     if self.join_str: q = q + ' ' + self.join_str
