@@ -74,7 +74,7 @@ class Query(object):
             if comparission is None: comparission = '='
             aux = ':'+placeholder
 
-          self.wheres.append(field+" "+comparission+" "+aux)
+          self.wheres.append("`"+field+"` "+comparission+" "+aux)
           self.values[placeholder] = value
       else:
         self.wheres.append(field)

@@ -87,6 +87,17 @@ class UserForm(FormFor):
     gender_field.pack_start(radios_hbox, False)
     hbox.pack_start(gender_field, False)
     
+    group_field = gtk.VBox()
+    self.group_l = gtk.Label(_a(self.object.__class__.__name__.lower(), 'group'))
+    self.group_e = gtk.Entry(255)
+    v = self.object.group
+    v = v if v is not None else ''
+    self.group_e.set_text(str(v))
+    
+    group_field.pack_start(self.group_l, False)
+    group_field.pack_start(self.group_e, False)
+    hbox.pack_start(group_field, False)
+    
     fb_field = gtk.VBox()
     self.facebook_uid_l = gtk.Label(_a(self.object.__class__.__name__.lower(), 'facebook_uid'))
     self.facebook_uid_e = gtk.Entry(300)
@@ -138,7 +149,7 @@ class UserForm(FormFor):
     return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
   
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'alt_phone': self.alt_phone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text(), 'comments': self.get_comments_text()}
+    return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'alt_phone': self.alt_phone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text(), 'comments': self.get_comments_text(), 'group': self.group_e.get_text()}
 
   def enable_memberships(self):
     self.memberships_panel.set_sensitive(True)
@@ -183,6 +194,7 @@ class SearchStudent(gtk.VBox):
     self.form = SearchForm()
     self.form.submit.connect('clicked', self.on_search)
     self.form.entry.connect('activate', self.on_search)
+    self.form.entry_2.connect('activate', self.on_search)
     self.pack_start(self.form, False)
     
     self.results = StudentsList([])
@@ -214,7 +226,7 @@ class SearchStudent(gtk.VBox):
     self.delete.set_sensitive(False)
 
   def on_search(self, widget, student = None, new_record = None):
-    self.emit('search', self.form.get_value())
+    self.emit('search', self.form.get_value(), self.form.get_group())
 
   def on_student_activated(self, widget, student):
     self.emit('student-edit', student.id)
@@ -241,7 +253,7 @@ gobject.type_register(SearchStudent)
 gobject.signal_new('search', \
                    SearchStudent, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (str, ))
+                   gobject.TYPE_NONE, (str, str))
 gobject.signal_new('student-edit', \
                    SearchStudent, \
                    gobject.SIGNAL_RUN_FIRST, \
@@ -261,14 +273,21 @@ class SearchForm(gtk.HBox):
 
     self.label = gtk.Label('Nombre, Apellido o D.N.I: ')
     self.entry = gtk.Entry(100)
+    self.label_2 = gtk.Label('Grupo: ')
+    self.entry_2 = gtk.Entry(255)
     self.submit = gtk.Button('Buscar')
     
     self.pack_start(self.label, False)
     self.pack_start(self.entry, False)
+    self.pack_start(self.label_2, False)
+    self.pack_start(self.entry_2, False)
     self.pack_start(self.submit, False)
 
   def get_value(self):
     return self.entry.get_text()
+  
+  def get_group(self):
+    return self.entry_2.get_text()
 
 gobject.type_register(SearchForm)
 gobject.signal_new('search', \

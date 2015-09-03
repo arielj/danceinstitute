@@ -166,7 +166,7 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, k_or_p = None):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = ''):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
@@ -187,6 +187,10 @@ class Payment(Model):
         where = '('+where+') OR (memberships.for_id IN (%s) AND memberships.for_type = "Klass")' % ','.join(map(lambda k: str(k.id), k_or_p.klasses))
           
       q.set_join('LEFT JOIN installments ON installments.id = payments.installment_id LEFT JOIN memberships ON installments.membership_id = memberships.id').where(where,args)
+    
+    if group:
+      q.set_join('LEFT JOIN users ON users.id = payments.user_id')
+      q = q.where('group',group)
 
     return q
 

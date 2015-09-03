@@ -156,12 +156,12 @@ class Model(object):
 
   def do_save(self):
     if self.id is None:
-      self.id = Conn.execute('INSERT INTO ' + self.table + '(' + ', '.join(self.fields_for_save) + ') VALUES (' + ', '.join(map(lambda f: ':'+f, self.fields_for_save)) + ')', self.to_db()).lastrowid
+      self.id = Conn.execute('INSERT INTO ' + self.table + '(' + ', '.join(map(lambda f: "`"+f+"`",self.fields_for_save)) + ') VALUES (' + ', '.join(map(lambda f: ':'+f, self.fields_for_save)) + ')', self.to_db()).lastrowid
       self.update_id_on_associations()
     else:
       values = self.to_db()
       values['id'] = self.id
-      Conn.execute('UPDATE ' + self.table + ' SET ' + ', '.join(map(lambda k: k+'=:'+k, self.fields_for_save)) + ' WHERE id = :id', values )
+      Conn.execute('UPDATE ' + self.table + ' SET ' + ', '.join(map(lambda k: "`"+k+"`"+'=:'+k, self.fields_for_save)) + ' WHERE id = :id', values )
 
   def before_save(self):
     return True

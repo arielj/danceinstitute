@@ -113,7 +113,8 @@ class I18n():
         'comments': ['Comments','Comentarios'],
         'memberships': ['Memberships','Inscripciones'],
         'facebook_uid': ['Facebook ID', 'ID de Facebook'],
-        'age': ['Age (Years)', 'Edad (Años)']
+        'age': ['Age (Years)', 'Edad (Años)'],
+        'group': ['Group', 'Grupo']
       },
       'teacher': {
         'name': ['Name','Nombre'],

@@ -21,7 +21,7 @@ def titleize(value):
 
 class User(Model):
   table = 'users'
-  fields_for_save = ['name','lastname','dni','cellphone','alt_phone','birthday',           'address','male','email','is_teacher','comments','facebook_uid','age']
+  fields_for_save = ['name', 'lastname', 'dni', 'cellphone', 'alt_phone', 'birthday', 'address', 'male', 'email', 'is_teacher', 'comments', 'facebook_uid', 'age', 'group']
   default_order = 'name ASC, lastname ASC'
 
   def __init__(self, data = {}):
@@ -40,6 +40,7 @@ class User(Model):
     self.facebook_uid = ''
     self._memberships = None
     self.family = None
+    self.group = ''
     
     Model.__init__(self,data)
 
@@ -134,7 +135,7 @@ class User(Model):
     for m in self.memberships: m.student_id = self.id
 
   def to_db(self):
-    return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age, 'family': self.family}
+    return {'name': self.name, 'lastname': self.lastname, 'dni': self._dni, 'cellphone': self.cellphone, 'alt_phone': self.alt_phone, 'birthday': self.birthday, 'address': self.address, 'male': self._male, 'email': self.email, 'is_teacher': self._is_teacher, 'comments': self.comments, 'facebook_uid': self.facebook_uid, 'age': self.age, 'family': self.family, 'group': self.group}
 
   def _is_valid(self):
     self.validate_presence_of('name')

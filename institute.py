@@ -385,8 +385,8 @@ class Controller(gobject.GObject):
     self.save_signal(self.connect('user-changed', page.on_search), page)
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
   
-  def on_student_search(self, page, value):
-    students = Student.search(value)
+  def on_student_search(self, page, value, group = None):
+    students = Student.search(value, group)
     page.update_results(students)
 
   def open_fb(self, page):
@@ -900,7 +900,7 @@ class Controller(gobject.GObject):
     received = page.get_done_or_received()
     user = page.get_selected_user()
     k_or_p = page.get_selected_klass_or_package()
-    payments = Payment.filter(f,t,received,user,k_or_p)
+    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group())
     page.update(payments)
 
   def export_payments_report_html(self, page):

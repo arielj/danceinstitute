@@ -64,6 +64,9 @@ class PaymentsReport(gtk.VBox):
     completion.connect('match-selected', self.on_klass_match_selected)
     self.klass_or_package.child.set_completion(completion)
     self.klass_or_package.set_active(0)
+    
+    self.group_l = gtk.Label('Grupo')
+    self.group_e = gtk.Entry(255)
 
     self.filter = gtk.Button('Buscar')
     
@@ -76,6 +79,8 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.received_rb, False)
     self.form.pack_start(self.user, False)
     self.form.pack_start(self.klass_or_package, False)
+    self.form.pack_start(self.group_l, False)
+    self.form.pack_start(self.group_e, False)
     self.form.pack_start(self.filter, False)
     
     self.pack_start(self.form, False)
@@ -165,6 +170,9 @@ class PaymentsReport(gtk.VBox):
       return self.klass_or_package.get_model().get_value(itr,0)
     else:
       return None
+  
+  def get_group(self):
+    return self.group_e.get_text()
 
   def update(self, payments = None):
     if payments is not None:

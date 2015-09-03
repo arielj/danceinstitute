@@ -193,6 +193,13 @@ class Conn(object):
       else:
         cls.execute('ALTER TABLE users ADD COLUMN family INT;')
       version = cls.set_version('0.8')
+    
+    if version == '0.8':
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE users ADD COLUMN "group" text;')
+      else:
+        cls.execute('ALTER TABLE users ADD COLUMN "group" VARCHAR(255);')
+      version = cls.set_version('0.8')
 
   @classmethod
   def set_version(cls,version):

@@ -9,5 +9,7 @@ class Student(user.User):
     user.User.__init__(self, data)
 
   @classmethod
-  def search(cls, value):
-    return cls.where('is_teacher',0).where("name LIKE :name_like OR lastname LIKE :name_like OR dni = :dni_value",{'name_like': "%"+value+"%", 'dni_value': re.sub(r'\.','',value)})
+  def search(cls, value, group = ''):
+    q = cls.where('is_teacher',0).where("name LIKE :name_like OR lastname LIKE :name_like OR dni = :dni_value",{'name_like': "%"+value+"%", 'dni_value': re.sub(r'\.','',value)})
+    if group: q = q.where('group',group)
+    return q
