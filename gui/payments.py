@@ -60,10 +60,29 @@ class AddPaymentsDialog(gtk.Dialog):
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
     self.installments = installments
     self.add_installments_table()
+    amount_f = gtk.HBox()
     self.amount_e = gtk.Entry(10)
-    self.vbox.pack_start(self.amount_e, False)
+    amount_f.pack_start(gtk.Label('Cantidad'), False)
+    amount_f.pack_start(self.amount_e, True)
+    self.vbox.pack_start(amount_f, False)
+    self.date_e = gtk.Entry(10)
+    self.date_e.set_text(datetime.datetime.today().strftime(Settings.get_settings().date_format))
+    self.date_e.connect('button-press-event', self.show_calendar)
+    date_f = gtk.HBox()
+    date_f.pack_start(gtk.Label('Fecha'), False)
+    date_f.pack_start(self.date_e, True)
+    self.vbox.pack_start(date_f, False)
     self.update_total()
     self.vbox.show_all()
+
+  def show_calendar(self, widget, event):
+    widgets.CalendarPopup(lambda cal, dialog: self.on_date_selected(cal,widget,dialog), widget.get_text()).run()
+
+  def on_date_selected(self, calendar, widget, dialog):
+    year, month, day = dialog.get_date_values()
+    d = datetime.date(int(year),int(month),int(day))
+    widget.set_text(d.strftime(Settings.get_settings().date_format))
+    dialog.destroy()
   
   def add_installments_table(self):
     scroll = gtk.ScrolledWindow()

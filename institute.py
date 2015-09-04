@@ -843,7 +843,7 @@ class Controller(gobject.GObject):
       if installments:
         if len(installments) == 1:
           installment = installments[0]
-          added = installment.add_payment({'amount': dialog.get_amount()})
+          added = installment.add_payment({'amount': dialog.get_amount(), 'date': dialog.date_e.get_text()})
           if added:
             if isinstance(added, Payment): self.emit('payment-changed', added, True)
             page.update()
@@ -859,7 +859,7 @@ class Controller(gobject.GObject):
             destroy_dialog = False
           else:
             for i in installments:
-              res = i.add_payment()
+              res = i.add_payment({'date': dialog.date_e.get_text()})
             self.emit('payment-changed', None, True)
             page.update()
       else:
