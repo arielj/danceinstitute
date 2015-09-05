@@ -788,7 +788,7 @@ class Controller(gobject.GObject):
 
   #payments controls
   def add_payment(self, widget, installment, done, page):
-    if installment.to_pay() == 0:
+    if installment and installment.to_pay() == 0:
       ErrorMessage('No se pueden cargar pagos:', 'La cuota seleccionada ya está pagada.').run()
     else:
       payment = Payment()
