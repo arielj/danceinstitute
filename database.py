@@ -199,7 +199,7 @@ class Conn(object):
         cls.execute('ALTER TABLE users ADD COLUMN "group" text;')
       else:
         cls.execute('ALTER TABLE users ADD COLUMN "group" VARCHAR(255);')
-      version = cls.set_version('0.8')
+      version = cls.set_version('0.9')
 
   @classmethod
   def set_version(cls,version):
