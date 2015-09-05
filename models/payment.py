@@ -190,7 +190,7 @@ class Payment(Model):
     
     if group:
       q.set_join('LEFT JOIN users ON users.id = payments.user_id')
-      q = q.where('group',group)
+      q = q.where('group', '%'+group+'%', comparission = 'LIKE')
 
     return q
 

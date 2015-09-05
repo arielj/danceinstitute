@@ -11,5 +11,5 @@ class Student(user.User):
   @classmethod
   def search(cls, value, group = ''):
     q = cls.where('is_teacher',0).where("name LIKE :name_like OR lastname LIKE :name_like OR dni = :dni_value",{'name_like': "%"+value+"%", 'dni_value': re.sub(r'\.','',value)})
-    if group: q = q.where('group',group)
+    if group: q = q.where('group', '%'+group+'%', comparission = 'LIKE')
     return q
