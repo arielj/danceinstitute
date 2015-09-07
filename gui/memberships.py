@@ -358,3 +358,24 @@ class AddInstallmentsForm(gtk.VBox):
   def get_values(self):
     return {'year': self.year_e.get_text(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'fee': self.fee_e.get_text()}
 
+class DeleteInstallmentDialog(gtk.Dialog):
+  def __init__(self, installment):
+    gtk.Dialog.__init__(self, '', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    
+    self.set_border_width(5)
+    
+    message = 'Vas a borrar la cuota de '+installment.to_label()+"\n¿Estás seguro?"
+    
+    self.vbox.pack_start(gtk.Label(message), False)
+    
+    self.payments_check = gtk.CheckButton('¿Borrar también los pagos de la cuota?')
+    
+    self.vbox.pack_start(self.payments_check, False)
+    
+    self.vbox.show_all()
+  
+  def delete_payments(self):
+    return self.payments_check.get_active();
