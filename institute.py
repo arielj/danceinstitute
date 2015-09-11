@@ -771,12 +771,15 @@ class Controller(gobject.GObject):
       dialog.destroy()
 
   def ask_delete_installment(self, widget, installment, page):
-    dialog = ConfirmDialog('Vas a borrar la cuota de '+installment.to_label()+"\n¿Estás seguro?")
+    dialog = DeleteInstallmentDialog(installment)
     dialog.connect('response', self.delete_installment, installment)
     dialog.run()
 
   def delete_installment(self, dialog, response, installment):
     if response == gtk.RESPONSE_ACCEPT:
+      if dialog.delete_payments():
+        for p in installment.payments:
+          p.delete()
       installment.delete()
       self.emit('installment-deleted', installment)
 
