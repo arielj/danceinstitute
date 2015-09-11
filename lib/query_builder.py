@@ -69,12 +69,15 @@ class Query(object):
           if isinstance(value, list):
             if comparission is None: comparission = 'IN'
             aux = '(:'+placeholder+')'
-            value = ','.join(map(lambda v: str(v),value))
+            value = ','.join(map(lambda v: str(v), value))
           else:
             if comparission is None: comparission = '='
             aux = ':'+placeholder
-
-          self.wheres.append("`"+field+"` "+comparission+" "+aux)
+          
+          table_field = field.split('.')
+          field = '.'.join(map(lambda x: self._fix_field(x), table_field))
+          
+          self.wheres.append(field+" "+comparission+" "+aux)
           self.values[placeholder] = value
       else:
         self.wheres.append(field)
@@ -138,3 +141,7 @@ class Query(object):
 
   def first(self):
     return self.cls.get_one(self.query(), self.values)
+
+  def _fix_field(self, f):
+    f =  f if f.startswith('`') else "`"+f+"` "
+    return f
