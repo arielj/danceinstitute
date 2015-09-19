@@ -51,7 +51,7 @@ class MembershipsPanel(gtk.VBox):
     t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
     t.add_payments_b.connect('clicked', self.on_add_payments_clicked, t)
     t.add_payment_b.connect('clicked', self.on_add_payment_clicked, t)
-    t.delete_installment_b.connect('clicked', self.on_delete_installment_clicked, t)
+    t.delete_installments_b.connect('clicked', self.on_delete_installments_clicked, t)
     t.list.connect('row-activated', self.on_row_activated)
 
   def update(self):
@@ -91,7 +91,7 @@ class MembershipsPanel(gtk.VBox):
 
   def on_add_payment_clicked(self, widget, tab, done = False):
     if isinstance(tab,MembershipTab):
-      self.emit('add-payment', tab.get_selected_installment(), done)
+      self.emit('add-payment', tab.get_selected_installments(), done)
     else:
       self.emit('add-payment', None, done)
 
@@ -101,8 +101,8 @@ class MembershipsPanel(gtk.VBox):
   def on_delete_payments_clicked(self, widget, tab):
     self.emit('delete-payments', tab.get_selected_payments())
 
-  def on_delete_installment_clicked(self, widget, tab):
-    self.emit('delete-installment', tab.get_selected_installment())
+  def on_delete_installments_clicked(self, widget, tab):
+    self.emit('delete-installments', tab.get_selected_installments())
 
   def on_row_activated(self, tree, path, view_column):
     model = tree.get_model()
@@ -131,7 +131,7 @@ gobject.signal_new('delete-payments', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-gobject.signal_new('delete-installment', \
+gobject.signal_new('delete-installments', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
@@ -160,6 +160,9 @@ class MembershipTab(gtk.VBox):
     self.selection = self.list.get_selection()
     self.selection.connect('changed', self.on_selection_changed)
     
+    self.list.set_rubber_banding(True)
+    self.selection.set_mode(gtk.SELECTION_MULTIPLE)
+    
     self.add_column('Año',1)
     self.add_column('Mes',2)
     self.add_column('Monto',3)
@@ -180,12 +183,12 @@ class MembershipTab(gtk.VBox):
     self.add_payments_b = gtk.Button('Agregar Pagos')
     self.add_payment_b = gtk.Button('Agregar Pago')
     self.add_payment_b.set_sensitive(False)
-    self.delete_installment_b = gtk.Button('Eliminar Cuota')
-    self.delete_installment_b.set_sensitive(False)
+    self.delete_installments_b = gtk.Button('Eliminar Cuota(s)')
+    self.delete_installments_b.set_sensitive(False)
     self.delete_b = gtk.Button('Eliminar inscripción')
     
     self.actions.pack_start(self.add_payment_b, False)
-    self.actions.pack_start(self.delete_installment_b, False)
+    self.actions.pack_start(self.delete_installments_b, False)
     self.actions.pack_start(self.add_installments_b, False)
     self.actions.pack_start(self.add_payments_b, False)
     self.actions.pack_start(self.delete_b, False)
@@ -205,16 +208,17 @@ class MembershipTab(gtk.VBox):
       self.store.append((ins,ins.year,ins.month_name(),ins.detailed_total(), ins.status, ins.payments_details()))
 
   def on_selection_changed(self, selection):
-    model, iter = selection.get_selected()
-    self.delete_installment_b.set_sensitive(iter is not None)
-    self.add_payment_b.set_sensitive(iter is not None)
+    model, pathlist = selection.get_selected_rows()
+    self.delete_installments_b.set_sensitive(pathlist != False)
+    self.add_payment_b.set_sensitive(len(pathlist) == 1)
 
-  def get_selected_installment(self):
-    model, iter = self.selection.get_selected()
-    if iter is None:
-      return None
-    else:
-      return model.get_value(iter,0)
+  def get_selected_installments(self):
+    model, pathlist = self.selection.get_selected_rows()
+    items = []
+    for path in pathlist:
+      iter = model.get_iter(path)
+      items.append(model.get_value(iter, 0))
+    return items
     
 
 class MembershipDialog(gtk.Dialog):
@@ -359,7 +363,7 @@ class AddInstallmentsForm(gtk.VBox):
     return {'year': self.year_e.get_text(), 'initial_month': self.get_selected_initial_month(), 'final_month': self.get_selected_final_month(), 'fee': self.fee_e.get_text()}
 
 class DeleteInstallmentDialog(gtk.Dialog):
-  def __init__(self, installment):
+  def __init__(self, installments):
     gtk.Dialog.__init__(self, '', None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
@@ -367,7 +371,9 @@ class DeleteInstallmentDialog(gtk.Dialog):
     
     self.set_border_width(5)
     
-    message = 'Vas a borrar la cuota de '+installment.to_label()+"\n¿Estás seguro?"
+    desc = "\n".join(map(lambda i: i.to_label(), installments))
+    
+    message = "Vas a borrar la(s) cuota(s) de:\n"+desc+"\n\n¿Estás seguro?"
     
     self.vbox.pack_start(gtk.Label(message), False)
     

@@ -339,7 +339,7 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('add-payment', self.add_payment, page)
     page.memberships_panel.connect('add-payments', self.add_payments, page)
     page.memberships_panel.connect('delete-payments', self.ask_delete_payments, page)
-    page.memberships_panel.connect('delete-installment', self.ask_delete_installment, page)
+    page.memberships_panel.connect('delete-installments', self.ask_delete_installments, page)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -770,18 +770,19 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_installment(self, widget, installment, page):
-    dialog = DeleteInstallmentDialog(installment)
-    dialog.connect('response', self.delete_installment, installment)
+  def ask_delete_installments(self, widget, installments, page):
+    dialog = DeleteInstallmentDialog(installments)
+    dialog.connect('response', self.delete_installments, installments)
     dialog.run()
 
-  def delete_installment(self, dialog, response, installment):
+  def delete_installments(self, dialog, response, installments):
     if response == gtk.RESPONSE_ACCEPT:
-      if dialog.delete_payments():
-        for p in installment.payments:
-          p.delete()
-      installment.delete()
-      self.emit('installment-deleted', installment)
+      for i in installments:
+        if dialog.delete_payments():
+          for p in i.payments:
+            p.delete()
+        i.delete()
+      self.emit('installment-deleted', i)
 
     dialog.destroy()
 
@@ -791,6 +792,13 @@ class Controller(gobject.GObject):
 
   #payments controls
   def add_payment(self, widget, installment, done, page):
+    if installment:
+      if len(installment) > 1:
+        ErrorMessage('No se pueden cargar pagos:', 'Tenés que seleccionar una sola cuota.').run()
+        return
+      else:
+        installments = installment[0]
+
     if installment and installment.to_pay() == 0:
       ErrorMessage('No se pueden cargar pagos:', 'La cuota seleccionada ya está pagada.').run()
     else:
@@ -874,7 +882,7 @@ class Controller(gobject.GObject):
 
   def ask_delete_payments(self, widget, payments, page):
     descriptions = "\n".join(map(lambda p: p.description, payments))
-    dialog = ConfirmDialog("Vas a borrar los pagos:\n"+descriptions+"\n¿Estás seguro?")
+    dialog = ConfirmDialog("Vas a borrar los pagos:\n"+descriptions+"\n\n¿Estás seguro?")
     dialog.connect('response', self.delete_payments, payments)
     dialog.run()
 
