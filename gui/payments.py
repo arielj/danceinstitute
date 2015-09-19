@@ -20,7 +20,7 @@ class PaymentsTable(gtk.TreeView):
     self.add_column('Descripción',2)
     self.add_column('Monto',3)
     self.add_column('Recibo N°',4)
-    
+
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
     col.set_expand(True)
@@ -205,6 +205,9 @@ class PaymentsTab(gtk.VBox):
     self.selection = self.list.get_selection()
     self.selection.connect('changed', self.on_selection_changed)
     
+    self.list.set_rubber_banding(True)
+    self.selection.set_mode(gtk.SELECTION_MULTIPLE)
+    
     self.add_column('Fecha',1)
     self.add_column('Descripción',2)
     self.add_column('Monto',3)
@@ -221,7 +224,7 @@ class PaymentsTab(gtk.VBox):
     self.actions = gtk.HBox(True, 5)
     
     self.add_b = gtk.Button('Agregar Pago')
-    self.delete_b = gtk.Button('Eliminar Pago')
+    self.delete_b = gtk.Button('Eliminar Pago(s)')
     self.delete_b.set_sensitive(False)
     
     self.actions.pack_start(self.add_b, False)
@@ -243,13 +246,14 @@ class PaymentsTab(gtk.VBox):
         self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+str(p.amount), str(p.receipt_number or '')))
 
   def on_selection_changed(self, selection):
-    model, iter = selection.get_selected()
-    self.delete_b.set_sensitive(iter is not None)
+    model, pathlist = selection.get_selected_rows()
+    self.delete_b.set_sensitive(pathlist != False)
 
-  def get_selected_payment(self):
-    model, iter = self.selection.get_selected()
-    if iter is None:
-      return None
-    else:
-      return model.get_value(iter,0)
+  def get_selected_payments(self):
+    model, pathlist = self.selection.get_selected_rows()
+    items = []
+    for path in pathlist:
+      iter = model.get_iter(path)
+      items.append(model.get_value(iter, 0))
+    return items
 

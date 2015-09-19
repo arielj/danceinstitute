@@ -338,7 +338,7 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('add-installments', self.add_installments, page)
     page.memberships_panel.connect('add-payment', self.add_payment, page)
     page.memberships_panel.connect('add-payments', self.add_payments, page)
-    page.memberships_panel.connect('delete-payment', self.ask_delete_payment, page)
+    page.memberships_panel.connect('delete-payments', self.ask_delete_payments, page)
     page.memberships_panel.connect('delete-installment', self.ask_delete_installment, page)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
@@ -872,15 +872,17 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_payment(self, widget, payment, page):
-    dialog = ConfirmDialog('Vas a borrar el pago: '+payment.description+"\n¿Estás seguro?")
-    dialog.connect('response', self.delete_payment, payment)
+  def ask_delete_payments(self, widget, payments, page):
+    descriptions = "\n".join(map(lambda p: p.description, payments))
+    dialog = ConfirmDialog("Vas a borrar los pagos:\n"+descriptions+"\n¿Estás seguro?")
+    dialog.connect('response', self.delete_payments, payments)
     dialog.run()
 
-  def delete_payment(self, dialog, response, payment):
+  def delete_payments(self, dialog, response, payments):
     if response == gtk.RESPONSE_ACCEPT:
-      payment.delete()
-      self.emit('payment-deleted', payment)
+      for p in payments:
+        p.delete()
+        self.emit('payment-deleted', p)
 
     dialog.destroy()
 

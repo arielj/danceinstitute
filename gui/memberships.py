@@ -32,12 +32,12 @@ class MembershipsPanel(gtk.VBox):
     if self.user.is_teacher:
       t2 = PaymentsTab(self.user, True)
       self.notebook.append_page(t2,gtk.Label('Pagos al profesor'))
-      t2.delete_b.connect('clicked', self.on_delete_payment_clicked, t2)
+      t2.delete_b.connect('clicked', self.on_delete_payments_clicked, t2)
       t2.add_b.connect('clicked', self.on_add_payment_clicked, None, True)
     
     t = PaymentsTab(self.user)
     self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
-    t.delete_b.connect('clicked', self.on_delete_payment_clicked, t)
+    t.delete_b.connect('clicked', self.on_delete_payments_clicked, t)
     t.add_b.connect('clicked', self.on_add_payment_clicked, None)
 
   def add_tabs(self):
@@ -98,8 +98,8 @@ class MembershipsPanel(gtk.VBox):
   def on_add_payments_clicked(self, widget, tab):
     self.emit('add-payments')
 
-  def on_delete_payment_clicked(self, widget, tab):
-    self.emit('delete-payment', tab.get_selected_payment())
+  def on_delete_payments_clicked(self, widget, tab):
+    self.emit('delete-payments', tab.get_selected_payments())
 
   def on_delete_installment_clicked(self, widget, tab):
     self.emit('delete-installment', tab.get_selected_installment())
@@ -127,7 +127,7 @@ gobject.signal_new('add-payments', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
-gobject.signal_new('delete-payment', \
+gobject.signal_new('delete-payments', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
