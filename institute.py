@@ -797,7 +797,7 @@ class Controller(gobject.GObject):
         ErrorMessage('No se pueden cargar pagos:', 'Tenés que seleccionar una sola cuota.').run()
         return
       else:
-        installments = installment[0]
+        installment = installment[0]
 
     if installment and installment.to_pay() == 0:
       ErrorMessage('No se pueden cargar pagos:', 'La cuota seleccionada ya está pagada.').run()
