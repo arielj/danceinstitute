@@ -131,7 +131,8 @@ class I18n():
         'is_teacher': ['Is teacher','Es profesor'],
         'comments': ['Comments','Comentarios'],
         'facebook_uid': ['Facebook ID', 'ID de Facebook'],
-        'age': ['Age (Years)', 'Edad (Años)']
+        'age': ['Age (Years)', 'Edad (Años)'],
+        'group': ['Group', 'Grupo']
       }
     },
     'errors': {
