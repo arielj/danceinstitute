@@ -4,6 +4,7 @@
 import gtk
 from datetime import datetime
 from settings import Settings
+from translations import _a
 
 class ErrorMessage(gtk.MessageDialog):
   def __init__(self, header, message):
@@ -58,3 +59,21 @@ class CalendarPopup(gtk.Dialog):
     if day < 10:
       day = "0"+str(day)
     return [str(year),str(month),str(day)]
+
+class OrderableColumn(gtk.TreeViewColumn):
+  __gsignals__ = {
+        "clicked" : "override"
+        }
+        
+  def __init__(self, cls, attr, text_idx):
+    label = _a('teacher', attr)
+    gtk.TreeViewColumn.__init__(self, label, gtk.CellRendererText(), text=text_idx)
+    self.set_expand(True)
+    self.attr = attr
+    self.direction = 'DESC'
+
+  def do_clicked(self):
+    self.direction = 'DESC' if self.direction == 'ASC' else 'ASC'
+
+  def order_text(self):
+    return self.attr+' COLLATE SPANISH '+self.direction

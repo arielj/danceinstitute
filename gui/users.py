@@ -6,6 +6,7 @@ import gobject
 from forms import FormFor
 from memberships import *
 from translations import _a
+from widgets import *
 import exporter
 
 class UserForm(FormFor):
@@ -302,6 +303,7 @@ class StudentsList(gtk.VBox):
     
     self.students_t = StudentsTable(students)
     self.students_t.connect('row-activated', self.on_row_activated)
+    self.students_t.connect('column-clicked', self.on_col_clicked)
 
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -328,12 +330,19 @@ class StudentsList(gtk.VBox):
 
   def to_csv(self):
     return self.students_t.to_csv()
+    
+  def on_col_clicked(self, table, column):
+    self.emit('query-reorder', column.order_text())
 
 gobject.type_register(StudentsList)
 gobject.signal_new('student-activated', \
                    StudentsList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('query-reorder', \
+                   StudentsList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (str, ))
 
 class StudentsTable(gtk.TreeView):
   def __init__(self, students):
@@ -344,14 +353,16 @@ class StudentsTable(gtk.TreeView):
     
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
-    self.headings = ['Nombre','Apellido','D.N.I.','Email','Dirección','Celular']
+    self.headings = ['name','lastname','dni','email','address','cellphone']
     
     for idx, h in enumerate(self.headings, 1):
       self.add_column(h,idx)
+
+    self.set_headers_clickable(True)
     
-  def add_column(self, label, text_idx):
-    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
-    col.set_expand(True)
+  def add_column(self, attr, text_idx):
+    col = OrderableColumn('student', attr, text_idx)
+    col.connect('clicked', self.on_col_clicked)
     self.append_column(col)
     return col
   
@@ -361,8 +372,7 @@ class StudentsTable(gtk.TreeView):
     self.set_model(students)
 
   def update(self, students):
-    if students is not None:
-      self.students = students
+    if students is not None: self.students = students
     self.store.clear()
     self.set_model(students)
   
@@ -375,11 +385,20 @@ class StudentsTable(gtk.TreeView):
     return exporter.html_table(self.headings, rows)
 
   def to_csv(self):
-    h = list(self.headings)
+    h = list(map(lambda x: _a('student',x), self.headings))
     h.insert(2,'Nombre y apellido')
     st = ';'.join(h)+"\n"
     st += "\n".join(map(lambda s: ';'.join([s.name, s.lastname, s.to_label(), s.dni, s.email, s.address, s.cellphone]), self.students))
     return st
+    
+  def on_col_clicked(self, column):
+    self.emit('column-clicked', column)
+
+gobject.type_register(StudentsTable)
+gobject.signal_new('column-clicked', \
+                   StudentsTable, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class StudentsListDialog(gtk.Dialog):
   def __init__(self, klass):
@@ -397,7 +416,6 @@ class StudentsListDialog(gtk.Dialog):
     self.vbox.pack_start(exports, False)
     
     self.show_all()
-
 
 class TeacherForm(FormFor):
   def __init__(self, teacher):
@@ -486,6 +504,7 @@ class TeachersList(gtk.VBox):
     
     self.teachers_t = TeachersTable(teachers)
     self.teachers_t.connect('row-activated', self.on_row_activated)
+    self.teachers_t.connect('column-clicked', self.on_col_clicked)
     self.t_selection = self.teachers_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
     
@@ -556,6 +575,9 @@ class TeachersList(gtk.VBox):
   def refresh_list(self, teachers):
     self.teachers_t.update(teachers)
 
+  def on_col_clicked(self, table, column):
+    self.emit('query-reorder', column.order_text())
+
 gobject.type_register(TeachersList)
 gobject.signal_new('teacher-edit', \
                    TeachersList, \
@@ -573,25 +595,29 @@ gobject.signal_new('selection-changed', \
                    TeachersList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('query-reorder', \
+                   TeachersList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (str, ))
 
 class TeachersTable(gtk.TreeView):
   def __init__(self, teachers):
     self.create_store(teachers)
     
-    gtk.TreeView.__init__(self,self.store)
+    gtk.TreeView.__init__(self, self.store)
     
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
-    self.add_column('Nombre',1)
-    self.add_column('Apellido',2)
-    self.add_column('D.N.I.',3)
-    self.add_column('Email',4)
-    self.add_column('Dirección',5)
-    self.add_column('Celular', 6)
+    self.headings = ['name','lastname','dni','email','address','cellphone']
     
-  def add_column(self, label, text_idx):
-    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
-    col.set_expand(True)
+    for idx, h in enumerate(self.headings, 1):
+      self.add_column(h,idx)
+    
+    self.set_headers_clickable(True)
+    
+  def add_column(self, attr, text_idx):
+    col = OrderableColumn('teachers', attr, text_idx)
+    col.connect('clicked', self.on_col_clicked)
     self.append_column(col)
     return col
   
@@ -607,6 +633,15 @@ class TeachersTable(gtk.TreeView):
   def set_model(self, teachers):
     for t in teachers:
       self.store.append((t,t.name,t.lastname,t.dni,t.email,t.address,t.cellphone))
+
+  def on_col_clicked(self, column):
+    self.emit('column-clicked', column)
+
+gobject.type_register(TeachersTable)
+gobject.signal_new('column-clicked', \
+                   TeachersTable, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class SelectTeacherDialog(gtk.Dialog):
   def __init__(self, teachers):

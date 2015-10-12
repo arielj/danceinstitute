@@ -8,6 +8,7 @@ import teacher
 import schedule
 import package
 import membership
+import student
 
 class Klass(Model):
   table = 'klasses'
@@ -175,5 +176,6 @@ class Klass(Model):
     for p in package.Package.with_klass(self):
       ms = ms + membership.Membership.for_klass_or_package(p).do_get()
     
-    return map(lambda m: m.student, ms)
+    uids = map(lambda m: str(m.student_id), ms)
 
+    return student.Student.where('id IN ('+','.join(uids)+')')

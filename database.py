@@ -12,9 +12,18 @@ import sqlite3
 import datetime
 import os
 import re
+import unicodedata
 
 CONFIG_FILE = 'database.config'
 FILENAME = 'data.db'
+
+def strip_accents(s):
+   s = unicode(s)
+   return ''.join(c for c in unicodedata.normalize('NFD', s)
+                  if unicodedata.category(c) != 'Mn')
+
+def spanish_order(str1, str2):
+  return cmp(strip_accents(str1), strip_accents(str2))
 
 class Conn(object):
   _conn = None
@@ -106,6 +115,9 @@ class Conn(object):
           cls._conn = sqlite3.connect(FILENAME)
           cls._conn.row_factory = sqlite3.Row
           cls._conn.text_factory = str
+      
+      if cls._adapter == 'sqlite':
+        cls._conn.create_collation('spanish', spanish_order)
 
       if create_db: cls.create_tables()
 

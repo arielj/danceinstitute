@@ -276,9 +276,14 @@ class Controller(gobject.GObject):
     page.connect('teacher-edit', self.edit_teacher)
     page.connect('teacher-add', self.add_teacher)
     page.connect('teacher-delete', self.ask_delete_teacher)
+    page.connect('query-reorder', self.reorder_teachers)
     self.save_signal(self.connect('user-changed', self.refresh_teachers, page), page)
     self.save_signal(self.connect('teacher-deleted', self.refresh_teachers, None, page), page)
     return page
+
+  def reorder_teachers(self, page, attr):
+    teachers = Teacher.get().order_by(attr)
+    page.refresh_list(teachers)
 
   def ask_delete_teacher(self, page, teacher_id):
     teacher = Teacher.find(teacher_id)
@@ -382,9 +387,16 @@ class Controller(gobject.GObject):
     page.connect('student-edit', self.edit_student)
     page.connect('student-add', self.add_student)
     page.connect('student-delete', self.ask_delete_student)
+    page.results.connect('query-reorder', self.reorder_students, page)
     self.save_signal(self.connect('user-changed', page.on_search), page)
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
-  
+
+  def reorder_students(self, table, attr, page):
+    value = page.form.get_value()
+    group = page.form.get_group()
+    students = Student.search(value, group).order_by(attr)
+    page.update_results(students)
+
   def on_student_search(self, page, value, group = None):
     students = Student.search(value, group)
     page.update_results(students)
@@ -552,10 +564,15 @@ class Controller(gobject.GObject):
   def on_list_students(self, page):
     dialog = StudentsListDialog(page.object)
     dialog.list.connect_object('student-activated', self.on_student_activated, dialog)
+    dialog.list.connect('query-reorder', self.reorder_klass_students, page.object)
     dialog.export_csv.connect_object('clicked', self.export_klass_students_csv, dialog, page.object)
     dialog.export_html.connect_object('clicked', self.export_klass_students_html, dialog, page.object)
     dialog.connect('response', self.students_list_dialog_response)
     dialog.run()
+
+  def reorder_klass_students(self, table, attr, klass):
+    students = klass.get_students().order_by(attr)
+    table.update_table(students)
 
   def students_list_dialog_response(self, dialog, response):
     dialog.destroy()
