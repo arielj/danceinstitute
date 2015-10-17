@@ -9,6 +9,7 @@ import package
 import klass
 import student
 import teacher
+from lib.money import Money
 from lib.query_builder import Query
 from settings import Settings
 
@@ -18,7 +19,7 @@ class Payment(Model):
   default_order = 'date ASC'
 
   def __init__(self, attrs = {}):
-    self._amount = 0
+    self._amount = Money(0)
     self.installment_id = None
     self._installment = None
     self.user_id = None
@@ -29,17 +30,23 @@ class Payment(Model):
     self._done = False
     self._receipt_number = None
     Model.__init__(self, attrs)
+    
+  @classmethod
+  def from_db(cls, r):
+    m = cls(r)
+    m._amount._cents = r['amount']
+    return m
 
   @property
   def amount(self):
-    return self._amount/100
+    return self._amount
 
   @amount.setter
   def amount(self,value):
     try:
-      v = int(Decimal(value)*100)
+      v = Money(value)
     except:
-      v = 0
+      v = Money(0)
     self._amount = v
 
   @property

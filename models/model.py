@@ -1,9 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from decimal import Decimal
 from database import Conn
 from translations import _a, _e
-from decimal import Decimal
 import re
 from lib.query_builder import Query
 
@@ -74,7 +74,7 @@ class Model(object):
         if only_integer:
           v = int(v)
         else:
-          v = Decimal(v)
+          v = Decimal(str(v).replace(',','.'))
         if great_than is not None and v <= great_than:
           err = 'field_not_greate_than'
           extra = {'than': great_than}
@@ -205,12 +205,16 @@ class Model(object):
 
   @classmethod
   def get_many(cls,query, params = ()):
-    return map(lambda r: cls(r), Conn.execute(query,params).fetchall())
+    return map(lambda r: cls.from_db(r), Conn.execute(query,params).fetchall())
 
   @classmethod
   def get_one(cls,query, params = ()):
     r = Conn.execute(query,params).fetchone()
-    return cls(r) if r else False
+    return cls.from_db(r) if r else False
+  
+  @classmethod
+  def from_db(cls,r):
+    return cls(r)
 
   @classmethod
   def find(cls, id):

@@ -13,6 +13,7 @@ import datetime
 import os
 import re
 import unicodedata
+from lib.money import Money
 
 CONFIG_FILE = 'database.config'
 FILENAME = 'data.db'
@@ -24,6 +25,10 @@ def strip_accents(s):
 
 def spanish_order(str1, str2):
   return cmp(strip_accents(str1), strip_accents(str2))
+
+def money_to_db(money):
+  return money._cents
+sqlite3.register_adapter(Money, money_to_db)
 
 class Conn(object):
   _conn = None
@@ -223,14 +228,14 @@ class Conn(object):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Tierra')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Aire')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
-    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 4, 300, 1, 'paid')''')
-    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 5, 300, 1, 'paid')''')
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 200, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
-    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.date(2015,3,1),))
-    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type, done) VALUES (?, 100, 'lalala', 1, 'Teacher',1)''',(datetime.datetime.today().date(),))
-    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 100, 2, 3, 'Student')''',(datetime.datetime.today().date(),))
-    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 100, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
+    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 4, 30000, 1, 'paid')''')
+    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 5, 30000, 1, 'paid')''')
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 20000, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
+    cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,1),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type, done) VALUES (?, 10000, 'lalala', 1, 'Teacher',1)''',(datetime.datetime.today().date(),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.datetime.today().date(),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (1, 2000, 2130, 3, 0)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (1, 2000, 2130, 3, 3)''')
@@ -255,7 +260,7 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('language','es')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('tabs_position','top')''')
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
-    cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 50, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
+    cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 10000, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
     cls.commit()
 
   @classmethod

@@ -38,7 +38,7 @@ class PaymentsTable(gtk.TreeView):
   
   def set_model(self, payments):
     for p in payments:
-      self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description,'$'+str(p.amount),str(p.receipt_number or '')))
+      self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description,'$'+p.amount,str(p.receipt_number or '')))
 
 
 class AddPaymentDialog(gtk.Dialog):
@@ -243,7 +243,7 @@ class PaymentsTab(gtk.VBox):
     
     if self.user.is_not_new_record():
       for p in self.user.get_payments(include_installments = False, done = self.done):
-        self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+str(p.amount), str(p.receipt_number or '')))
+        self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+p.amount, str(p.receipt_number or '')))
 
   def on_selection_changed(self, selection):
     model, pathlist = selection.get_selected_rows()

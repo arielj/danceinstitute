@@ -3,6 +3,7 @@
 
 import gtk
 import gobject
+from lib.money import Money
 
 class Home(gtk.HBox):
   def __init__(self, klasses = [], notes = '', installments = [], payments = [], movements = []):
@@ -219,8 +220,8 @@ class PaymentsList(gtk.VBox):
     return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
 
   def get_totals(self, payments):
-    total_in = 0
-    total_out = 0
+    total_in = Money(0)
+    total_out = Money(0)
     for p in payments:
       if p.done:
         total_out += p.amount
@@ -298,8 +299,8 @@ class MovementsList(gtk.VBox):
     return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
 
   def get_totals(self, movements):
-    total_in = 0
-    total_out = 0
+    total_in = Money(0)
+    total_out = Money(0)
     for m in movements:
       if m.is_outgoing():
         total_out += m.amount
@@ -346,10 +347,10 @@ class MovementsTable(gtk.TreeView):
   def set_model(self, movements):
     for m in movements:
       if m.is_incoming():
-        amount_in = m.amount
+        amount_in = str(m.amount)
         amount_out = ''
       else:
-        amount_out = m.amount
+        amount_out = str(m.amount)
         amount_in = ''
-      self.store.append((m, str(amount_in), str(amount_out), m.description))
+      self.store.append((m, amount_in, amount_out, m.description))
 

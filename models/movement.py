@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-from decimal import Decimal
+from lib.money import Money
 from model import Model
 from lib.query_builder import Query
 import datetime
@@ -11,22 +11,28 @@ class Movement(Model):
   fields_for_save = ['amount', 'date', 'description', 'done']
 
   def __init__(self, attrs = {}):
-    self._amount = 0
+    self._amount = Money(0)
     self._date = datetime.datetime.now().date()
     self.description = ''
     self.done = False
     Model.__init__(self, attrs)
 
+  @classmethod
+  def from_db(cls, r):
+    m = cls(r)
+    m._amount._cents = r['amount']
+    return m
+
   @property
   def amount(self):
-    return self._amount/100
+    return self._amount
 
   @amount.setter
   def amount(self,value):
     try:
-      v = int(Decimal(value)*100)
+      v = Money(value)
     except:
-      v = 0
+      v = Money(0)
     self._amount = v
 
   @property
