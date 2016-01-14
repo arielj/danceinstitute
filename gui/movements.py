@@ -27,7 +27,7 @@ class AddMovementForm(FormFor):
     self.add_field('date', attrs=10)
     self.date_e.set_text(movement.date.strftime(Settings.get_settings().date_format))
     self.date_e.connect('button-press-event', self.show_calendar)
-    self.add_field('amount', attrs=6)
+    self.add_field('amount', attrs=15)
     self.add_field('description', attrs=100)
     self.direction = gtk.HBox(True, 2)
     self.incoming_r = gtk.RadioButton(None, 'Entrada')

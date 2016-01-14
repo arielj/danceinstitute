@@ -27,11 +27,9 @@ class Money(object):
     self._cents = convert_to_cents(amount)
 
   def __str__(self):
-    s = str(self._cents)
-    v = s[:-2]+','+s[-2:]
-    v = v[0:-3] if v.endswith(',00') else v
-    if v.startswith(','): v = '0' + v
-    return v
+    s = "%.2f" % (self._cents/100.0)
+    s = s.replace('.',',')
+    return s[0:-3] if s.endswith(',00') else s
 
   def __add__(self, other):
     return Money(Decimal(self._cents + convert_to_cents(other))/100)
@@ -44,7 +42,10 @@ class Money(object):
     return self
 
   def __radd__(self, other):
-    return other+str(self)
+    if int == type(other):
+      return Money(Decimal(self._cents + convert_to_cents(other))/100)
+    else:
+      return other+str(self)
 
   def __int__(self):
     return self._cents/100

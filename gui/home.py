@@ -217,7 +217,7 @@ class PaymentsList(gtk.VBox):
 
   def get_total_text(self, payments):
     total_in, total_out = self.get_totals(payments)
-    return 'Entradas: $'+str(total_in)+' ; Salidas: $'+str(total_out)
+    return 'Entradas: $%s ; Salidas: $%s' % (str(total_in), str(total_out))
 
   def get_totals(self, payments):
     total_in = Money(0)

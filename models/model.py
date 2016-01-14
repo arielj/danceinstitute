@@ -71,10 +71,8 @@ class Model(object):
       err = False
       extra = False
       try:
-        if only_integer:
-          v = int(v)
-        else:
-          v = Decimal(str(v).replace(',','.'))
+        v = int(v) if only_integer else Decimal(str(v).replace(',','.'))
+        
         if great_than is not None and v <= great_than:
           err = 'field_not_greate_than'
           extra = {'than': great_than}

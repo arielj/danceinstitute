@@ -152,7 +152,7 @@ class AddPaymentForm(FormFor):
     self.add_field('date', attrs=10)
     self.date_e.set_text(payment.date.strftime(Settings.get_settings().date_format))
     self.date_e.connect('button-press-event', self.show_calendar)
-    self.add_field('amount', attrs=6)
+    self.add_field('amount', attrs=15)
     self.add_field('receipt_number', attrs=15)
     self.add_field('description', attrs=100, getter='_description')
 
