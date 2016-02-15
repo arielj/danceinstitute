@@ -94,7 +94,10 @@ class Klass(Model):
     for kls in cls.all():
       for sch in kls.schedules:
         for interval in sch.get_intervals():
-          klasses[sch.room.name][interval][sch.day_abbr()] = kls
+          try:
+            klasses[sch.room.name][interval][sch.day_abbr()] = kls
+          except KeyError as e:
+            print e, kls.name
     
     return klasses
 

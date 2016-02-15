@@ -37,6 +37,7 @@ class Conn(object):
 
   CREATE = {'sqlite': {'settings': '''CREATE TABLE settings (key text, value text)''',
             'installments': '''CREATE TABLE installments (id integer primary key, year integer, month integer, membership_id integer, amount integer, status text default '')''',
+            'liabilities': '''CREATE TABLE liabilities (id integer primary key, date date, user_id integer, amount integer, status text default '', description text default '')''',
             'payments': '''CREATE TABLE payments (id integer primary key, date date, amount integer, installment_id integer, user_id integer, user_type text default '',description text default '', done integer default 0)''',
             'rooms': '''CREATE TABLE rooms (id integer primary key, name text)''',
             'memberships': '''CREATE TABLE memberships (id integer primary key, student_id integer, for_id integer, for_type text, info text)''',
@@ -217,6 +218,15 @@ class Conn(object):
       else:
         cls.execute('ALTER TABLE users ADD COLUMN "group" VARCHAR(255);')
       version = cls.set_version('0.9')
+    
+    if version == '0.9':
+      cls.create('liabilities')
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE payments ADD COLUMN liability_id integer;')
+      else:
+        cls.execute('ALTER TABLE payments ADD COLUMN liability_id INT;')
+      
+      version = cls.set_version('1.0')
 
   @classmethod
   def set_version(cls,version):
@@ -228,8 +238,8 @@ class Conn(object):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Tierra')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Aire')''')
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
-    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 4, 30000, 1, 'paid')''')
-    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 5, 30000, 1, 'paid')''')
+    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 4, 300, 1, 'paid')''')
+    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 5, 300, 1, 'paid')''')
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 20000, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,1),))

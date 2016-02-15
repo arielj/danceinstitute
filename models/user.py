@@ -5,6 +5,7 @@ import re
 from model import Model
 from database import Conn
 import payment
+import liability
 import membership
 import datetime
 
@@ -147,6 +148,12 @@ class User(Model):
 
   def get_payments(self, include_installments = True, done = None):
     return payment.Payment.for_user(self.id, include_installments, done)
+
+  def get_liabilities(self):
+    return liability.Liability.to_pay_for(self.id)
+  
+  def new_liability(self):
+    return liability.Liability({'user_id': self.id})
 
   def family_members(self):
     if self.family is not None:

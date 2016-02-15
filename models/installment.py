@@ -150,7 +150,7 @@ class Installment(Model):
       p.user = self.get_student()
       if p.save():
         self.payments.append(p)
-        if self.to_pay() == 0:
+        if int(self.to_pay()) == 0:
           if self.get_recharge() > 0 and self.ignore_recharge is False:
             self._status = 'paid_with_interests'
           else:

@@ -186,7 +186,6 @@ class PaymentsTab(gtk.VBox):
   def __init__(self, user, done = False):
     gtk.VBox.__init__(self)
     
-    self.membership = None
     self.user = user
     self.done = done
     

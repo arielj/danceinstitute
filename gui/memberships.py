@@ -5,6 +5,7 @@ import gtk
 import gobject
 from forms import FormFor
 from payments import *
+from liabilities import *
 from translations import _t, _m
 import datetime
 
@@ -39,6 +40,12 @@ class MembershipsPanel(gtk.VBox):
     self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
     t.delete_b.connect('clicked', self.on_delete_payments_clicked, t)
     t.add_b.connect('clicked', self.on_add_payment_clicked, None)
+    
+    t3 = LiabilitiesTab(self.user)
+    self.notebook.append_page(t3,gtk.Label('Deudas'))
+    t3.delete_b.connect('clicked', self.on_delete_liability_clicked, t3)
+    t3.add_b.connect('clicked', self.on_add_liability_clicked, None)
+    t3.add_payment_b.connect('clicked', self.on_add_payment_clicked, t3)
 
   def add_tabs(self):
     for m in self.user.memberships:
@@ -59,7 +66,7 @@ class MembershipsPanel(gtk.VBox):
     for tab in children:
       tab.refresh()
     for m in self.user.memberships:
-      if m.id not in [t.membership.id for t in children if t.membership is not None]:
+      if m.id not in [t.membership.id for t in children if hasattr(t, 'membership')]:
         self.add_tab(m)
     self.notebook.show_all()
 
@@ -74,7 +81,7 @@ class MembershipsPanel(gtk.VBox):
 
   def on_installment_deleted(self, i_id):
     for tab in self.notebook.get_children():
-      if not isinstance(tab,PaymentsTab): tab.membership.reload_installments()
+      if hasattr(tab, 'membership'): tab.membership.reload_installments()
       tab.refresh()
     self.update()
 
@@ -92,6 +99,8 @@ class MembershipsPanel(gtk.VBox):
   def on_add_payment_clicked(self, widget, tab, done = False):
     if isinstance(tab,MembershipTab):
       self.emit('add-payment', tab.get_selected_installments(), done)
+    elif isinstance(tab, LiabilitiesTab):
+      self.emit('add-payment', tab.get_selected_liabilities(), done)
     else:
       self.emit('add-payment', None, done)
 
@@ -100,6 +109,12 @@ class MembershipsPanel(gtk.VBox):
 
   def on_delete_payments_clicked(self, widget, tab):
     self.emit('delete-payments', tab.get_selected_payments())
+  
+  def on_add_liability_clicked(self, widget, tab):
+    self.emit('add-liability')
+  
+  def on_delete_liability_clicked(self, widget, tab):
+    self.emit('delete-liability', tab.get_selected_liability())
 
   def on_delete_installments_clicked(self, widget, tab):
     self.emit('delete-installments', tab.get_selected_installments())
@@ -128,6 +143,14 @@ gobject.signal_new('add-payments', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 gobject.signal_new('delete-payments', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-liability', \
+                   MembershipsPanel, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('delete-liability', \
                    MembershipsPanel, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))

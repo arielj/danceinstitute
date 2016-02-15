@@ -46,6 +46,16 @@ class Money(object):
       return Money(Decimal(self._cents + convert_to_cents(other))/100)
     else:
       return other+str(self)
+      
+  def __isub__(self, other):
+    self._cents = (self-other)._cents
+    return self
+
+  def __rsub__(self, other):
+    if int == type(other):
+      return Money(Decimal(convert_to_cents(other) - self._cents)/100)
+    else:
+      return other-str(self)
 
   def __int__(self):
     return self._cents/100

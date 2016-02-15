@@ -343,8 +343,10 @@ class Controller(gobject.GObject):
     page.memberships_panel.connect('add-installments', self.add_installments, page)
     page.memberships_panel.connect('add-payment', self.add_payment, page)
     page.memberships_panel.connect('add-payments', self.add_payments, page)
+    page.memberships_panel.connect('add-liability', self.add_liability, page)
     page.memberships_panel.connect('delete-payments', self.ask_delete_payments, page)
     page.memberships_panel.connect('delete-installments', self.ask_delete_installments, page)
+    page.memberships_panel.connect('delete-liability', self.ask_delete_liability, page)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -808,26 +810,29 @@ class Controller(gobject.GObject):
 
 
   #payments controls
-  def add_payment(self, widget, installment, done, page):
-    if installment:
-      if len(installment) > 1:
-        ErrorMessage('No se pueden cargar pagos:', 'Tenés que seleccionar una sola cuota.').run()
+  def add_payment(self, widget, related, done, page):
+    if related:
+      if len(related) > 1:
+        ErrorMessage('No se pueden cargar pagos:', 'Tenés que seleccionar una sola cuota/deuda.').run()
         return
       else:
-        installment = installment[0]
+        related = related[0]
 
-    if installment and installment.to_pay() == 0:
-      ErrorMessage('No se pueden cargar pagos:', 'La cuota seleccionada ya está pagada.').run()
+    if related and related.to_pay() == 0:
+      ErrorMessage('No se pueden cargar pagos:', 'La cuota/deuda seleccionada ya está pagada.').run()
     else:
       payment = Payment()
       payment.user = page.object
       payment.done = done
-      if isinstance(installment, Installment):
-        payment.installment = installment
-        payment.amount = installment.to_pay()
+      if isinstance(related, Installment):
+        payment.installment = related
+        payment.amount = related.to_pay()
+      elif isinstance(related, Liability):
+        payment.liability = related
+        payment.amount = related.to_pay()
 
       dialog = AddPaymentDialog(payment)
-      dialog.connect('response', self.on_add_payment, page, installment)
+      dialog.connect('response', self.on_add_payment, page, related)
       dialog.run()
     
   def add_payments(self, widget, page):
@@ -840,12 +845,14 @@ class Controller(gobject.GObject):
       dialog.connect('response', self.on_add_payments, page)
       dialog.run()
   
-  def on_add_payment(self, dialog, response, page, installment = None):
+  def on_add_payment(self, dialog, response, page, related = None):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
       data = dialog.form.get_values()
-      if isinstance(installment, Installment):
-        added = installment.add_payment(data)
+      if isinstance(related, Installment):
+        added = related.add_payment(data)
+      elif isinstance(related, Liability):
+        added = related.add_payment(data)
       else:
         payment = dialog.payment
         payment.set_attrs(data)
@@ -913,7 +920,46 @@ class Controller(gobject.GObject):
 
 
 
-  #resports
+
+  #liabilities controls
+  def add_liability(self, widget, page):
+    dialog = AddLiabilityDialog(page.object.new_liability())
+    dialog.connect('response', self.on_add_liability, page)
+    dialog.run()
+  
+  def on_add_liability(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      liability = dialog.form.object
+      liability.set_attrs(dialog.form.get_values())
+      liability.user_id = page.object.id
+      if liability.save() is True:
+        page.update()
+      else:
+        ErrorMessage('No se pudo agregar la deuda:', created).run()
+        destroy_dialog = False
+
+    if destroy_dialog:
+      dialog.destroy()
+
+  def ask_delete_liability(self, widget, liability, page):
+    dialog = DeleteInstallmentDialog(liability)
+    dialog.connect('response', self.delete_liability, liability)
+    dialog.run()
+
+  def delete_liability(self, dialog, response, liability):
+    if response == gtk.RESPONSE_ACCEPT:
+      if dialog.delete_payments():
+        for p in liability.payments: p.delete()
+      liability.delete()
+      self.emit('liability-deleted', liability)
+
+    dialog.destroy()
+    
+    
+
+
+  #reports
   def payments_report(self, menu_item):
     today = datetime.datetime.today().date()
     page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all(), Package.all())

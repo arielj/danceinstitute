@@ -5,6 +5,7 @@ from decimal import Decimal
 from model import Model
 import datetime
 import installment
+import liability
 import package
 import klass
 import student
@@ -15,13 +16,15 @@ from settings import Settings
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount','installment_id','user_id','user_type','date','description', 'done','receipt_number']
+  fields_for_save = ['amount', 'installment_id', 'user_id', 'user_type', 'date', 'description', 'done', 'receipt_number', 'liability_id']
   default_order = 'date ASC'
 
   def __init__(self, attrs = {}):
     self._amount = Money(0)
     self.installment_id = None
     self._installment = None
+    self.liability_id = None
+    self._liability = None
     self.user_id = None
     self.user_type = ''
     self._user = None
@@ -58,6 +61,10 @@ class Payment(Model):
     ins = self.installment
     if ins:
       descs.append(ins.membership.klass_or_package.name + ' ' + ins.month_name() + ' ' + str(ins.year))
+    
+    li = self.liability
+    if li:
+      descs.append(li.description)
     return '. '.join(descs)
 
   @description.setter
@@ -97,6 +104,20 @@ class Payment(Model):
     else:
       self.installment_id = ins.id
     self._installment = ins
+    
+  @property
+  def liability(self):
+    if self.liability_id and self._liability is None:
+      self._liability = liability.Liability.find(self.liability_id)
+    return self._liability
+
+  @liability.setter
+  def liability(self, li):
+    if li is None:
+      self.liability_id = None
+    else:
+      self.liability_id = li.id
+    self._liability = li
 
   @property
   def date(self):
@@ -151,7 +172,7 @@ class Payment(Model):
     self.validate_presence_of('date')
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id}
 
   def to_s(self):
     s = self.date.strftime(Settings.get_settings().date_format) + ": $" + str(self.amount)
@@ -162,6 +183,10 @@ class Payment(Model):
   @classmethod
   def for_installment(cls,ins_id):
     return cls.where('installment_id',ins_id)
+
+  @classmethod
+  def for_liability(cls,li_id):
+    return cls.where('liability_id',li_id)
 
   @classmethod
   def for_user(cls,u_id,include_installments = True, done = None):

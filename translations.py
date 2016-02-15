@@ -37,7 +37,8 @@ class I18n():
       'schedule': ['Schedule','Horario'],
       'student': ['Student','Alumno'],
       'teacher': ['Teacher','Profesor'],
-      'movement': ['Movement','Movimiento']
+      'movement': ['Movement','Movimiento'],
+      'liability': ['Liability','Deuda']
     },
     'attrs': {
       'installment': {
@@ -63,6 +64,11 @@ class I18n():
         'teachers': ['Teachers', 'Profesores'],
         'students': ['Students', 'Alumnos'],
         'schedules': ['Schedules', 'Horarios']
+      },
+      'liability': {
+        'date': ['Date','Fecha'],
+        'amount': ['Amount','Monto'],
+        'description': ['Description','Descripción']
       },
       'membership': {
         'student_id': ['Student','Alumno'],

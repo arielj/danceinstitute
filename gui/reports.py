@@ -623,7 +623,8 @@ class InstallmentsList(gtk.TreeView):
     self.set_model(installments)
   
   def set_model(self, installments):
-    for i in installments: self.store.append(self.to_row(i))
+    for i in installments: 
+      if i.membership: self.store.append(self.to_row(i))
 
   def default_to_row(self, i):
     return (i,i.membership.student.to_label(),str(i.year),i.month_name(), i.membership.klass_or_package.name)
