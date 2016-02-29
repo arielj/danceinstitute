@@ -208,4 +208,4 @@ class User(Model):
       return False
 
   def is_inscription_payed(self):
-    return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where('description', 'Inscripción')) > 0
+    return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where('description', 'Insc%', comparission = 'like')) > 0
