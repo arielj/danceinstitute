@@ -40,7 +40,7 @@ class Liability(Model):
     self._user = value
 
   def to_label(self):
-    return self.month_name() + " " + str(self.year)
+    return self.description + ' (' + self.date.strftime('%d/%m/%Y') + ')'
 
   @property
   def amount(self):

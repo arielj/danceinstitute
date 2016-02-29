@@ -338,20 +338,21 @@ class Controller(gobject.GObject):
     page = UserForm(user)
     page.submit.connect_object('clicked', self.submit_user, page)
     page.open_fb.connect_object('clicked', self.open_fb, page)
-    page.memberships_panel.enroll_b.connect_object('clicked', self.new_membership, page)
-    page.memberships_panel.connect('ask-delete-membership', self.ask_delete_membership)
-    page.memberships_panel.connect('add-installments', self.add_installments, page)
-    page.memberships_panel.connect('add-payment', self.add_payment, page)
-    page.memberships_panel.connect('add-payments', self.add_payments, page)
-    page.memberships_panel.connect('add-liability', self.add_liability, page)
-    page.memberships_panel.connect('delete-payments', self.ask_delete_payments, page)
-    page.memberships_panel.connect('delete-installments', self.ask_delete_installments, page)
-    page.memberships_panel.connect('delete-liability', self.ask_delete_liability, page)
+    page.connect('add-membership', self.new_membership)
+    page.connect('ask-delete-membership', self.ask_delete_membership)
+    page.connect('add-installments', self.add_installments)
+    page.connect('add-payment', self.add_payment)
+    page.connect('add-payments', self.add_payments)
+    page.connect('add-liability', self.add_liability)
+    page.connect('delete-payments', self.ask_delete_payments)
+    page.connect('delete-installments', self.ask_delete_installments)
+    page.connect('delete-liabilities', self.ask_delete_liabilities)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
     self.save_signal(self.connect('payment-deleted', page.on_payment_deleted), page)
     self.save_signal(self.connect('installment-deleted', page.on_installment_deleted), page)
+    self.save_signal(self.connect('liability-deleted', page.on_liability_deleted), page)
     self.window.add_page(page)
     return page
 
@@ -748,7 +749,7 @@ class Controller(gobject.GObject):
         membership.student_id = page.object.id
         if membership.save():
           page.object.reload_memberships()
-          page.update()
+          page.membership_added(membership)
         else:
           ErrorMessage("No se puede guardar la inscripción:", membership.full_errors()).run()
           destroy_dialog = False
@@ -756,7 +757,7 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_membership(self, widget, membership):
+  def ask_delete_membership(self, page, membership):
     dialog = ConfirmDialog('Vas a borrar la inscripción a '+membership.klass_or_package.name+"\n¿Estás seguro?")
     dialog.connect('response', self.delete_membership, membership)
     dialog.run()
@@ -769,7 +770,7 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
-  def add_installments(self, widget, membership, page):
+  def add_installments(self, page, membership):
     dialog = AddInstallmentsDialog(membership)
     dialog.connect('response', self.on_add_installments, page)
     dialog.run()
@@ -789,7 +790,7 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_installments(self, widget, installments, page):
+  def ask_delete_installments(self, page, installments):
     dialog = DeleteInstallmentDialog(installments)
     dialog.connect('response', self.delete_installments, installments)
     dialog.run()
@@ -810,7 +811,7 @@ class Controller(gobject.GObject):
 
 
   #payments controls
-  def add_payment(self, widget, related, done, page):
+  def add_payment(self, page, related, done):
     if related:
       if len(related) > 1:
         ErrorMessage('No se pueden cargar pagos:', 'Tenés que seleccionar una sola cuota/deuda.').run()
@@ -835,7 +836,7 @@ class Controller(gobject.GObject):
       dialog.connect('response', self.on_add_payment, page, related)
       dialog.run()
     
-  def add_payments(self, widget, page):
+  def add_payments(self, page):
     installments = Installment.to_pay_for(page.object)
     
     if len(installments) == 0:
@@ -904,7 +905,7 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_payments(self, widget, payments, page):
+  def ask_delete_payments(self, page, payments):
     descriptions = "\n".join(map(lambda p: p.description, payments))
     dialog = ConfirmDialog("Vas a borrar los pagos:\n"+descriptions+"\n\n¿Estás seguro?")
     dialog.connect('response', self.delete_payments, payments)
@@ -922,7 +923,7 @@ class Controller(gobject.GObject):
 
 
   #liabilities controls
-  def add_liability(self, widget, page):
+  def add_liability(self, page):
     dialog = AddLiabilityDialog(page.object.new_liability())
     dialog.connect('response', self.on_add_liability, page)
     dialog.run()
@@ -942,17 +943,18 @@ class Controller(gobject.GObject):
     if destroy_dialog:
       dialog.destroy()
 
-  def ask_delete_liability(self, widget, liability, page):
-    dialog = DeleteInstallmentDialog(liability)
-    dialog.connect('response', self.delete_liability, liability)
+  def ask_delete_liabilities(self, page, liabilities):
+    dialog = DeleteLiabilitiesDialog(liabilities)
+    dialog.connect('response', self.delete_liability, liabilities)
     dialog.run()
 
-  def delete_liability(self, dialog, response, liability):
+  def delete_liability(self, dialog, response, liabilities):
     if response == gtk.RESPONSE_ACCEPT:
-      if dialog.delete_payments():
-        for p in liability.payments: p.delete()
-      liability.delete()
-      self.emit('liability-deleted', liability)
+      for l in liabilities:
+        if dialog.delete_payments():
+          for p in l.payments: p.delete()
+        l.delete()
+        self.emit('liability-deleted', l)
 
     dialog.destroy()
     
@@ -1147,8 +1149,13 @@ gobject.signal_new('movement-deleted', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-                   #payment id
+                   #movement id
 
+gobject.signal_new('liability-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+                   #liability id
 
 gobject.signal_new('settings-changed', \
                    Controller, \

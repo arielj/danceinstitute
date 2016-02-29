@@ -206,3 +206,6 @@ class User(Model):
       return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
     else:
       return False
+
+  def is_inscription_payed(self):
+    return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where('description', 'Inscripción')) > 0

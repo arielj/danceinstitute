@@ -5,13 +5,14 @@ import gtk
 import gobject
 from forms import FormFor
 from memberships import *
-from translations import _a
+from translations import _a, _t, _m
 from widgets import *
 import exporter
 
 class UserForm(FormFor):
   def __init__(self, user):
     FormFor.__init__(self, user)
+    self.user = user
 
     self.create_form_fields()
     
@@ -20,13 +21,18 @@ class UserForm(FormFor):
     
     self.add_family_block()
     
-    self.memberships_panel = MembershipsPanel(self.object)
-    self.memberships_panel.set_sensitive(not self.object.is_new_record())
+    self.tabs = gtk.Notebook()
+    self.tabs.set_scrollable(True)
+    self.tabs.set_sensitive(not self.object.is_new_record())
+    
+    self.add_tabs()
 
     self.pack_start(self.fields, True)
-    self.pack_start(self.memberships_panel, True)
+    self.pack_start(self.tabs, True)
     
     self.show_all()
+    
+    self.set_inscription_message()
 
   def get_tab_label(self):
     if self.object.id:
@@ -40,7 +46,7 @@ class UserForm(FormFor):
       if self.object.is_teacher:
         return 'Agregar Profesor/a'
       else:
-        return 'Agregar Alumno/a'
+        return 'Agregar Alumno/a' 
   
   def create_form_fields(self):
     self.fields = gtk.VBox(False, 5)
@@ -145,6 +151,33 @@ class UserForm(FormFor):
     self.fields.pack_start(self.family_vbox, True)
     self.family_vbox.set_sensitive(not self.object.is_new_record())
 
+  def add_tabs(self):
+    if self.user.is_teacher:
+      t2 = PaymentsTab(self.user, True)
+      self.tabs.append_page(t2,gtk.Label('Pagos al profesor'))
+      t2.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t2)
+      t2.add_b.connect_object('clicked', self.on_add_payment_clicked, t2, None, True)
+    
+    t = PaymentsTab(self.user)
+    self.tabs.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
+    t.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t)
+    t.add_b.connect_object('clicked', self.on_add_payment_clicked, t, None)
+    
+    self.liabilities = LiabilitiesTab(self.user)
+    self.tabs.append_page(self.liabilities, gtk.Label('Deudas'))
+    self.liabilities.delete_b.connect_object('clicked', self.on_delete_liabilities_clicked, self.liabilities)
+    self.liabilities.add_b.connect_object('clicked', self.on_add_liability_clicked, self.liabilities)
+    self.liabilities.connect('add-payment', self.on_add_payment_clicked)
+    
+    self.memberships = MembershipsTab(self.user)
+    self.tabs.append_page(self.memberships, gtk.Label('Inscripciones'))
+    self.memberships.enroll_b.connect('clicked', self.on_add_membership_clicked)
+    self.memberships.delete_b.connect('clicked', self.on_delete_membership_clicked)
+    self.memberships.connect('add-installments', self.on_add_installments_clicked)
+    self.memberships.connect('add-payment', self.on_add_payment_clicked)
+    self.memberships.connect('add-payments', self.on_add_payments_clicked)
+    self.memberships.connect('delete-installments', self.on_delete_installments_clicked)
+
   def get_comments_text(self):
     buff = self.comments_e.get_buffer()
     return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
@@ -153,20 +186,74 @@ class UserForm(FormFor):
     return {'name': self.name_e.get_text(), 'lastname': self.lastname_e.get_text(), 'dni': self.dni_e.get_text(), 'male': self.male_r.get_active(), 'cellphone': self.cellphone_e.get_text(), 'alt_phone': self.alt_phone_e.get_text(), 'address': self.address_e.get_text(), 'birthday': self.birthday_e.get_text(), 'email': self.email_e.get_text(), 'facebook_uid': self.facebook_uid_e.get_text(), 'age': self.age_e.get_text(), 'comments': self.get_comments_text(), 'group': self.group_e.get_text()}
 
   def enable_memberships(self):
-    self.memberships_panel.set_sensitive(True)
+    self.tabs.set_sensitive(True)
     self.family_vbox.set_sensitive(True)
+    self.set_inscription_message()
+
+  def membership_added(self, membership):
+    self.update()
+    self.memberships.select_membership(membership)
+
+  def set_inscription_message(self):
+    if not self.user.is_inscription_payed():
+      self.set_flash("Falta pagar inscripción")
+    else:
+      self.hide_flash()
 
   def update(self):
-    self.memberships_panel.update()
+    for tab in self.tabs.get_children():
+      tab.refresh()
+    self.tabs.show_all()
+    self.set_inscription_message()
+    
+  def on_add_membership_clicked(self, button):
+    self.emit('add-membership')
+    
+  def on_delete_membership_clicked(self, button):
+    self.emit('ask-delete-membership', self.memberships.get_current_membership())
 
   def on_membership_deleted(self, emmiter, m_id):
-    self.memberships_panel.on_membership_deleted(m_id)
+    for tab in self.tabs.get_children():
+      if not isinstance(tab,MembershipsTab):
+        tab.refresh()
+      else:
+        tab.on_membership_deleted(m_id)
+
+  def on_delete_installments_clicked(self, tab, installments):
+    self.emit('delete-installments', installments)
+
+  def on_add_payment_clicked(self, tab, related, done = False):
+    if isinstance(tab,MembershipsTab):
+      self.emit('add-payment', related, done)
+    elif isinstance(tab, LiabilitiesTab):
+      self.emit('add-payment', related, done)
+    else:
+      self.emit('add-payment', None, done)
+
+  def on_add_payments_clicked(self, tab):
+    self.emit('add-payments')
+
+  def on_add_installments_clicked(self, tab):
+    self.emit('add-installments', tab.get_current_membership())
+
+  def on_delete_payments_clicked(self, tab):
+    self.emit('delete-payments', tab.get_selected_payments())
+  
+  def on_add_liability_clicked(self, tab):
+    self.emit('add-liability')
+  
+  def on_delete_liabilities_clicked(self, tab):
+    self.emit('delete-liabilities', tab.get_selected_liabilities())
 
   def on_payment_deleted(self, emmiter, p_id):
-    self.memberships_panel.on_payment_deleted(p_id)
+    for tab in self.tabs.get_children():
+      tab.on_payment_deleted(p_id)
 
   def on_installment_deleted(self, emmiter, i_id):
-    self.memberships_panel.on_installment_deleted(i_id)
+    self.memberships.on_installment_deleted(i_id)
+    
+  def on_liability_deleted(self, emmiter, l_id):
+    self.liabilities.on_liability_deleted(l_id)
 
   def on_birthday_focus_out(self, entry, event):
     date = entry.get_text()
@@ -183,6 +270,44 @@ class UserForm(FormFor):
 
   def refresh_family(self):
     self.family_list.update_table(self.object.family_members())
+
+gobject.type_register(UserForm)
+gobject.signal_new('ask-delete-membership', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-membership', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('add-installments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-payment', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool))
+gobject.signal_new('add-payments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('delete-payments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-liability', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('delete-liabilities', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('delete-installments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):

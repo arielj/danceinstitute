@@ -502,7 +502,7 @@ class OverdueInstallments(gtk.VBox):
     
     self.pack_start(self.form, False)
     
-    self.headings = ['Alumno', 'Año', 'Mes', 'Clase']
+    self.headings = ['Alumno', 'Año', 'Mes', 'Clase', 'A pagar']
     
     self.list = InstallmentsList(installments, self.headings)
     self.list.connect('row-activated', self.on_row_activated)
@@ -512,6 +512,11 @@ class OverdueInstallments(gtk.VBox):
     self.scroll.add(self.list)
     
     self.pack_start(self.scroll, True)
+    
+    total_hbox = gtk.HBox()
+    self.total_label = gtk.Label('Total: $'+self.sum_total(installments))
+    total_hbox.pack_start(self.total_label, False)
+    self.pack_start(total_hbox, False)
     
     self.actions = gtk.HBox(False, 5)
     self.export_html = gtk.Button('Exportar HTML')
@@ -524,6 +529,9 @@ class OverdueInstallments(gtk.VBox):
 
   def get_tab_label(self):
     return "Cuotas atrasadas"
+
+  def sum_total(self, installments):
+    return str(sum(map(lambda i: i.to_pay(), installments)))
 
   def to_html(self):
     h1_content = "Cuotas atrasadas"
@@ -547,7 +555,7 @@ class OverdueInstallments(gtk.VBox):
     return f+'.csv'
 
   def values_for_html(self,i):
-    return [i.membership.student.to_label(),str(i.year),i.month_name(),i.membership.klass_or_package.name]
+    return [i.membership.student.to_label(),str(i.year),i.month_name(),i.membership.klass_or_package.name, str(i.to_pay())]
 
   def update(self, installments = None):
     if installments is not None:
@@ -615,7 +623,7 @@ class InstallmentsList(gtk.TreeView):
 
   def create_store(self, installments):
     # installments, user name, year, month name, klass
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str)
     self.update(installments)
 
   def update(self, installments):
@@ -627,4 +635,4 @@ class InstallmentsList(gtk.TreeView):
       if i.membership: self.store.append(self.to_row(i))
 
   def default_to_row(self, i):
-    return (i,i.membership.student.to_label(),str(i.year),i.month_name(), i.membership.klass_or_package.name)
+    return (i,i.membership.student.to_label(),str(i.year),i.month_name(), i.membership.klass_or_package.name, i.to_pay())

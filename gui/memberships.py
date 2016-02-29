@@ -9,115 +9,103 @@ from liabilities import *
 from translations import _t, _m
 import datetime
 
-class MembershipsPanel(gtk.VBox):
+class MembershipsTab(gtk.VBox):
   def __init__(self, user):
     gtk.VBox.__init__(self)
     self.user = user
 
-    self.pack_start(gtk.Label('Clases y cuotas:'), False)
+    self.membership_data = MembershipData(None)
+    
+    self.memberships = gtk.ComboBoxEntry()
+    self.memberships.connect('changed', self.on_membership_selected)
+    self.completion = gtk.EntryCompletion()
+    
+    self.pack_start(self.memberships, False)
+    self.pack_start(self.membership_data, True)
 
+    self.actions = gtk.HBox(True, 2)
     self.enroll_b = gtk.Button('Incribir a una clase')
-    
-    self.pack_start(self.enroll_b, False)
+    self.delete_b = gtk.Button('Eliminar inscripción')
 
-    self.notebook = gtk.Notebook()
-    self.notebook.set_scrollable(True)
+    self.actions.pack_start(self.enroll_b, False)    
+    self.actions.pack_start(self.delete_b, False)
     
-    self.add_payments_tabs()
+    self.pack_start(self.actions, False)
     
-    self.add_tabs()
+    self.set_model(self.user.memberships)
+    m = self.user.memberships[0] if len(self.user.memberships) > 0 else None
+    self.membership_data.set_membership(m)
+
+    self.membership_data.add_installments_b.connect('clicked', self.on_add_ins_clicked)
+    self.membership_data.add_payments_b.connect('clicked', self.on_add_payments_clicked)
+    self.membership_data.add_payment_b.connect('clicked', self.on_add_payment_clicked)
+    self.membership_data.delete_installments_b.connect('clicked', self.on_delete_installments_clicked)
+    self.membership_data.list.connect('row-activated', self.on_row_activated)
+  
+  def set_model(self, memberships):
+    memberships_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    for m in memberships:
+      memberships_model.append((m, m.klass_or_package.name))
       
-    self.pack_start(self.notebook, True)
+    self.memberships.set_model(memberships_model)
+    self.memberships.set_text_column(1)
+    self.completion.set_model(memberships_model)
+    self.completion.set_text_column(1)
+    self.completion.connect('match-selected', self.on_memberships_match_selected)
+    self.memberships.child.set_completion(self.completion)
+    if len(memberships) > 0:
+      self.memberships.set_active(0)
+    else:
+      self.membership_data.set_membership(None)
+  
+  def refresh(self):
+    self.set_model(self.user.reload_memberships())
+    self.membership_data.refresh()
 
-  def add_payments_tabs(self):
-    if self.user.is_teacher:
-      t2 = PaymentsTab(self.user, True)
-      self.notebook.append_page(t2,gtk.Label('Pagos al profesor'))
-      t2.delete_b.connect('clicked', self.on_delete_payments_clicked, t2)
-      t2.add_b.connect('clicked', self.on_add_payment_clicked, None, True)
-    
-    t = PaymentsTab(self.user)
-    self.notebook.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
-    t.delete_b.connect('clicked', self.on_delete_payments_clicked, t)
-    t.add_b.connect('clicked', self.on_add_payment_clicked, None)
-    
-    t3 = LiabilitiesTab(self.user)
-    self.notebook.append_page(t3,gtk.Label('Deudas'))
-    t3.delete_b.connect('clicked', self.on_delete_liability_clicked, t3)
-    t3.add_b.connect('clicked', self.on_add_liability_clicked, None)
-    t3.add_payment_b.connect('clicked', self.on_add_payment_clicked, t3)
+  def on_membership_selected(self, combo):
+    model = combo.get_model()
+    if combo.get_active_iter() is not None:
+      membership = model.get_value(combo.get_active_iter(), 0)
+      self.membership_data.set_membership(membership)
 
-  def add_tabs(self):
-    for m in self.user.memberships:
-      self.add_tab(m)
+  def select_membership(self, membership):
+    memberships_model = self.memberships.get_model()
+    found = None
 
-  def add_tab(self,m):
-    t = MembershipTab(m)
-    self.notebook.append_page(t,gtk.Label(m.klass_or_package.name))
-    t.delete_b.connect('clicked', self.on_delete_clicked, m)
-    t.add_installments_b.connect('clicked', self.on_add_ins_clicked, m)
-    t.add_payments_b.connect('clicked', self.on_add_payments_clicked, t)
-    t.add_payment_b.connect('clicked', self.on_add_payment_clicked, t)
-    t.delete_installments_b.connect('clicked', self.on_delete_installments_clicked, t)
-    t.list.connect('row-activated', self.on_row_activated)
+    if membership is not None:
+      model_iter = memberships_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_m = memberships_model.get_value(model_iter,0)
+        if iter_m is not None and iter_m.id == membership.id:
+          found = model_iter
+        else:
+          model_iter = memberships_model.iter_next(model_iter)
 
-  def update(self):
-    children = self.notebook.get_children()
-    for tab in children:
-      tab.refresh()
-    for m in self.user.memberships:
-      if m.id not in [t.membership.id for t in children if hasattr(t, 'membership')]:
-        self.add_tab(m)
-    self.notebook.show_all()
+    if found is not None:
+      self.memberships.set_active_iter(found)
+    else:
+      self.memberships.set_active_iter(memberships_model.get_iter_first())
 
   def on_membership_deleted(self, m_id):
-    self.user.reload_memberships()
-    for tab in self.notebook.get_children():
-      if isinstance(tab,PaymentsTab):
-        tab.refresh()
-      elif tab.membership is None or tab.membership.id == m_id:
-        self.notebook.remove_page(self.notebook.page_num(tab))
-    self.update()
+    self.refresh()
 
   def on_installment_deleted(self, i_id):
-    for tab in self.notebook.get_children():
-      if hasattr(tab, 'membership'): tab.membership.reload_installments()
-      tab.refresh()
-    self.update()
-
-  def on_payment_deleted(self, p_id):
-    for tab in self.notebook.get_children():
-      if isinstance(tab,PaymentsTab):
-        tab.refresh()
+    self.refresh()
 
   def on_delete_clicked(self, widget, membership):
     self.emit('ask-delete-membership', membership)
 
-  def on_add_ins_clicked(self, widget, membership):
-    self.emit('add-installments', membership)
+  def on_add_ins_clicked(self, widget):
+    self.emit('add-installments')
 
-  def on_add_payment_clicked(self, widget, tab, done = False):
-    if isinstance(tab,MembershipTab):
-      self.emit('add-payment', tab.get_selected_installments(), done)
-    elif isinstance(tab, LiabilitiesTab):
-      self.emit('add-payment', tab.get_selected_liabilities(), done)
-    else:
-      self.emit('add-payment', None, done)
+  def on_add_payment_clicked(self, widget):
+    self.emit('add-payment', self.membership_data.get_selected_installments(), False)
 
-  def on_add_payments_clicked(self, widget, tab):
+  def on_add_payments_clicked(self, widget):
     self.emit('add-payments')
-
-  def on_delete_payments_clicked(self, widget, tab):
-    self.emit('delete-payments', tab.get_selected_payments())
-  
-  def on_add_liability_clicked(self, widget, tab):
-    self.emit('add-liability')
-  
-  def on_delete_liability_clicked(self, widget, tab):
-    self.emit('delete-liability', tab.get_selected_liability())
-
-  def on_delete_installments_clicked(self, widget, tab):
-    self.emit('delete-installments', tab.get_selected_installments())
+    
+  def on_delete_installments_clicked(self, widget):
+    self.emit('delete-installments', self.membership_data.get_selected_installments())
 
   def on_row_activated(self, tree, path, view_column):
     model = tree.get_model()
@@ -125,58 +113,40 @@ class MembershipsPanel(gtk.VBox):
     installment = model.get_value(itr, 0)
     self.emit('add-payment', installment, False)
 
-gobject.type_register(MembershipsPanel)
-gobject.signal_new('ask-delete-membership', \
-                   MembershipsPanel, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+  def on_memberships_match_selected(self, completion, model, itr):
+    membership = model.get_value(itr,0)
+    self.select_membership(membership)
+
+  def get_current_membership(self):
+    return self.membership_data.membership
+
+gobject.type_register(MembershipsTab)
 gobject.signal_new('add-installments', \
-                   MembershipsPanel, \
+                   MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+                   gobject.TYPE_NONE, ())
 gobject.signal_new('add-payment', \
-                   MembershipsPanel, \
+                   MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool))
 gobject.signal_new('add-payments', \
-                   MembershipsPanel, \
+                   MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
-gobject.signal_new('delete-payments', \
-                   MembershipsPanel, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-gobject.signal_new('add-liability', \
-                   MembershipsPanel, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, ())
-gobject.signal_new('delete-liability', \
-                   MembershipsPanel, \
-                   gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('delete-installments', \
-                   MembershipsPanel, \
+                   MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
-class MembershipTab(gtk.VBox):
+class MembershipData(gtk.VBox):
   def __init__(self, membership):
     gtk.VBox.__init__(self)
     
-    self.membership = membership
-    
     self.info_vbox =gtk.VBox()
-    if membership.info:
-      self.info_vbox.pack_start(gtk.Label(membership.info), False)
-    if membership.is_package():
-      self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases: "+membership.klass_or_package.klasses_names()), False)
-
     self.pack_start(self.info_vbox, False)
 
     #installment, year, month, base, status, payments
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
-    
-    self.refresh()
     
     self.list = gtk.TreeView(self.store)
     self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
@@ -208,15 +178,16 @@ class MembershipTab(gtk.VBox):
     self.add_payment_b.set_sensitive(False)
     self.delete_installments_b = gtk.Button('Eliminar Cuota(s)')
     self.delete_installments_b.set_sensitive(False)
-    self.delete_b = gtk.Button('Eliminar inscripción')
     
     self.actions.pack_start(self.add_payment_b, False)
-    self.actions.pack_start(self.delete_installments_b, False)
-    self.actions.pack_start(self.add_installments_b, False)
     self.actions.pack_start(self.add_payments_b, False)
-    self.actions.pack_start(self.delete_b, False)
+    self.actions.pack_start(self.add_installments_b, False)
+    self.actions.pack_start(self.delete_installments_b, False)
     
     self.pack_start(self.actions, False)
+    
+    self.membership = None
+    self.set_membership(membership)
     
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
@@ -224,11 +195,27 @@ class MembershipTab(gtk.VBox):
     self.list.append_column(col)
     return col
 
+  def set_membership_info(self):
+    for c in self.info_vbox.get_children(): self.info_vbox.remove(c)
+
+    if self.membership is not None:
+      if self.membership.info:
+        self.info_vbox.pack_start(gtk.Label(self.membership.info), False)
+      if self.membership.is_package():
+        self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases: "+self.membership.klass_or_package.klasses_names()), False)
+
   def refresh(self):
+    self.set_membership_info()
     self.store.clear()
     
-    for ins in self.membership.installments:
-      self.store.append((ins,ins.year,ins.month_name(),ins.detailed_total(), ins.status, ins.payments_details()))
+    if self.membership is not None:
+      for ins in self.membership.installments:
+        self.store.append((ins,ins.year,ins.month_name(),ins.detailed_total(), ins.status, ins.payments_details()))
+      self.add_installments_b.set_sensitive(True)
+      self.add_payments_b.set_sensitive(True)
+    else:
+      self.add_installments_b.set_sensitive(False)
+      self.add_payments_b.set_sensitive(False)
 
   def on_selection_changed(self, selection):
     model, pathlist = selection.get_selected_rows()
@@ -242,6 +229,10 @@ class MembershipTab(gtk.VBox):
       iter = model.get_iter(path)
       items.append(model.get_value(iter, 0))
     return items
+
+  def set_membership(self, membership):
+    self.membership = membership
+    self.refresh()
     
 
 class MembershipDialog(gtk.Dialog):
@@ -401,6 +392,30 @@ class DeleteInstallmentDialog(gtk.Dialog):
     self.vbox.pack_start(gtk.Label(message), False)
     
     self.payments_check = gtk.CheckButton('¿Borrar también los pagos de la cuota?')
+    
+    self.vbox.pack_start(self.payments_check, False)
+    
+    self.vbox.show_all()
+  
+  def delete_payments(self):
+    return self.payments_check.get_active();
+
+class DeleteLiabilitiesDialog(gtk.Dialog):
+  def __init__(self, liabilities):
+    gtk.Dialog.__init__(self, '', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    
+    self.set_border_width(5)
+    
+    desc = "\n".join(map(lambda l: l.to_label(), liabilities))
+    
+    message = "Vas a borrar la(s) deuda(s):\n"+desc+"\n\n¿Estás seguro?"
+    
+    self.vbox.pack_start(gtk.Label(message), False)
+    
+    self.payments_check = gtk.CheckButton('¿Borrar también los pagos de cada deuda?')
     
     self.vbox.pack_start(self.payments_check, False)
     

@@ -4,12 +4,37 @@
 import gtk
 from translations import _a
 
-class FormFor(gtk.HBox):
+class FormFor(gtk.VBox):
   def __init__(self, obj):
-    gtk.HBox.__init__(self, False, 8)
+    gtk.VBox.__init__(self, False, 4)
     self.object = obj
     self.set_border_width(4)
     
+    self.flash = gtk.Label()
+    self.flash.set_use_markup(True)
+    self.flash_wrapper = gtk.EventBox()
+    self.flash_wrapper.add(self.flash)
+    self.flash_wrapper.set_no_show_all(True)
+    self.flash_wrapper.hide()
+    self.flash_wrapper.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#a94442"))
+    #self.flash_wrapper.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#a94442"))
+    
+    self.data = gtk.HBox(False, 8)
+    
+    gtk.VBox.pack_start(self, self.flash_wrapper, False)
+    gtk.VBox.pack_start(self, self.data, True)
+
+  def pack_start(self, widget, boolean):
+    self.data.pack_start(widget, boolean)
+
+  def set_flash(self, message):
+    self.flash.set_markup('<span size="15000" weight="bold">' + message + '</span>')
+    self.flash_wrapper.show()
+    self.flash.show()
+  
+  def hide_flash(self):
+    self.flash_wrapper.hide()
+  
   def add_field(self, method, label = None, field_type = 'entry', attrs = None, box = None, list_store = None, getter = None):
     if getter is None: getter = method
 

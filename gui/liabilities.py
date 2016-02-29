@@ -29,8 +29,8 @@ class LiabilitiesTab(gtk.VBox):
     self.selection = self.list.get_selection()
     self.selection.connect('changed', self.on_selection_changed)
     
-    #self.list.set_rubber_banding(True)
-    #self.selection.set_mode(gtk.SELECTION_MULTIPLE)
+    self.list.set_rubber_banding(True)
+    self.selection.set_mode(gtk.SELECTION_MULTIPLE)
     
     self.add_column('Fecha',1)
     self.add_column('Descripción',2)
@@ -51,6 +51,7 @@ class LiabilitiesTab(gtk.VBox):
     self.delete_b.set_sensitive(False)
     self.add_payment_b = gtk.Button('Agregar Pago')
     self.add_payment_b.set_sensitive(False)
+    self.add_payment_b.connect('clicked', self.on_add_payment_clicked)
     
     self.actions.pack_start(self.add_b, False)
     self.actions.pack_start(self.delete_b, False)
@@ -82,8 +83,19 @@ class LiabilitiesTab(gtk.VBox):
     for path in pathlist:
       iter = model.get_iter(path)
       items.append(model.get_value(iter, 0))
-    print items
     return items
+
+  def on_add_payment_clicked(self, button):
+    self.emit('add-payment', self.get_selected_liabilities(), False)
+
+  def on_liability_deleted(self, l_id):
+    self.refresh()
+
+gobject.type_register(LiabilitiesTab)
+gobject.signal_new('add-payment', \
+                   LiabilitiesTab, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool))
 
 class AddLiabilityDialog(gtk.Dialog):
   def __init__(self, liability):
