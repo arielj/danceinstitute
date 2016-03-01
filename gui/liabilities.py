@@ -70,7 +70,7 @@ class LiabilitiesTab(gtk.VBox):
     
     if self.user.is_not_new_record():
       for l in self.user.get_liabilities():
-        self.store.append((l,l.date.strftime(Settings.get_settings().date_format), l.description, l.detailed_amount()))
+        self.store.append((l,l.date.strftime(Settings.get_settings().date_format), l.description, l.detailed_to_pay()))
 
   def on_selection_changed(self, selection):
     model, pathlist = selection.get_selected_rows()
@@ -89,6 +89,9 @@ class LiabilitiesTab(gtk.VBox):
     self.emit('add-payment', self.get_selected_liabilities(), False)
 
   def on_liability_deleted(self, l_id):
+    self.refresh()
+
+  def on_payment_deleted(self, p_id):
     self.refresh()
 
 gobject.type_register(LiabilitiesTab)

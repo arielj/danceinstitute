@@ -255,4 +255,7 @@ class PaymentsTab(gtk.VBox):
       iter = model.get_iter(path)
       items.append(model.get_value(iter, 0))
     return items
+  
+  def on_payment_deleted(self, p_id):
+    self.refresh()
 

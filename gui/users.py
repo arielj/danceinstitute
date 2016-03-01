@@ -170,7 +170,7 @@ class UserForm(FormFor):
     self.liabilities.connect('add-payment', self.on_add_payment_clicked)
     
     self.memberships = MembershipsTab(self.user)
-    self.tabs.append_page(self.memberships, gtk.Label('Inscripciones'))
+    self.tabs.append_page(self.memberships, gtk.Label('Clases'))
     self.memberships.enroll_b.connect('clicked', self.on_add_membership_clicked)
     self.memberships.delete_b.connect('clicked', self.on_delete_membership_clicked)
     self.memberships.connect('add-installments', self.on_add_installments_clicked)
