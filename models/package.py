@@ -17,6 +17,7 @@ class Package(Model):
     self._klasses = None
     self._fee = 0
     self._alt_fee = 0
+    self._for_user = False
     Model.__init__(self,attrs)
 
   @property
@@ -52,9 +53,17 @@ class Package(Model):
 
   def klasses_names(self):
     return ', '.join(map(lambda x: x.name, self.klasses))
+    
+  @property
+  def for_user(self):
+    return bool(self._for_user)
+
+  @for_user.setter
+  def for_user(self,value):
+    self._for_user = bool(value)
 
   def to_db(self):
-    return {'name': self.name, 'fee': self.fee, 'alt_fee': self.alt_fee}
+    return {'name': self.name, 'fee': self.fee, 'alt_fee': self.alt_fee, 'for_user': int(self.for_user)}
 
   def after_save(self):
     c = self.__class__.get_conn()

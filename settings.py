@@ -1,4 +1,5 @@
 from database import Conn
+import json
 
 class Settings(object):
   _settings = None
@@ -15,6 +16,7 @@ class Settings(object):
     self.notes = ''
     self._export_path = ''
     self.date_format = '%Y-%m-%d'
+    self.hour_fees = {}
 
   @property
   def export_path(self):
@@ -49,7 +51,11 @@ class Settings(object):
   def load_settings(cls):
     cls._settings = cls()
     for r in Conn.execute('SELECT * FROM settings').fetchall():
-      setattr(cls._settings,r['key'],r['value'])
+      if r['key'] == 'hour_fees':
+        setattr(cls._settings,r['key'], json.loads(r['value']))
+      else:
+        setattr(cls._settings,r['key'],r['value'])
+        
     return cls._settings
 
   def set_values(self, data):
@@ -59,5 +65,17 @@ class Settings(object):
   def save(self):
     for k in vars(self):
       if k.startswith('_'): k = k.replace('_','',1)
-      Conn.execute('UPDATE settings SET value=:value WHERE `key`=:key', {'key': k, 'value': getattr(self,k)})
+      v = json.dumps(getattr(self, k)) if k.startswith('hour_fees') else None
+
+      self.save_attr(k, v)
+
     return True
+  
+  def save_attr(self, k, value = None):
+    if value is None: value = getattr(self, k)
+    Conn.execute('UPDATE settings SET value=:value WHERE `key`=:key', {'key': k, 'value': value})
+
+  @classmethod
+  def get_fee_for_hours(cls, hours):
+    return cls.get_settings().hour_fees[hours]
+    

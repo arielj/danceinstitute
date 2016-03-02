@@ -173,6 +173,7 @@ class UserForm(FormFor):
     self.tabs.append_page(self.memberships, gtk.Label('Clases'))
     self.memberships.enroll_b.connect('clicked', self.on_add_membership_clicked)
     self.memberships.delete_b.connect('clicked', self.on_delete_membership_clicked)
+    self.memberships.create_package_b.connect('clicked', self.on_create_user_package_clicked)
     self.memberships.connect('add-installments', self.on_add_installments_clicked)
     self.memberships.connect('add-payment', self.on_add_payment_clicked)
     self.memberships.connect('add-payments', self.on_add_payments_clicked)
@@ -245,6 +246,9 @@ class UserForm(FormFor):
   def on_delete_liabilities_clicked(self, tab):
     self.emit('delete-liabilities', tab.get_selected_liabilities())
 
+  def on_create_user_package_clicked(self, button):
+    self.emit('create-user-package')
+
   def on_payment_deleted(self, emmiter, p_id):
     for tab in self.tabs.get_children():
       tab.on_payment_deleted(p_id)
@@ -308,6 +312,10 @@ gobject.signal_new('delete-installments', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('create-user-package', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):

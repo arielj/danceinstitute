@@ -47,7 +47,7 @@ class Conn(object):
             'klasses_teachers': '''CREATE TABLE klasses_teachers (klass_id integer, teacher_id integer)''',
             'packages': '''CREATE TABLE packages (id integer primary key, name text, fee integer, alt_fee integer)''',
             'klasses_packages': '''CREATE TABLE klasses_packages (klass_id integer, package_id integer)''',
-            'movements': '''CREATE TABLE movements (id integer primary key, date date, amount integer, description text default '', done integer default 0)'''
+            'movements': '''CREATE TABLE movements (id integer primary key, date date, amount integer, description text default '', done integer default 0)''',
            },
             'mysql': {'settings': '''CREATE TABLE settings (`key` VARCHAR(255), `value` TEXT);''',
             'installments': '''CREATE TABLE installments (id INT UNSIGNED NOT NULL AUTO_INCREMENT, year INT, month INT, membership_id INT UNSIGNED, amount INT, status VARCHAR(100) default '', PRIMARY KEY (id))''',
@@ -61,7 +61,6 @@ class Conn(object):
             'packages': '''CREATE TABLE packages (id INT UNSIGNED NOT NULL AUTO_INCREMENT, name MEDIUMTEXT, fee INT UNSIGNED, alt_fee INT UNSIGNED, PRIMARY KEY (id))''',
             'klasses_packages': '''CREATE TABLE klasses_packages (klass_id INT UNSIGNED, package_id INT UNSIGNED)''',
             'movements': '''CREATE TABLE movements (id INT UNSIGNED NOT NULL AUTO_INCREMENT, date DATE, amount INT UNSIGNED, description MEDIUMTEXT default '', done BOOLEAN default 0, PRIMARY KEY (id))'''
-             
            }
           }
 
@@ -227,6 +226,17 @@ class Conn(object):
         cls.execute('ALTER TABLE payments ADD COLUMN liability_id INT;')
       
       version = cls.set_version('1.0')
+    
+    if version == '1.0':
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE packages ADD COLUMN for_user integer default 0;')
+      else:
+        cls.execute('ALTER TABLE packages ADD COLUMN for_user BOOLEAN default 0;')
+      version = cls.set_version('1.1')
+    
+    if version == '1.1':
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('hour_fees','{}')''')
+      version = cls.set_version('1.2')
 
   @classmethod
   def set_version(cls,version):
@@ -271,6 +281,7 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('tabs_position','top')''')
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
     cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 10000, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
+    cls.execute('''UPDATE settings SET value = '{"1": 300, "1.5": 450, "2": 550, "2.5": 650, "3": 750, "3.5": 800, "4": 850, "6": 900}' WHERE key = "hour_fees"''')
     cls.commit()
 
   @classmethod

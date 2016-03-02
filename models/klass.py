@@ -166,8 +166,17 @@ class Klass(Model):
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')
 
+  def get_full_name(self):
+    sch = self.schedules[0]
+    sch_label = sch.day_name() + ' ' + sch.str_from_time() + '-' + sch.str_to_time()
+    return self.name + ' (' + sch_label + ')' 
+
   def teacher_ids(self):
     return map(lambda t: t.id,self.teachers)
+  
+  def get_duration(self):
+    d = sum(map(lambda s: s.duration(), self.schedules))
+    return int(d) if d == int(d) else d
 
   @classmethod
   def for_package(cls,package_id):

@@ -338,6 +338,7 @@ class Controller(gobject.GObject):
     page = UserForm(user)
     page.submit.connect_object('clicked', self.submit_user, page)
     page.open_fb.connect_object('clicked', self.open_fb, page)
+    page.connect('create-user-package', self.new_user_package)
     page.connect('add-membership', self.new_membership)
     page.connect('ask-delete-membership', self.ask_delete_membership)
     page.connect('add-installments', self.add_installments)
@@ -714,7 +715,32 @@ class Controller(gobject.GObject):
         ErrorMessage("No se puede borrar el paquete:", deleted).run()
     dialog.destroy()
 
+  def new_user_package(self, page):
+    dialog = NewUserPackageDialog(Klass.all())
+    dialog.connect('response', self.on_new_user_package, page)
+    dialog.run()
 
+  def on_new_user_package(self, dialog, response, page):
+    if response == gtk.RESPONSE_ACCEPT:
+      if len(dialog.get_checked_klasses()) > 0:
+        package = Package.for_user_with_klasses(dialog.get_checked_klasses())
+        membership = Membership()
+        membership.info = dialog.get_description()
+        membership.klass_or_package = package
+        membership.student = page.user
+        if membership.save() is True: page.update()
+
+        if dialog.create_installments() is True:
+          created = membeship.create_installments(datetime.date.today().year, dialog.installments_from(), dialog.installments_to(), dialog.get_amount())
+
+          if created is True: page.update()
+        
+        dialog.destroy()
+      else:
+        ErrorMessage("No se puede crear el paquete:", 'Tenés que elegir al menos una clase').run()
+    else:
+      dialog.destroy()
+    
 
 
   # memberships

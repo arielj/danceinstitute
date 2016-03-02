@@ -3,6 +3,7 @@
 
 import gtk
 import gobject
+from settings import Settings
 from forms import FormFor
 
 class PackagesList(gtk.VBox):
@@ -195,6 +196,49 @@ class PackageForm(FormFor):
     if kls:
       values['klasses'] = kls
     return values
+
+class NewUserPackageDialog(gtk.Dialog):
+  def __init__(self, klasses):
+    self.form = NewUserPackageForm(klasses)
+    gtk.Dialog.__init__(self, 'Nuevo paquete', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    self.vbox.pack_start(self.form, False)
+    self.vbox.show_all()
+
+class NewUserPackageForm(gtk.VBox):
+  def __init__(self, klasses):
+    gtk.VBox.__init__(self, False, 4)
+    label = gtk.Label('Clases')
+    self.pack_start(label)
+    
+    self.checks = {}
+    for klass in klasses:
+      check = gtk.CheckButton(klass.get_full_name())
+      check.connect('toggled', self.on_klass_toggled)
+      self.checks[check] = klass
+    
+    for check in self.checks.keys():
+      self.pack_start(check)
+    
+    self.create_installments = gtk.CheckButton('Agregar cuotas?')
+    self.create_installments.set_active(True)
+    self.pack_start(self.create_installments)
+    
+    label2 = gtk.Label('Precio')
+    self.pack_start(label2)
+    
+    self.fee_e = gtk.Entry(10)
+    self.fee_e.set_text('0')
+    self.pack_start(self.fee_e)
+
+  def on_klass_toggled(self, check):
+    durations = map(lambda (c, k): k.get_duration() if c.get_active() is True else 0, self.checks.items())
+    duration = sum(durations)
+
+    klasses_fee = Settings.get_settings().get_fee_for_hours(str(duration)) if duration > 0 else 0
+    self.fee_e.set_text(str(klasses_fee))
 
 class CustomCheckButton(gtk.CheckButton):
   def __init__(self,k):

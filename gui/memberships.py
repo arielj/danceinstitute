@@ -24,10 +24,12 @@ class MembershipsTab(gtk.VBox):
     self.pack_start(self.membership_data, True)
 
     self.actions = gtk.HBox(True, 2)
+    self.create_package_b = gtk.Button('Crear Paquete')
     self.enroll_b = gtk.Button('Incribir a una clase')
     self.delete_b = gtk.Button('Eliminar inscripción')
 
-    self.actions.pack_start(self.enroll_b, False)    
+    self.actions.pack_start(self.create_package_b, False)
+    self.actions.pack_start(self.enroll_b, False)
     self.actions.pack_start(self.delete_b, False)
     
     self.pack_start(self.actions, False)

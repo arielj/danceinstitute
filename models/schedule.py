@@ -88,6 +88,12 @@ class Schedule(Model):
   def str_to_time(self):
     st = str(self.to_time).zfill(4)
     return st[0:2]+':'+st[2:4]
+
+  # duration in hours
+  def duration(self):
+    to = datetime.datetime.strptime(self.str_to_time(), '%H:%M')
+    fr = datetime.datetime.strptime(self.str_from_time(), '%H:%M')
+    return (to-fr).seconds/3600.0
   
   def day_name(self):
     return _t('days')[self.day]
