@@ -45,8 +45,14 @@ class MembershipsTab(gtk.VBox):
     self.membership_data.list.connect('row-activated', self.on_row_activated)
   
   def set_model(self, memberships):
+    current_membership = self.membership_data.membership
+    current_present = False
+
     memberships_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    for m in memberships:
+    for m in memberships.order_by('id DESC'):
+      if current_membership is not None and m.id == current_membership.id:
+        current_membership = m
+        current_present = True
       memberships_model.append((m, m.klass_or_package.name))
       
     self.memberships.set_model(memberships_model)
@@ -55,10 +61,9 @@ class MembershipsTab(gtk.VBox):
     self.completion.set_text_column(1)
     self.completion.connect('match-selected', self.on_memberships_match_selected)
     self.memberships.child.set_completion(self.completion)
-    if len(memberships) > 0:
-      self.memberships.set_active(0)
-    else:
-      self.membership_data.set_membership(None)
+    if current_present is True: self.select_membership(current_membership)
+    elif len(memberships) > 0: self.memberships.set_active(0)
+    else: self.membership_data.set_membership(None)
   
   def refresh(self):
     self.set_model(self.user.reload_memberships())
@@ -85,6 +90,7 @@ class MembershipsTab(gtk.VBox):
 
     if found is not None:
       self.memberships.set_active_iter(found)
+      self.membership_data.set_membership(membership)
     else:
       self.memberships.set_active_iter(memberships_model.get_iter_first())
 
@@ -204,7 +210,7 @@ class MembershipData(gtk.VBox):
       if self.membership.info:
         self.info_vbox.pack_start(gtk.Label(self.membership.info), False)
       if self.membership.is_package():
-        self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases: "+self.membership.klass_or_package.klasses_names()), False)
+        self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases:\n"+self.membership.klass_or_package.klasses_names("\n")), False)
 
   def refresh(self):
     self.set_membership_info()

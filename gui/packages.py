@@ -3,8 +3,10 @@
 
 import gtk
 import gobject
+import datetime
 from settings import Settings
 from forms import FormFor
+from translations import _t, _m
 
 class PackagesList(gtk.VBox):
   def __init__(self, packages, with_actions = True):
@@ -214,13 +216,22 @@ class NewUserPackageForm(gtk.VBox):
     self.pack_start(label)
     
     self.checks = {}
-    for klass in klasses:
-      check = gtk.CheckButton(klass.get_full_name())
-      check.connect('toggled', self.on_klass_toggled)
-      self.checks[check] = klass
+    self.day_checks = {}
+    for day in klasses:
+      day_box = gtk.VBox(False, 2)
+      day_box.pack_start(gtk.Label(_t('days')[day]))
+      self.day_checks[day] = day_box
+      for klass in sorted(klasses[day]):
+        check = gtk.CheckButton(klass.get_full_name(ignore_day = True))
+        check.connect('toggled', self.on_klass_toggled)
+        self.checks[check] = klass
+        day_box.pack_start(check)
     
-    for check in self.checks.keys():
-      self.pack_start(check)
+    self.days_wrapper = gtk.HBox(False, 2)
+    for day in sorted(self.day_checks):
+      self.days_wrapper.pack_start(self.day_checks[day])
+    
+    self.pack_start(self.days_wrapper)
     
     self.create_installments = gtk.CheckButton('Agregar cuotas?')
     self.create_installments.set_active(True)
@@ -233,12 +244,75 @@ class NewUserPackageForm(gtk.VBox):
     self.fee_e.set_text('0')
     self.pack_start(self.fee_e)
 
-  def on_klass_toggled(self, check):
-    durations = map(lambda (c, k): k.get_duration() if c.get_active() is True else 0, self.checks.items())
-    duration = sum(durations)
+    self.months = gtk.HBox(False, 4)
+    
+    field = gtk.VBox()
+    self.initial_month_l = gtk.Label('Mes inicial')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.initial_month_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.initial_month_e.pack_start(cell, True)
+    self.initial_month_e.add_attribute(cell, 'text', 1)
+    start_m = datetime.datetime.today().month
+    if datetime.datetime.today().day <= 25: start_m = start_m-1
+    if start_m < 0: start_m = 0
+    self.initial_month_e.set_active(start_m)
+    field.pack_start(self.initial_month_l, False)
+    field.pack_start(self.initial_month_e, False)
+    self.months.pack_start(field, True)
 
-    klasses_fee = Settings.get_settings().get_fee_for_hours(str(duration)) if duration > 0 else 0
+    field = gtk.VBox()
+    self.final_month_l = gtk.Label('Mes final')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.final_month_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.final_month_e.pack_start(cell, True)
+    self.final_month_e.add_attribute(cell, 'text', 1)
+    end_m = start_m + 4
+    if end_m > 11: end_m = 11
+    self.final_month_e.set_active(end_m)
+    field.pack_start(self.final_month_l, False)
+    field.pack_start(self.final_month_e, False)
+    self.months.pack_start(field, True)
+    
+    self.pack_start(self.months, False)
+
+  def on_klass_toggled(self, check):
+    if Settings.get_settings().use_hour_fees is True:
+      duration = sum(map(lambda k: k.get_duration(), self.get_checked_klasses()))
+      if duration == int(duration): duration = int(duration)
+
+      klasses_fee = Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
+    else:
+      fees = map(lambda k: k.normal_fee, self.get_checked_klasses())
+      
+      klasses_fee = sum(fees)
+      
     self.fee_e.set_text(str(klasses_fee))
+
+  def get_checked_klasses(self):
+    checked = []
+    for (c,k) in self.checks.items():
+      if c.get_active() is True: checked.append(k)
+    return checked
+
+  def should_create_installments(self):
+    return self.create_installments.get_active()
+
+  def get_initial_month(self):
+    itr = self.initial_month_e.get_active_iter()
+    return self.initial_month_e.get_model().get_value(itr,0)
+  
+  def get_final_month(self):
+    itr = self.final_month_e.get_active_iter()
+    return self.final_month_e.get_model().get_value(itr,0)
+
+  def get_amount(self):
+    return int(self.fee_e.get_text())
 
 class CustomCheckButton(gtk.CheckButton):
   def __init__(self,k):

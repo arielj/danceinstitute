@@ -16,7 +16,8 @@ class Settings(object):
     self.notes = ''
     self._export_path = ''
     self.date_format = '%Y-%m-%d'
-    self.hour_fees = {}
+    self.fees = {}
+    self._use_hour_fees = '0'
 
   @property
   def export_path(self):
@@ -37,6 +38,17 @@ class Settings(object):
     except:
       self._recharge_after = 10
 
+  @property
+  def use_hour_fees(self):
+    return self._use_hour_fees == '1'
+
+  @use_hour_fees.setter
+  def use_hour_fees(self, value):
+    if type(value) == int: self._use_hour_fees = '1' if value == 1 else '0'
+    elif type(value) == str: self._use_hour_fees = '1' if value == '1' or value == 'True' else '0'
+    elif type(value) == bool: self._use_hour_fees = '1' if value else '0'
+    else: self._use_hour_fees = '0'
+
   def get_opening_h(self):
     return int(self.opening.split(':')[0])
   
@@ -51,10 +63,10 @@ class Settings(object):
   def load_settings(cls):
     cls._settings = cls()
     for r in Conn.execute('SELECT * FROM settings').fetchall():
-      if r['key'] == 'hour_fees':
+      if r['key'] == 'fees':
         setattr(cls._settings,r['key'], json.loads(r['value']))
       else:
-        setattr(cls._settings,r['key'],r['value'])
+        setattr(cls._settings,r['key'], r['value'])
         
     return cls._settings
 
@@ -65,7 +77,8 @@ class Settings(object):
   def save(self):
     for k in vars(self):
       if k.startswith('_'): k = k.replace('_','',1)
-      v = json.dumps(getattr(self, k)) if k.startswith('hour_fees') else None
+      v = json.dumps(getattr(self, k)) if k == 'fees' else None
+      if k == 'use_hour_fees': v = getattr(self, '_use_hour_fees')
 
       self.save_attr(k, v)
 
@@ -76,6 +89,6 @@ class Settings(object):
     Conn.execute('UPDATE settings SET value=:value WHERE `key`=:key', {'key': k, 'value': value})
 
   @classmethod
-  def get_fee_for_hours(cls, hours):
-    return cls.get_settings().hour_fees[hours]
+  def get_fee_for(cls, k):
+    return cls.get_settings().fees[k]
     

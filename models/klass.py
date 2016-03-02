@@ -119,6 +119,15 @@ class Klass(Model):
     
     return klasses
 
+  @classmethod
+  def by_day(cls):
+    klasses = {}
+    for kls in cls.all():
+      for sch in kls.schedules:
+        if klasses.has_key(sch.day) is False: klasses[sch.day] = []
+        klasses[sch.day].append(kls)
+    return klasses
+
   def find_schedule(self, sch_id):
     for sch in self.schedules:
       if sch.id == sch_id:
@@ -166,10 +175,16 @@ class Klass(Model):
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')
 
-  def get_full_name(self):
+  def get_full_name(self, ignore_day = False, ignore_time = False):
     sch = self.schedules[0]
-    sch_label = sch.day_name() + ' ' + sch.str_from_time() + '-' + sch.str_to_time()
-    return self.name + ' (' + sch_label + ')' 
+    sch_label = ''
+    if ignore_day is False: sch_label += sch.day_name()
+    if ignore_time is False:
+      if sch_label != '': sch_label += ' '
+      sch_label += sch.str_from_time() + '-' + sch.str_to_time()
+    
+    if sch_label != '': sch_label = ' (' + sch_label + ')'
+    return self.name + sch_label
 
   def teacher_ids(self):
     return map(lambda t: t.id,self.teachers)

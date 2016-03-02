@@ -643,7 +643,7 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
 
-    page = PackagesList(Package.all())
+    page = PackagesList(Package.where('for_user', 0))
     self.window.add_page(page)
     page.connect('package-add',self.add_package)
     page.connect('package-edit', self.edit_package)
@@ -716,22 +716,23 @@ class Controller(gobject.GObject):
     dialog.destroy()
 
   def new_user_package(self, page):
-    dialog = NewUserPackageDialog(Klass.all())
+    dialog = NewUserPackageDialog(Klass.by_day())
     dialog.connect('response', self.on_new_user_package, page)
     dialog.run()
 
   def on_new_user_package(self, dialog, response, page):
     if response == gtk.RESPONSE_ACCEPT:
-      if len(dialog.get_checked_klasses()) > 0:
-        package = Package.for_user_with_klasses(dialog.get_checked_klasses())
+      klasses = dialog.form.get_checked_klasses()
+      if len(klasses) > 0:
+        package = Package.for_user_with_klasses(klasses)
         membership = Membership()
-        membership.info = dialog.get_description()
+        #membership.info = dialog.form.get_description()
         membership.klass_or_package = package
         membership.student = page.user
-        if membership.save() is True: page.update()
+        if membership.save() is True: page.membership_added(membership)
 
-        if dialog.create_installments() is True:
-          created = membeship.create_installments(datetime.date.today().year, dialog.installments_from(), dialog.installments_to(), dialog.get_amount())
+        if dialog.form.should_create_installments() is True:
+          created = membership.create_installments(datetime.date.today().year, dialog.form.get_initial_month(), dialog.form.get_final_month(), dialog.form.get_amount())
 
           if created is True: page.update()
         
@@ -747,7 +748,7 @@ class Controller(gobject.GObject):
   def new_membership(self, page):
     membership = Membership()
     klasses = Klass.all()
-    packages = Package.all()
+    packages = Package.where('for_user', 0)
     
     options = klasses.do_get() + packages.do_get()
 

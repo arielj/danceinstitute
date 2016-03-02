@@ -235,8 +235,12 @@ class Conn(object):
       version = cls.set_version('1.1')
     
     if version == '1.1':
-      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('hour_fees','{}')''')
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('fees','{}')''')
       version = cls.set_version('1.2')
+    
+    if version == '1.2':
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('use_hour_fees','1')''')
+      version = cls.set_version('1.3')
 
   @classmethod
   def set_version(cls,version):
@@ -281,7 +285,7 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('tabs_position','top')''')
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
     cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 10000, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
-    cls.execute('''UPDATE settings SET value = '{"1": 300, "1.5": 450, "2": 550, "2.5": 650, "3": 750, "3.5": 800, "4": 850, "6": 900}' WHERE key = "hour_fees"''')
+    cls.execute('''UPDATE settings SET value = '{"1": 300, "1.5": 450, "2": 550, "2.5": 650, "3": 750, "3.5": 800, "4": 850, "6": 900}' WHERE key = "fees"''')
     cls.commit()
 
   @classmethod

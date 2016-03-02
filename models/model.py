@@ -202,11 +202,11 @@ class Model(object):
     Conn.execute('DELETE from ' + self.table + ' WHERE id = ?', (self.id, ))
 
   @classmethod
-  def get_many(cls,query, params = ()):
+  def get_many(cls, query, params = ()):
     return map(lambda r: cls.from_db(r), Conn.execute(query,params).fetchall())
 
   @classmethod
-  def get_one(cls,query, params = ()):
+  def get_one(cls, query, params = ()):
     r = Conn.execute(query,params).fetchone()
     return cls.from_db(r) if r else False
   

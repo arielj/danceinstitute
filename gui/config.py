@@ -56,15 +56,15 @@ class Config(gtk.ScrolledWindow):
     self.date_format_e = self.add_field('Formato de fechas', attrs=15)
     self.date_format_e.set_text(str(getattr(self.settings,'date_format')))
     
-    self.hour_fees_l = gtk.Label('Precio por hora')
-    self.hour_fees_ls = HourFeesList(self.settings.hour_fees)
-    #self.hour_fees_ls.connect('hour-fees-add', self.on_hour_fees_add)
-    #self.hour_fees_ls.connect('hour-fees-edit', self.on_hour_fees_edit)
-    #self.hour_fees_ls.connect('hour-fees-remove', self.on_hour_fees_delete)
+    self.fees_l = gtk.Label('Precios')
+    self.hour_fees_check = gtk.CheckButton('¿Calcular precios según horas de clase?')
+    self.hour_fees_check.set_active(getattr(self.settings, 'use_hour_fees'))
+    self.fees_ls = FeesList(self.settings.fees)
 
     field = gtk.VBox()
-    field.pack_start(self.hour_fees_l, False)
-    field.pack_start(self.hour_fees_ls, True)
+    field.pack_start(self.fees_l, False)
+    field.pack_start(self.hour_fees_check, False)
+    field.pack_start(self.fees_ls, True)
     self.right.pack_start(field, False)
 
     self.submit = gtk.Button('Guardar')
@@ -87,10 +87,10 @@ class Config(gtk.ScrolledWindow):
     return "Configuración"
 
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'hour_fees': self.hour_fees_ls.get_hour_fees()}
+    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'fees': self.fees_ls.get_fees(), 'use_hour_fees': self.hour_fees_check.get_active()}
 
 
-class HourFeesList(gtk.TreeView):
+class FeesList(gtk.TreeView):
   def __init__(self, fees):
     self.create_store(fees)
     
@@ -98,7 +98,7 @@ class HourFeesList(gtk.TreeView):
     
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
     
-    self.add_column('Horas', 0)
+    self.add_column('Referencia', 0)
     self.add_column('Precio', 1)
 
   def add_column(self, label, text_idx):
@@ -138,7 +138,7 @@ class HourFeesList(gtk.TreeView):
       if row[0].strip() != "" or row[1].strip() != "": d[row[0].strip()] = row[1].strip()
     return d
 
-  def get_hour_fees(self):
+  def get_fees(self):
     d = {}
     for row in self.store:
       if row[0].strip() != "" and row[1].strip() != "": d[row[0].strip()] = int(row[1].strip())
