@@ -302,7 +302,6 @@ class Controller(gobject.GObject):
       if deleted is True:
         self.emit('teacher-deleted', teacher)
       else:
-        print deleted
         ErrorMessage("No se puede borrar al profesor:", deleted).run()
     dialog.destroy()
 
@@ -348,6 +347,7 @@ class Controller(gobject.GObject):
     page.connect('delete-payments', self.ask_delete_payments)
     page.connect('delete-installments', self.ask_delete_installments)
     page.connect('delete-liabilities', self.ask_delete_liabilities)
+    page.connect('edit-package', self.edit_user_package)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -665,6 +665,11 @@ class Controller(gobject.GObject):
     klasses = Klass.all()
     return self.package_form(package, klasses)
   
+  def edit_user_package(self, page, package):
+    dialog = EditUserPackageDialog(package, Klass.by_day())
+    dialog.connect('response', self.on_update_user_package, page)
+    dialog.run()
+
   def edit_package(self, widget, package_id):
     package = Package.find(package_id)
     return self.package_form(package)
@@ -726,7 +731,6 @@ class Controller(gobject.GObject):
       if len(klasses) > 0:
         package = Package.for_user_with_klasses(klasses)
         membership = Membership()
-        #membership.info = dialog.form.get_description()
         membership.klass_or_package = package
         membership.student = page.user
         if membership.save() is True: page.membership_added(membership)
@@ -741,7 +745,24 @@ class Controller(gobject.GObject):
         ErrorMessage("No se puede crear el paquete:", 'Tenés que elegir al menos una clase').run()
     else:
       dialog.destroy()
-    
+  
+  def on_update_user_package(self, dialog, response, page):
+    if response == gtk.RESPONSE_ACCEPT:
+      klasses = dialog.form.get_checked_klasses()
+      if len(klasses) > 0:
+        p = dialog.package
+        p.klasses = klasses
+        ids = sorted(map(lambda k: k.id, klasses))
+        p.name = 'Clases ' + str(datetime.date.today().year) + ' (' + ','.join(map(lambda i: str(i), ids)) + ')'
+        if p.save() is True:
+          page.update()
+          dialog.destroy()
+        else:
+          ErrorMessage("No se puede crear el paquete:", package.full_errors()).run()
+      else:
+        ErrorMessage("No se puede crear el paquete:", 'Tenés que elegir al menos una clase').run()
+    else:
+      dialog.destroy()
 
 
   # memberships

@@ -178,6 +178,7 @@ class UserForm(FormFor):
     self.memberships.connect('add-payment', self.on_add_payment_clicked)
     self.memberships.connect('add-payments', self.on_add_payments_clicked)
     self.memberships.connect('delete-installments', self.on_delete_installments_clicked)
+    self.memberships.connect('edit-package', self.on_edit_package_clicked)
 
   def get_comments_text(self):
     buff = self.comments_e.get_buffer()
@@ -249,6 +250,9 @@ class UserForm(FormFor):
   def on_create_user_package_clicked(self, button):
     self.emit('create-user-package')
 
+  def on_edit_package_clicked(self, memberships, package):
+    self.emit('edit-package', package)
+
   def on_payment_deleted(self, emmiter, p_id):
     for tab in self.tabs.get_children():
       tab.on_payment_deleted(p_id)
@@ -316,6 +320,10 @@ gobject.signal_new('create-user-package', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
+gobject.signal_new('edit-package', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class SearchStudent(gtk.VBox):
   def get_tab_label(self):

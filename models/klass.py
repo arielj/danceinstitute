@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from translations import _t
+from settings import Settings
 from model import Model
 from lib.query_builder import Query
 import teacher
@@ -174,6 +175,12 @@ class Klass(Model):
 
   def get_fee_for(self, fee_type):
     return getattr(self,fee_type+'_fee')
+
+  def get_hours_fee(self):
+    duration = self.get_duration()
+    if duration == int(duration): duration = int(duration)
+
+    return Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
 
   def get_full_name(self, ignore_day = False, ignore_time = False):
     sch = self.schedules[0]

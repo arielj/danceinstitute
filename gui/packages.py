@@ -200,9 +200,9 @@ class PackageForm(FormFor):
     return values
 
 class NewUserPackageDialog(gtk.Dialog):
-  def __init__(self, klasses):
+  def __init__(self, klasses, title = 'Nuevo paquete'):
     self.form = NewUserPackageForm(klasses)
-    gtk.Dialog.__init__(self, 'Nuevo paquete', None,
+    gtk.Dialog.__init__(self, title, None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -314,8 +314,14 @@ class NewUserPackageForm(gtk.VBox):
   def get_amount(self):
     return int(self.fee_e.get_text())
 
+class EditUserPackageDialog(NewUserPackageDialog):
+  def __init__(self, package, klasses):
+    NewUserPackageDialog.__init__(self, klasses, 'Editar Paquete')
+    self.package = package
+    for (c,k) in self.form.checks.items():
+      if k in package.klasses: c.set_active(True)
+
 class CustomCheckButton(gtk.CheckButton):
   def __init__(self,k):
     gtk.CheckButton.__init__(self,k.name)
     self.k = k
-

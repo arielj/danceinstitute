@@ -3,6 +3,7 @@
 
 from decimal import Decimal
 import datetime
+from settings import Settings
 from translations import _t
 from model import Model
 from lib.query_builder import Query
@@ -44,10 +45,13 @@ class Membership(Model):
 
   def get_fee(self):
     obj = self.klass_or_package
-    if isinstance(obj, klass.Klass):
-      return obj.normal_fee
+    if Settings.get_settings().use_hour_fees is True:
+      return obj.get_hours_fee()
     else:
-      return obj.fee
+      if isinstance(obj, klass.Klass):
+        return obj.normal_fee
+      else:
+        return obj.fee
 
   @property
   def student(self):

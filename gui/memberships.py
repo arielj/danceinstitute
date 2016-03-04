@@ -15,6 +15,7 @@ class MembershipsTab(gtk.VBox):
     self.user = user
 
     self.membership_data = MembershipData(None)
+    self.membership_data.connect('edit-package', self.on_edit_package_clicked)
     
     self.memberships = gtk.ComboBoxEntry()
     self.memberships.connect('changed', self.on_membership_selected)
@@ -49,7 +50,8 @@ class MembershipsTab(gtk.VBox):
     current_present = False
 
     memberships_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    for m in memberships.order_by('id DESC'):
+    ms = memberships if isinstance(memberships, list) else memberships.order_by('id DESC')
+    for m in ms:
       if current_membership is not None and m.id == current_membership.id:
         current_membership = m
         current_present = True
@@ -128,6 +130,9 @@ class MembershipsTab(gtk.VBox):
   def get_current_membership(self):
     return self.membership_data.membership
 
+  def on_edit_package_clicked(self, data, package):
+    self.emit('edit-package', package)
+
 gobject.type_register(MembershipsTab)
 gobject.signal_new('add-installments', \
                    MembershipsTab, \
@@ -145,12 +150,16 @@ gobject.signal_new('delete-installments', \
                    MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-package', \
+                   MembershipsTab, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class MembershipData(gtk.VBox):
   def __init__(self, membership):
     gtk.VBox.__init__(self)
     
-    self.info_vbox =gtk.VBox()
+    self.info_vbox = gtk.VBox()
     self.pack_start(self.info_vbox, False)
 
     #installment, year, month, base, status, payments
@@ -210,7 +219,14 @@ class MembershipData(gtk.VBox):
       if self.membership.info:
         self.info_vbox.pack_start(gtk.Label(self.membership.info), False)
       if self.membership.is_package():
-        self.info_vbox.pack_start(gtk.Label("El paquete incluye las clases:\n"+self.membership.klass_or_package.klasses_names("\n")), False)
+        includes = gtk.HBox(False, 5)
+        includes.pack_start(gtk.Label("El paquete incluye las clases:\n"), False)
+        edit_package_button = gtk.Button(None, gtk.STOCK_EDIT)
+        edit_package_button.connect('clicked', self.on_edit_package_clicked)
+        includes.pack_start(edit_package_button, False)
+        includes.pack_start(gtk.Label(self.membership.klass_or_package.klasses_names("\n")), False)
+        self.info_vbox.pack_start(includes, False)
+      self.info_vbox.show_all()
 
   def refresh(self):
     self.set_membership_info()
@@ -241,7 +257,15 @@ class MembershipData(gtk.VBox):
   def set_membership(self, membership):
     self.membership = membership
     self.refresh()
-    
+  
+  def on_edit_package_clicked(self, button):
+    if self.membership.is_package() is True: self.emit('edit-package', self.membership.klass_or_package)
+
+gobject.type_register(MembershipData)
+gobject.signal_new('edit-package', \
+                   MembershipData, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class MembershipDialog(gtk.Dialog):
   def __init__(self, membership, options):

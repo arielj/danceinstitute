@@ -7,6 +7,7 @@ import datetime
 from lib.query_builder import Query
 import membership
 import klass
+from settings import Settings
 
 class Package(Model):
   table = 'packages'
@@ -43,6 +44,12 @@ class Package(Model):
     except:
       self._alt_fee = 0
 
+  def get_hours_fee(self):
+    duration = sum(map(lambda k: k.get_duration(), self.klasses))
+    if duration == int(duration): duration = int(duration)
+
+    return Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
+
   @property
   def klasses(self):
     if self._klasses is None: self._klasses = klass.Klass.for_package(self.id)
@@ -68,10 +75,10 @@ class Package(Model):
 
   def after_save(self):
     c = self.__class__.get_conn()
+    self.__class__.set_from('klasses_packages').where('package_id', self.id).delete_all()
     for k in self.klasses:
-      if self.__class__.set_from('klasses_packages').where('klass_id', k.id).where('package_id', self.id).count() == 0:
-        args = {'klass_id': k.id, 'package_id': self.id}
-        self.__class__.get_conn().execute('INSERT INTO klasses_packages (klass_id,package_id) VALUES (:klass_id,:package_id)', args)
+      args = {'klass_id': k.id, 'package_id': self.id}
+      self.__class__.get_conn().execute('INSERT INTO klasses_packages (klass_id,package_id) VALUES (:klass_id,:package_id)', args)
 
   def _is_valid(self):
     self.validate_presence_of('name')
@@ -91,9 +98,6 @@ class Package(Model):
     ids = sorted(map(lambda k: k.id, klasses))
     name = 'Clases ' + str(datetime.date.today().year) + ' (' + ','.join(map(lambda i: str(i), ids)) + ')'
 
-    p = cls.where({'name': name, 'for_user': 1}).first()
-    if p is not None and p is not False: return p
-    
     p = cls({'name': name, 'for_user': 1})
     p.klasses = klasses
     p.save()

@@ -141,6 +141,12 @@ class Query(object):
 
   def first(self):
     return self.cls.get_one(self.query(), self.values)
+  
+  def delete_all(self):
+    q = 'DELETE FROM ' + self.from_str
+    if self.wheres: q = q + self.get_wheres()
+    if self.limit is not None: q = q + ' LIMIT %i' % self.limit
+    return Conn.execute_plain(q, self.values)
 
   def _fix_field(self, f):
     f =  f if f.startswith('`') else "`"+f+"` "
