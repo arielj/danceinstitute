@@ -45,13 +45,10 @@ class Membership(Model):
 
   def get_fee(self):
     obj = self.klass_or_package
-    if Settings.get_settings().use_hour_fees is True:
-      return obj.get_hours_fee()
+    if isinstance(obj, klass.Klass):
+      return obj.normal_fee
     else:
-      if isinstance(obj, klass.Klass):
-        return obj.normal_fee
-      else:
-        return obj.fee
+      return obj.fee
 
   @property
   def student(self):

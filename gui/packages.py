@@ -320,6 +320,10 @@ class EditUserPackageDialog(NewUserPackageDialog):
     self.package = package
     for (c,k) in self.form.checks.items():
       if k in package.klasses: c.set_active(True)
+    self.form.months.set_no_show_all(True)
+    self.form.create_installments.set_no_show_all(True)
+    self.form.months.hide()
+    self.form.create_installments.hide()
 
 class CustomCheckButton(gtk.CheckButton):
   def __init__(self,k):

@@ -730,6 +730,8 @@ class Controller(gobject.GObject):
       klasses = dialog.form.get_checked_klasses()
       if len(klasses) > 0:
         package = Package.for_user_with_klasses(klasses)
+        package.fee = dialog.form.get_amount()
+        package.save()
         membership = Membership()
         membership.klass_or_package = package
         membership.student = page.user
@@ -754,6 +756,8 @@ class Controller(gobject.GObject):
         p.klasses = klasses
         ids = sorted(map(lambda k: k.id, klasses))
         p.name = 'Clases ' + str(datetime.date.today().year) + ' (' + ','.join(map(lambda i: str(i), ids)) + ')'
+        p.fee = dialog.form.get_amount()
+        p.save()
         if p.save() is True:
           page.update()
           dialog.destroy()
