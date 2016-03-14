@@ -7,6 +7,7 @@ import datetime
 import widgets
 import exporter
 import string
+import re
 from settings import Settings
 
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
@@ -274,7 +275,7 @@ class PaymentsList(gtk.TreeView):
   
   def set_model(self, payments):
     for p in payments:
-      self.store.append(self.to_row(p))
+        self.store.append(self.to_row(p))
 
   def default_to_row(self, p):
     return (p,p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount), p.description, str(p.receipt_number or ''))
@@ -303,10 +304,14 @@ class DailyCashReport(gtk.VBox):
     self.date.set_can_focus(False)
     self.filter = gtk.Button('Buscar')
     
+    self.desc_filter = gtk.Entry(100)
+    self.desc_filter.connect('changed', self.on_desc_filter_changed)
+    
     self.form = gtk.HBox(False, 5)
     self.form.pack_start(gtk.Label('Fecha:'), False)
     self.form.pack_start(self.date, False)
     self.form.pack_start(self.filter, False)
+    self.form.pack_start(self.desc_filter, False)
     
     self.pack_start(self.form, False)
     
@@ -348,11 +353,16 @@ class DailyCashReport(gtk.VBox):
 
     self.pack_start(self.tables)
 
+    total_hbox = gtk.HBox()
+    self.total_label = gtk.Label(self.totals(payments,movements))
+
     self.actions = gtk.HBox(False, 5)
     self.export_html = gtk.Button('Exportar HTML')
     self.export_csv = gtk.Button('Exportar CSV')
     self.actions.pack_start(self.export_html, False)
     self.actions.pack_start(self.export_csv, False)
+    self.actions.pack_start(gtk.HBox(), True)
+    self.actions.pack_start(self.total_label, False)
     self.pack_start(self.actions, False)
     
     self.show_all()
@@ -387,9 +397,9 @@ class DailyCashReport(gtk.VBox):
 
   def to_csv(self):
     st = ';'.join(self.payment_headings)+"\n"
-    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:]), self.payments))
+    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:]), self.get_filtered_payments()))
     st += "\n"
-    st += "\n".join(map(lambda m: ';'.join(list(self.m_to_row(m))[1:]), self.movements))
+    st += "\n".join(map(lambda m: ';'.join(list(self.m_to_row(m))[1:]), self.get_filtered_movements()))
     return st
 
   def csv_filename(self):
@@ -398,17 +408,24 @@ class DailyCashReport(gtk.VBox):
   def get_date(self):
     return datetime.datetime.strptime(self.date.get_text(),Settings.get_settings().date_format)
 
+  def get_desc_filter(self):
+    return self.desc_filter.get_text()
+
   def update(self, payments = None, movements = None):
     if payments is not None:
       self.payments = payments
-    self.p_list.update(self.payments)
-    self.total_p_label.set_text(self.payment_totals(self.payments))
+    f_p = self.get_filtered_payments()
+    self.p_list.update(f_p)
+    self.total_p_label.set_text(self.payment_totals(f_p))
+    
     if movements is not None:
       self.movements = movements
-    self.m_list.update(self.movements)
-    self.total_m_label.set_text(self.movement_totals(self.movements))
+    f_m = self.get_filtered_movements()
+    self.m_list.update(f_m)
+    self.total_m_label.set_text(self.movement_totals(f_m))
+    self.total_label.set_text(self.totals(f_p, f_m))
 
-  def payment_totals(self, payments):
+  def _payment_totals(self, payments):
     total_in = 0
     total_out = 0
     for p in payments:
@@ -416,9 +433,14 @@ class DailyCashReport(gtk.VBox):
         total_out += p.amount
       else:
         total_in += p.amount
+    return [total_in, total_out]
+
+
+  def payment_totals(self, payments):
+    total_in, total_out = self._payment_totals(payments)
     return "Entradas: $" + str(total_in) + " ; Salidas: $" + str(total_out)
   
-  def movement_totals(self, movements):
+  def _movement_totals(self, movements):
     total_in = 0
     total_out = 0
     for m in movements:
@@ -426,7 +448,17 @@ class DailyCashReport(gtk.VBox):
         total_out += m.amount
       else:
         total_in += m.amount
+    return [total_in, total_out]
+  
+  def movement_totals(self, movements):
+    total_in, total_out = self._movement_totals(movements)
     return "Entradas: $" + str(total_in) + " ; Salidas: $" + str(total_out)
+
+  def totals(self, payments, movements):
+    total_in_p, total_out_p = self._payment_totals(payments)
+    total_in_m, total_out_m = self._movement_totals(movements)
+    return "Entradas: $" + str(total_in_p+total_in_m) + " ; Salidas: $" + str(total_out_p+total_out_m) + " ; Total: $" + str(total_in_p+total_in_m - total_out_p -total_out_m)
+    
 
   def show_calendar(self, widget, event):
     widgets.CalendarPopup(lambda cal, dialog: self.on_date_selected(cal,widget,dialog), widget.get_text()).run()
@@ -436,6 +468,21 @@ class DailyCashReport(gtk.VBox):
     d = datetime.date(int(year),int(month),int(day))
     widget.set_text(d.strftime(Settings.get_settings().date_format))
     dialog.destroy()
+
+  def on_desc_filter_changed(self, entry):
+    self.update()
+
+  def get_filtered_movements(self):
+    ms = []
+    for m in self.movements:
+      if re.search(self.get_desc_filter(), self.m_to_row(m)[1], flags=re.I): ms.append(m)
+    return ms
+
+  def get_filtered_payments(self):
+    ps = []
+    for p in self.payments:
+      if re.search(self.get_desc_filter(), self.p_to_row(p)[1], flags=re.I): ps.append(p)
+    return ps
 
 class MovementsList(gtk.TreeView):
   def __init__(self, movements, headings, to_row = None):

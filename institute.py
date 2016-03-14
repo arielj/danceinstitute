@@ -1053,6 +1053,7 @@ class Controller(gobject.GObject):
     date = page.get_date()
     payments = Payment.filter(date,date,None)
     movements = Movement.by_date(date)
+
     page.update(payments = payments, movements = movements)
 
   def export_daily_cash_html(self, page):
