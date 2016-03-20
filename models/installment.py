@@ -160,7 +160,7 @@ class Installment(Model):
       else:
         return p.full_errors()
     else:
-      return "No se puede agregar un pago con mayor valor que el resto a pagar."
+      return "No se puede agregar un pago con mayor valor que el resto a pagar. Saldo: " + str(self.to_pay()) + ", Ingresado: " + str(amount)
 
   def get_student_id(self):
     s = self.get_student()

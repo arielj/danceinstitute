@@ -58,6 +58,8 @@ class AddPaymentsDialog(gtk.Dialog):
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    
+    self.selected_payments = []
     self.installments = installments
     self.add_installments_table()
     amount_f = gtk.HBox()
@@ -90,6 +92,7 @@ class AddPaymentsDialog(gtk.Dialog):
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str,bool,bool)
     for i in self.installments:
       do_check = i.year == datetime.date.today().year and i.month == datetime.date.today().month-1
+      if do_check: self.selected_payments.append(i)
       self.store.append([i,i.get_student().to_label(),i.month_name(),str(i.year),i.detailed_total(),i.detailed_to_pay(), do_check, False])
     
     self.table = gtk.TreeView(self.store)
@@ -117,19 +120,25 @@ class AddPaymentsDialog(gtk.Dialog):
     self.vbox.pack_start(scroll, True)
 
   def on_payment_toggled(self, renderer, path):
-    self.store[path][6] = not self.store[path][6]
+    row = self.store[path]
+    row[6] = not row[6]
+    if row[6]:
+      self.selected_payments.append(row[0])
+    else:
+      self.selected_payments.remove(row[0])
+    
     self.update_total()
 
   def on_ignore_recharge_toggled(self, renderer, path):
-    self.store[path][7] = not self.store[path][7]
-    self.store[path][0].ignore_recharge = self.store[path][7]
-    self.store[path][5] = self.store[path][0].detailed_to_pay()
+    row = self.store[path]
+    row[7] = not row[7]
+    row[0].ignore_recharge = row[7]
+    row[5] = row[0].detailed_to_pay()
     self.update_total()
 
   def update_total(self):
     total = 0
-    for r in self.store:
-      if r[6] is True: total += r[0].to_pay()
+    for p in self.selected_payments: total += p.to_pay()
     self.amount_e.set_text(str(total))
 
   def add_column(self, label, text_idx):
@@ -139,7 +148,7 @@ class AddPaymentsDialog(gtk.Dialog):
     return col
 
   def get_selected_installments(self):
-    return [x[0] for x in self.store if x[6] is True]
+    return self.selected_payments
 
   def get_amount(self):
     return int(self.amount_e.get_text())

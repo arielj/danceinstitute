@@ -939,17 +939,23 @@ class Controller(gobject.GObject):
             ErrorMessage('No se pudo cargar el pago:', added).run()
             destroy_dialog = False
         else:
-          total = 0;
-          for i in installments: total += i.to_pay()
+          amount_paid = dialog.get_amount()
+          total = sum(map(lambda i: i.to_pay(), installments))
           
-          if total != dialog.get_amount():
-            ErrorMessage('No se pueden cargar los pagos:', 'El monto ingresado es diferente al total de las cuotas seleccionadas.').run()
+          if total < amount_paid:
+            ErrorMessage('No se pueden cargar los pagos:', 'El monto ingresado es mayor al monto a pagar').run()
             destroy_dialog = False
           else:
+            rest = amount_paid
             for i in installments:
-              res = i.add_payment({'date': dialog.date_e.get_text()})
+              if rest > 0:
+                amount = i.to_pay()
+                if amount > rest: amount = rest
+                i.add_payment({'date': dialog.date_e.get_text(), 'amount': amount})
+                rest -= amount
             self.emit('payment-changed', None, True)
             page.update()
+            
       else:
         ErrorMessage('No se pueden cargar los pagos:', 'No se seleccionó ninguna cuota.').run()
         destroy_dialog = False
