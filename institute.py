@@ -79,6 +79,7 @@ class Controller(gobject.GObject):
     self.window.menu.payments.connect('activate', self.payments_report)
     self.window.menu.daily_cash.connect('activate', self.daily_cash)
     self.window.menu.overdue_installments.connect('activate', self.overdue_installments)
+    self.window.menu.debts.connect('activate', self.debts)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
@@ -1036,7 +1037,8 @@ class Controller(gobject.GObject):
     received = page.get_done_or_received()
     user = page.get_selected_user()
     k_or_p = page.get_selected_klass_or_package()
-    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group())
+    q_term = page.get_filter()
+    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group(), q_term)
     page.update(payments)
 
   def export_payments_report_html(self, page):
@@ -1088,6 +1090,28 @@ class Controller(gobject.GObject):
 
   def export_overdue_installments_report_csv(self, page):
     self.export_csv(page.to_csv(), page.csv_filename())
+
+
+  def debts(self, menu_item):
+    page = Debts(Liability.overdues())
+    page.filter.connect_object('clicked', self.filter_debts, page)
+    page.export_html.connect_object('clicked', self.export_debts_report_html, page)
+    page.export_csv.connect_object('clicked', self.export_debts_report_csv, page)
+    page.connect('student-edit', self.edit_student)
+    self.window.add_page(page)
+    return page
+
+  def filter_debts(self, page):
+    #klass = page.get_selected_klass()
+    debts = Liability.overdues(desc=page.get_filter())
+    page.update(debts)
+
+  def export_debts_report_html(self, page):
+    self.export_html(page.to_html())
+
+  def export_debts_report_csv(self, page):
+    self.export_csv(page.to_csv(), page.csv_filename())
+
 
   #save a reference of signals connected
   def save_signal(self, h_id, obj):

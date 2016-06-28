@@ -155,8 +155,10 @@ class Liability(Model):
     return True
 
   @classmethod
-  def overdues(cls, recharge_after = None, klass = None):
-    return cls.where('status != "paid"')
+  def overdues(cls, recharge_after = None, klass = None, desc = ''):
+    q = cls.where('status != "paid"')
+    if desc != '': q.where('description', '%%%s%%' % desc, comparission = 'LIKE')
+    return q
 
   @classmethod
   def to_pay_for(cls, user_id):

@@ -24,6 +24,9 @@ class PaymentsReport(gtk.VBox):
     self.packages = packages
     gtk.VBox.__init__(self, False, 5)
     
+    content = gtk.HBox()
+    self.pack_start(content, True)
+    
     self.from_e = gtk.Entry(10)
     self.from_e.set_text(datetime.date.today().strftime(Settings.get_settings().date_format))
     self.from_e.connect('button-press-event', self.show_calendar)
@@ -68,10 +71,16 @@ class PaymentsReport(gtk.VBox):
     
     self.group_l = gtk.Label('Grupo')
     self.group_e = gtk.Entry(255)
+    
+    self.filter_l = gtk.Label('Buscar')
+    self.filter_e = gtk.Entry(255)
 
     self.filter = gtk.Button('Buscar')
     
-    self.form = gtk.HBox(False, 5)
+    self.form = gtk.VBox(False, 5)
+    label = gtk.Label()
+    label.set_markup("<big><b>Filtrar:</b></big>");
+    self.form.pack_start(label, False)
     self.form.pack_start(gtk.Label('Desde:'), False)
     self.form.pack_start(self.from_e, False)
     self.form.pack_start(gtk.Label('Hasta:'), False)
@@ -82,9 +91,11 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.klass_or_package, False)
     self.form.pack_start(self.group_l, False)
     self.form.pack_start(self.group_e, False)
+    self.form.pack_start(self.filter_l, False)
+    self.form.pack_start(self.filter_e, False)
     self.form.pack_start(self.filter, False)
     
-    self.pack_start(self.form, False)
+    content.pack_start(self.form, False)
     
     self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle', 'Recibo N°']
     
@@ -95,7 +106,7 @@ class PaymentsReport(gtk.VBox):
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.scroll.add(self.list)
     
-    self.pack_start(self.scroll, True)
+    content.pack_start(self.scroll, True)
     
     total_hbox = gtk.HBox()
     self.total_label = gtk.Label('Total: $'+self.sum_total(payments))
@@ -154,6 +165,9 @@ class PaymentsReport(gtk.VBox):
 
   def get_to(self):
     return datetime.datetime.strptime(self.to_e.get_text(),Settings.get_settings().date_format)
+  
+  def get_filter(self):
+    return self.filter_e.get_text()
 
   def get_done_or_received(self):
     return self.done_rb.get_active()
@@ -296,6 +310,9 @@ class DailyCashReport(gtk.VBox):
     self.movements = movements
     self.payments = payments
     gtk.VBox.__init__(self, False, 5)
+    
+    content = gtk.HBox()
+    self.pack_start(content, True)
 
     self.date = gtk.Entry(10)
     self.date.set_text(datetime.datetime.today().strftime(Settings.get_settings().date_format))
@@ -307,13 +324,17 @@ class DailyCashReport(gtk.VBox):
     self.desc_filter = gtk.Entry(100)
     self.desc_filter.connect('changed', self.on_desc_filter_changed)
     
-    self.form = gtk.HBox(False, 5)
+    self.form = gtk.VBox(False, 5)
+    label = gtk.Label()
+    label.set_markup('<big><b>Filtrar:</b></big>')
+    self.form.pack_start(label, False)
     self.form.pack_start(gtk.Label('Fecha:'), False)
     self.form.pack_start(self.date, False)
-    self.form.pack_start(self.filter, False)
+    self.form.pack_start(gtk.Label('Buscar:'), False)
     self.form.pack_start(self.desc_filter, False)
+    self.form.pack_start(self.filter, False)
     
-    self.pack_start(self.form, False)
+    content.pack_start(self.form, False)
     
     self.tables = gtk.HBox(True, 6)
     p_table = gtk.VBox()
@@ -351,7 +372,7 @@ class DailyCashReport(gtk.VBox):
     
     self.tables.pack_start(m_table)
 
-    self.pack_start(self.tables)
+    content.pack_start(self.tables)
 
     total_hbox = gtk.HBox()
     self.total_label = gtk.Label(self.totals(payments,movements))
@@ -528,6 +549,9 @@ class OverdueInstallments(gtk.VBox):
     self.installments = installments
     gtk.VBox.__init__(self, False, 5)
     
+    content = gtk.HBox()
+    self.pack_start(content, True)
+    
     klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
     klasses_model.append((None,'Todas las clases'))
     for klass in klasses:
@@ -543,11 +567,14 @@ class OverdueInstallments(gtk.VBox):
 
     self.filter = gtk.Button('Buscar')
     
-    self.form = gtk.HBox(False, 5)
+    self.form = gtk.VBox(False, 5)
+    label = gtk.Label()
+    label.set_markup('<big><b>Filtrar:</b></big>')
+    self.form.pack_start(label, False)
     self.form.pack_start(self.klass, False)
     self.form.pack_start(self.filter, False)
     
-    self.pack_start(self.form, False)
+    content.pack_start(self.form, False)
     
     self.headings = ['Alumno', 'Año', 'Mes', 'Clase', 'A pagar']
     
@@ -558,7 +585,7 @@ class OverdueInstallments(gtk.VBox):
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.scroll.add(self.list)
     
-    self.pack_start(self.scroll, True)
+    content.pack_start(self.scroll, True)
     
     total_hbox = gtk.HBox()
     self.total_label = gtk.Label('Total: $'+self.sum_total(installments))
@@ -608,6 +635,7 @@ class OverdueInstallments(gtk.VBox):
     if installments is not None:
       self.installments = installments
     self.list.update(self.installments)
+    self.total_label.set_text('Total: $'+self.sum_total(self.installments))
 
   def on_row_activated(self, tree, path, column):
     model = tree.get_model()
@@ -683,3 +711,178 @@ class InstallmentsList(gtk.TreeView):
 
   def default_to_row(self, i):
     return (i,i.membership.student.to_label(),str(i.year),i.month_name(), i.membership.klass_or_package.name, i.to_pay())
+
+
+class Debts(gtk.VBox):
+  def __init__(self, debts):
+    self.debts = debts
+    gtk.VBox.__init__(self, False, 5)
+    
+    content = gtk.HBox()
+    self.pack_start(content, True)
+    
+    #klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
+    #klasses_model.append((None,'Todas las clases'))
+    #for klass in klasses:
+    #  klasses_model.append((klass, klass.name))
+    
+    #self.klass = gtk.ComboBoxEntry(klasses_model,1)
+    #completion = gtk.EntryCompletion()
+    #completion.set_model(klasses_model)
+    #completion.set_text_column(1)
+    #completion.connect('match-selected', self.on_klass_match_selected)
+    #self.klass.child.set_completion(completion)
+    #self.klass.set_active(0)
+
+    self.filter = gtk.Button('Buscar')
+    
+    self.filter_l = gtk.Label('Buscar:')
+    self.filter_e = gtk.Entry(100)
+    
+    self.form = gtk.VBox(False, 5)
+    label = gtk.Label()
+    label.set_markup('<big><b>Filtrar:</b></big>')
+    self.form.pack_start(label, False)
+    self.form.pack_start(self.filter_l, False)
+    self.form.pack_start(self.filter_e, False)
+    self.form.pack_start(self.filter, False)
+    
+    content.pack_start(self.form, False)
+    
+    self.headings = ['Alumno', 'Detalle', 'Monto']
+    
+    self.list = DebtsList(debts, self.headings)
+    self.list.connect('row-activated', self.on_row_activated)
+    
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.list)
+    
+    content.pack_start(self.scroll, True)
+    
+    total_hbox = gtk.HBox()
+    self.total_label = gtk.Label('Total: $'+self.sum_total(debts))
+    total_hbox.pack_start(self.total_label, False)
+    self.pack_start(total_hbox, False)
+    
+    self.actions = gtk.HBox(False, 5)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
+    self.pack_start(self.actions, False)
+    
+    self.show_all()
+
+  def get_tab_label(self):
+    return "Deudas"
+
+  def sum_total(self, debts):
+    return str(sum(map(lambda d: d.to_pay(), debts)))
+
+  def to_html(self):
+    h1_content = "Deudas"
+    #k = self.get_selected_klass()
+    #if k is not None: h1_content += ' de la clase %s' % k.name
+    
+    title = "<h1>%s</h1>" % h1_content
+    rows = map(lambda d: self.values_for_html(d), self.debts)
+
+    return exporter.html_wrapper(title+exporter.html_table(self.headings,rows))
+
+  def to_csv(self):
+    st = ';'.join(self.headings)+"\n"
+    st += "\n".join(map(lambda d: ';'.join(self.values_for_html(d)), self.debts))
+    return st
+
+  def csv_filename(self):
+    f = 'deudas'
+    k = self.get_selected_klass()
+    if k is not None: f += '_clase_%s' % str_to_filename(k.name)
+    return f+'.csv'
+
+  def values_for_html(self,d):
+    return [d.user.to_label(), d.description, str(d.to_pay())]
+
+  def update(self, debts = None):
+    if debts is not None:
+      self.debts = debts
+    self.list.update(self.debts)
+    self.total_label.set_text('Total: $'+self.sum_total(debts))
+
+  def on_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    liability = model.get_value(itr, 0)
+    self.emit('student-edit', liability.user_id)
+
+  def get_filter(self):
+    return self.filter_e.get_text()
+
+  def get_selected_klass(self):
+    itr = self.klass.get_active_iter()
+    if itr is not None:
+      return self.klass.get_model().get_value(itr,0)
+    else:
+      return None
+
+  def on_klass_match_selected(self, completion, model, itr):
+    klass = model.get_value(itr,0)
+    klasses_model = self.klass.get_model()
+    found = None
+
+    if klass is not None:
+      model_iter = klasses_model.get_iter_first()
+      while model_iter is not None and found is None:
+        iter_klass = klasses_model.get_value(model_iter,0)
+        if iter_klass is not None and iter_klass.id == klass.id:
+          found = model_iter
+        else:
+          model_iter = klasses_model.iter_next(model_iter)
+
+    if found is not None:
+      self.klass.set_active_iter(found)
+    else:
+      self.klass.set_active_iter(klasses_model.get_iter_first())
+
+gobject.type_register(Debts)
+gobject.signal_new('student-edit', \
+                   Debts, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+
+class DebtsList(gtk.TreeView):
+  def __init__(self, debts, headings, to_row = None):
+    if to_row is not None:
+      self.to_row = to_row
+    else:
+      self.to_row = self.default_to_row
+
+    self.create_store(debts)
+    
+    gtk.TreeView.__init__(self, self.store)
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+    
+    for idx, heading in enumerate(headings, 1):
+      self.add_column(heading,idx)
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.append_column(col)
+    return col
+
+  def create_store(self, debts):
+    # liability, user name, description, amount
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str)
+    self.update(debts)
+
+  def update(self, debts):
+    self.store.clear()
+    self.set_model(debts)
+  
+  def set_model(self, debts):
+    for d in debts: self.store.append(self.to_row(d))
+
+  def default_to_row(self, d):
+    return (d,d.user.to_label(), d.description, d.to_pay())

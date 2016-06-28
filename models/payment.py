@@ -198,13 +198,14 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = ''):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', q_term = ''):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
     
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
+    if q_term != '': q.where('description', '%%%s%%' % q_term, comparission = 'LIKE')
     if k_or_p is not None:
       if isinstance(k_or_p, klass.Klass):
         where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'
