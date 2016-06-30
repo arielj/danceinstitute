@@ -141,7 +141,7 @@ class Liability(Model):
     q = cls.where('status != "paid"')
     if desc != '': q.where('description', '%%%s%%' % desc, comparission = 'LIKE')
     if include_inactive is False:
-      q.set_join('LEFT JOIN users ON users.id = payments.user_id')
+      q.set_join('LEFT JOIN users ON users.id = liabilities.user_id')
       q.where('users.inactive = 0')
 
     return q
