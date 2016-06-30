@@ -44,25 +44,7 @@ class Movement(Model):
     if isinstance(value,datetime.date):
       self._date = value
     else:
-      try:
-        self._date = datetime.datetime.strptime(value,'%Y/%m/%d').date()
-      except:
-        try:
-          self._date = datetime.datetime.strptime(value,'%Y/%d/%m').date()
-        except:
-          try:
-            self._date = datetime.datetime.strptime(value,'%Y-%m-%d').date()
-          except:
-            try:
-              self._date = datetime.datetime.strptime(value,'%Y-%d-%m').date()
-            except:
-              try:
-                self._date = datetime.datetime.strptime(value,'%d-%m-%Y').date()
-              except:
-                try:
-                  self._date = datetime.datetime.strptime(value,'%d/%m/%Y').date()
-                except:
-                  self._date = ''
+      self._date = self.parse_date(value)
 
   @property
   def done(self):

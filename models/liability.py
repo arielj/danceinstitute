@@ -63,25 +63,7 @@ class Liability(Model):
     if isinstance(value,datetime.date):
       self._date = value
     else:
-      try:
-        self._date = datetime.datetime.strptime(value,'%Y/%m/%d').date()
-      except:
-        try:
-          self._date = datetime.datetime.strptime(value,'%Y/%d/%m').date()
-        except:
-          try:
-            self._date = datetime.datetime.strptime(value,'%Y-%m-%d').date()
-          except:
-            try:
-              self._date = datetime.datetime.strptime(value,'%Y-%d-%m').date()
-            except:
-              try:
-                self._date = datetime.datetime.strptime(value,'%d-%m-%Y').date()
-              except:
-                try:
-                  self._date = datetime.datetime.strptime(value,'%d/%m/%Y').date()
-                except:
-                  self._date = ''
+      self._date = self.parse_date(value)
 
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
@@ -155,9 +137,13 @@ class Liability(Model):
     return True
 
   @classmethod
-  def overdues(cls, recharge_after = None, klass = None, desc = ''):
+  def overdues(cls, recharge_after = None, klass = None, desc = '', include_inactive = False):
     q = cls.where('status != "paid"')
     if desc != '': q.where('description', '%%%s%%' % desc, comparission = 'LIKE')
+    if include_inactive is False:
+      q.set_join('LEFT JOIN users ON users.id = payments.user_id')
+      q.where('users.inactive = 0')
+
     return q
 
   @classmethod

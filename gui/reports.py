@@ -77,6 +77,9 @@ class PaymentsReport(gtk.VBox):
 
     self.filter = gtk.Button('Buscar')
     
+    self.include_inactive = gtk.CheckButton('Incluir usuarios inactivos')
+    self.include_inactive.set_active(True)
+    
     self.form = gtk.VBox(False, 5)
     label = gtk.Label()
     label.set_markup("<big><b>Filtrar:</b></big>");
@@ -89,6 +92,7 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.received_rb, False)
     self.form.pack_start(self.user, False)
     self.form.pack_start(self.klass_or_package, False)
+    self.form.pack_start(self.include_inactive, False)
     self.form.pack_start(self.group_l, False)
     self.form.pack_start(self.group_e, False)
     self.form.pack_start(self.filter_l, False)
@@ -171,6 +175,9 @@ class PaymentsReport(gtk.VBox):
 
   def get_done_or_received(self):
     return self.done_rb.get_active()
+
+  def should_include_inactive(self):
+    return self.include_inactive.get_active()
 
   def get_selected_user(self):
     itr = self.user.get_active_iter()
@@ -564,7 +571,9 @@ class OverdueInstallments(gtk.VBox):
     completion.connect('match-selected', self.on_klass_match_selected)
     self.klass.child.set_completion(completion)
     self.klass.set_active(0)
-
+    
+    self.include_inactive = gtk.CheckButton('Incluir usuarios inactivos')
+    
     self.filter = gtk.Button('Buscar')
     
     self.form = gtk.VBox(False, 5)
@@ -572,6 +581,7 @@ class OverdueInstallments(gtk.VBox):
     label.set_markup('<big><b>Filtrar:</b></big>')
     self.form.pack_start(label, False)
     self.form.pack_start(self.klass, False)
+    self.form.pack_start(self.include_inactive, False)
     self.form.pack_start(self.filter, False)
     
     content.pack_start(self.form, False)
@@ -650,6 +660,9 @@ class OverdueInstallments(gtk.VBox):
     else:
       return None
 
+  def should_include_inactive_users(self):
+    return self.include_inactive.get_active()
+
   def on_klass_match_selected(self, completion, model, itr):
     klass = model.get_value(itr,0)
     klasses_model = self.klass.get_model()
@@ -721,23 +734,12 @@ class Debts(gtk.VBox):
     content = gtk.HBox()
     self.pack_start(content, True)
     
-    #klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    #klasses_model.append((None,'Todas las clases'))
-    #for klass in klasses:
-    #  klasses_model.append((klass, klass.name))
-    
-    #self.klass = gtk.ComboBoxEntry(klasses_model,1)
-    #completion = gtk.EntryCompletion()
-    #completion.set_model(klasses_model)
-    #completion.set_text_column(1)
-    #completion.connect('match-selected', self.on_klass_match_selected)
-    #self.klass.child.set_completion(completion)
-    #self.klass.set_active(0)
-
     self.filter = gtk.Button('Buscar')
     
     self.filter_l = gtk.Label('Buscar:')
     self.filter_e = gtk.Entry(100)
+    
+    self.include_inactive = gtk.CheckButton('Incluir usuarios inactivos')
     
     self.form = gtk.VBox(False, 5)
     label = gtk.Label()
@@ -825,6 +827,9 @@ class Debts(gtk.VBox):
       return self.klass.get_model().get_value(itr,0)
     else:
       return None
+
+  def should_include_inactive_users(self):
+    return self.include_inactive.get_active()
 
   def on_klass_match_selected(self, completion, model, itr):
     klass = model.get_value(itr,0)

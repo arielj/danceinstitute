@@ -128,25 +128,7 @@ class Payment(Model):
     if isinstance(value,datetime.date):
       self._date = value
     else:
-      try:
-        self._date = datetime.datetime.strptime(value,'%Y/%m/%d').date()
-      except:
-        try:
-          self._date = datetime.datetime.strptime(value,'%Y/%d/%m').date()
-        except:
-          try:
-            self._date = datetime.datetime.strptime(value,'%Y-%m-%d').date()
-          except:
-            try:
-              self._date = datetime.datetime.strptime(value,'%Y-%d-%m').date()
-            except:
-              try:
-                self._date = datetime.datetime.strptime(value,'%d-%m-%Y').date()
-              except:
-                try:
-                  self._date = datetime.datetime.strptime(value,'%d/%m/%Y').date()
-                except:
-                  self._date = ''
+      self._date = self.parse_date(value)
 
   @property
   def done(self):
@@ -198,7 +180,7 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', q_term = ''):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', q_term = '', include_inactive = False):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
@@ -206,6 +188,10 @@ class Payment(Model):
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
     if q_term != '': q.where('description', '%%%s%%' % q_term, comparission = 'LIKE')
+    if include_inactive is False:
+      q.set_join('LEFT JOIN users ON users.id = payments.user_id')
+      q.where('users.inactive = 0')
+
     if k_or_p is not None:
       if isinstance(k_or_p, klass.Klass):
         where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'

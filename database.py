@@ -241,6 +241,15 @@ class Conn(object):
     if version == '1.2':
       cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('use_hour_fees','1')''')
       version = cls.set_version('1.3')
+      
+    if version == '1.3':
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE users ADD COLUMN inactive integer default 0;')
+        cls.execute('ALTER TABLE memberships ADD COLUMN inactive integer default 0;')
+      else:
+        cls.execute('ALTER TABLE users ADD COLUMN inactive BOOLEAN default 0;')
+        cls.execute('ALTER TABLE memberships ADD COLUMN inactive BOOLEAN default 0;')
+      version = cls.set_version('1.4')
 
   @classmethod
   def set_version(cls,version):

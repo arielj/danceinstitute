@@ -337,6 +337,8 @@ class Controller(gobject.GObject):
 
     page = UserForm(user)
     page.submit.connect_object('clicked', self.submit_user, page)
+    page.inactivate.connect_object('clicked', self.inactivate_user, page)
+    page.activate.connect_object('clicked', self.reactivate_user, page)
     page.open_fb.connect_object('clicked', self.open_fb, page)
     page.connect('create-user-package', self.new_user_package)
     page.connect('add-membership', self.new_membership)
@@ -434,6 +436,14 @@ class Controller(gobject.GObject):
       else:
         ErrorMessage("No se puede borrar al alumno:", deleted).run()
     dialog.destroy()
+
+  def inactivate_user(self, form):
+    form.user.inactivate()
+    form.update_user_status()
+
+  def reactivate_user(self, form):
+    form.user.reactivate()
+    form.update_user_status()
 
 
   #klasses controls
@@ -1038,7 +1048,8 @@ class Controller(gobject.GObject):
     user = page.get_selected_user()
     k_or_p = page.get_selected_klass_or_package()
     q_term = page.get_filter()
-    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group(), q_term)
+    inactive = page.should_include_inactive()
+    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group(), q_term, inactive)
     page.update(payments)
 
   def export_payments_report_html(self, page):
@@ -1082,7 +1093,8 @@ class Controller(gobject.GObject):
 
   def filter_overdues(self, page):
     klass = page.get_selected_klass()
-    installments = Installment.overdues(klass=klass)
+    inactive = page.should_include_inactive_users()
+    installments = Installment.overdues(klass=klass,include_inactive=inactive)
     page.update(installments)
 
   def export_overdue_installments_report_html(self, page):
@@ -1102,8 +1114,8 @@ class Controller(gobject.GObject):
     return page
 
   def filter_debts(self, page):
-    #klass = page.get_selected_klass()
-    debts = Liability.overdues(desc=page.get_filter())
+    inactive = page.should_include_inactive_users()
+    debts = Liability.overdues(desc=page.get_filter(), include_inactive=inactive)
     page.update(debts)
 
   def export_debts_report_html(self, page):

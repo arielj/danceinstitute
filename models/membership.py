@@ -14,7 +14,7 @@ import package
 
 class Membership(Model):
   table = 'memberships'
-  fields_for_save = ['student_id','for_id','for_type','info']
+  fields_for_save = ['student_id','for_id','for_type','info', 'inactive']
 
   def __init__(self, data = {}):
     self.student_id = None
@@ -24,7 +24,7 @@ class Membership(Model):
     self._for = None
     self._installments = None
     self.info = ''
-    self.active = True
+    self.inactive = False
     
     Model.__init__(self, data)
 
@@ -73,6 +73,14 @@ class Membership(Model):
     self._installments = None
     return self.installments
 
+  def inactivate(self):
+    self.inactive = True
+    self.save()
+
+  def reactivate(self):
+    self.inactive = False
+    self.save()
+
   def create_installments(self, year, initial_month, final_month, fee):
     year = year
     initial_month = initial_month
@@ -105,7 +113,7 @@ class Membership(Model):
     return {'normal': 'Normal', 'half': 'Mitad de clases', 'once': 'Una sola clase'}
 
   def to_db(self):
-    return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info}
+    return {'student_id': self.student_id, 'for_id': self.for_id, 'for_type': self.for_type, 'info': self.info, 'inactive': self.inactive}
 
   def _is_valid(self):
     self.validate_presence_of('student')

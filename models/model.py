@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from decimal import Decimal
+import datetime
 from database import Conn
 from translations import _a, _e
 import re
@@ -32,6 +33,14 @@ class Model(object):
     self.errors = {}
     
     self.set_attrs(attrs)
+
+  def parse_date(self, date_str):
+    for format in ['%Y/%m/%d','%Y/%d/%m','%Y-%m-%d','%Y-%d-%m','%d-%m-%Y','%d/%m/%Y']:
+      try:
+        return datetime.datetime.strptime(date_str,format).date()
+      except:
+        continue
+    return ''
 
   @classmethod
   def create(cls, attrs = {}):

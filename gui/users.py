@@ -16,8 +16,18 @@ class UserForm(FormFor):
 
     self.create_form_fields()
     
+    self.form_actions = gtk.HBox()
     self.submit = gtk.Button('Guardar')
-    self.fields.pack_start(self.submit,False)
+    self.inactivate = gtk.Button('Desactivar')
+    self.activate = gtk.Button('Activar')
+    
+    self.update_user_status()
+    
+    self.form_actions.pack_start(self.submit,True)
+    self.form_actions.pack_start(self.inactivate, False)
+    self.form_actions.pack_start(self.activate, False)
+    
+    self.fields.pack_start(self.form_actions, False)
     
     self.add_family_block()
     
@@ -35,15 +45,15 @@ class UserForm(FormFor):
     self.set_inscription_message()
 
   def get_tab_label(self):
-    if self.object.id:
-      if self.object.is_teacher:
-        title = 'Profesor' if self.object.male else 'Profesora'
+    if self.user.id:
+      if self.user.is_teacher:
+        title = 'Profesor' if self.user.male else 'Profesora'
       else:
-        title = 'Alumno' if self.object.male else 'Alumna'
+        title = 'Alumno' if self.user.male else 'Alumna'
 
-      return 'Editar ' + title + ":\n" + self.object.name + ' ' + self.object.lastname
+      return 'Editar ' + title + ":\n" + self.user.name + ' ' + self.user.lastname
     else:
-      if self.object.is_teacher:
+      if self.user.is_teacher:
         return 'Agregar Profesor/a'
       else:
         return 'Agregar Alumno/a' 
@@ -207,7 +217,12 @@ class UserForm(FormFor):
       tab.refresh()
     self.tabs.show_all()
     self.set_inscription_message()
-    
+    self.update_user_status()
+
+  def update_user_status(self):
+    self.inactivate.set_sensitive(not self.user.inactive)
+    self.activate.set_sensitive(self.user.inactive)
+
   def on_add_membership_clicked(self, button):
     self.emit('add-membership')
     

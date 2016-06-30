@@ -190,7 +190,7 @@ class Installment(Model):
     return True
 
   @classmethod
-  def overdues(cls, recharge_after = None, klass = None):
+  def overdues(cls, recharge_after = None, klass = None, include_inactive = False):
     today = cls._today()
     if recharge_after is None: recharge_after = settings.Settings.get_settings().recharge_after
 
@@ -212,6 +212,8 @@ class Installment(Model):
         args['p_ids'] = ','.join(map(lambda p: str(p.id), packages))
 
       q.where(where,args)
+    
+    if include_inactive is False: q.where('users.inactive = 0')
     
     return q
 

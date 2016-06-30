@@ -204,7 +204,7 @@ class Klass(Model):
   def for_package(cls,package_id):
     return cls.set_from('klasses_packages').set_join('LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id').where('package_id',package_id)
 
-  def get_students(self):
+  def get_students(self, include_inactive = False):
     ms = membership.Membership.for_klass_or_package(self).do_get()
     
     for p in package.Package.with_klass(self):
@@ -212,4 +212,8 @@ class Klass(Model):
     
     uids = map(lambda m: str(m.student_id), ms)
 
-    return student.Student.where('id IN ('+','.join(uids)+')')
+    q = student.Student.where('id IN ('+','.join(uids)+')')
+
+    if include_inactive is False: q.where('inactive = 0')
+    
+    return q
