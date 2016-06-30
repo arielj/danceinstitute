@@ -35,12 +35,16 @@ class Model(object):
     self.set_attrs(attrs)
 
   def parse_date(self, date_str):
+    return Model.parse_date(date_str)
+  
+  @classmethod
+  def parse_date(cls, date_str):
     for format in ['%Y/%m/%d','%Y/%d/%m','%Y-%m-%d','%Y-%d-%m','%d-%m-%Y','%d/%m/%Y']:
       try:
         return datetime.datetime.strptime(date_str,format).date()
       except:
         continue
-    return ''
+    return ''  
 
   @classmethod
   def create(cls, attrs = {}):

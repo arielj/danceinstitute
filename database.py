@@ -295,6 +295,7 @@ class Conn(object):
     cls.execute('UPDATE settings SET value = "anotación importante\nhola" WHERE key = "notes"')
     cls.execute('''INSERT INTO movements (date, amount, description, done) VALUES (?, 10000, 'saco 100 para el kiosko',1)''',(datetime.datetime.today().date(),))
     cls.execute('''UPDATE settings SET value = '{"1": 300, "1.5": 450, "2": 550, "2.5": 650, "3": 750, "3.5": 800, "4": 850, "6": 900}' WHERE key = "fees"''')
+    cls.execute('''INSERT INTO users (name, lastname, dni, cellphone, birthday, address, male, email, is_teacher, age) VALUES ('Juanito Alberto', 'Cumplehoy', '32496425', '0299-15-412-5106', ?, '9 de Julio 1140', 1, 'arieljuod@gmail.com', 0, 28)''', (datetime.datetime.today().date(),))
     cls.commit()
 
   @classmethod

@@ -6,7 +6,7 @@ import gobject
 from lib.money import Money
 
 class Home(gtk.HBox):
-  def __init__(self, klasses = [], notes = '', installments = [], payments = [], movements = []):
+  def __init__(self, klasses = [], notes = '', installments = [], payments = [], movements = [], today_birthdays = []):
     gtk.HBox.__init__(self, False, 10)
     self.set_border_width(4)
     
@@ -14,8 +14,14 @@ class Home(gtk.HBox):
     self.klasses = TodayKlasses(klasses)
     left.pack_start(self.klasses, False)
     left.pack_start(gtk.HSeparator(), False)
+    
+    more_info = gtk.HBox(False, 10)
     self.notes = Notes(notes)
-    left.pack_start(self.notes, True)
+    self.birthdays = Birthdays(today_birthdays)
+    more_info.pack_start(self.notes, True)
+    more_info.pack_start(self.birthdays, False)
+    
+    left.pack_start(more_info, True)
     
     self.daily_cash = DailyCash(payments,movements)
     
@@ -51,7 +57,9 @@ gobject.signal_new('user-edit', \
 class TodayKlasses(gtk.VBox):
   def __init__(self,klasses):
     gtk.VBox.__init__(self)
-    self.pack_start(gtk.Label('Clases de hoy'), False)
+    l = gtk.Label()
+    l.set_markup('<b>Clases de hoy</b>')
+    self.pack_start(l, False)
     self.table = KlassesTable(klasses)
     self.pack_start(self.table, True)
 
@@ -101,7 +109,9 @@ class KlassesTable(gtk.TreeView):
 class Notes(gtk.VBox):
   def __init__(self,notes):
     gtk.VBox.__init__(self)
-    self.pack_start(gtk.Label('Notas'), False)
+    l = gtk.Label()
+    l.set_markup('<b>Notas</b>')
+    self.pack_start(l, False)
     self.entry = gtk.TextView()
     self.entry.set_editable(True)
     self.entry.get_buffer().set_text(notes)
@@ -114,6 +124,23 @@ class Notes(gtk.VBox):
     
     self.save = gtk.Button('Guardar nota')
     self.pack_start(self.save, False)
+
+class Birthdays(gtk.VBox):
+  def __init__(self, users):
+    gtk.VBox.__init__(self, False, 10)
+    l = gtk.Label()
+    l.set_markup('<b>Hoy cumplen años:</b>')
+    self.pack_start(l, False)
+    if users.anything():
+      viewport = gtk.ScrolledWindow()
+      viewport.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+      users_list = gtk.VBox()
+      for user in users:
+        users_list.pack_start(gtk.Label(user.to_label(True)), False)
+      viewport.add_with_viewport(users_list)
+      self.pack_start(viewport, True)
+    else:
+      self.pack_start(gtk.Label("No hay alumnos/as que\ncumplan años hoy"), False)
 
 class OverdueInstallments(gtk.VBox):
   def __init__(self,installments):

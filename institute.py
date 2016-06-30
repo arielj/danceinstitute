@@ -119,7 +119,8 @@ class Controller(gobject.GObject):
     notes = self.settings.notes
     payments = payment.Payment.filter(today,today)
     movements = movement.Movement.by_date(today)
-    page = Home(klasses, notes, installments, payments, movements)
+    today_birthdays = user.User.birthday_today()
+    page = Home(klasses, notes, installments, payments, movements, today_birthdays)
     page.connect('user-edit', self.edit_student)
     page.notes.save.connect_object('clicked',self.save_notes, page)
     page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)

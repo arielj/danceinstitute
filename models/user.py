@@ -113,8 +113,10 @@ class User(Model):
     self._memberships = None
     return self.memberships
 
-  def to_label(self):
-    return ' '.join([self.name,self.lastname])
+  def to_label(self, add_group = False):
+    s = ' '.join([self.name,self.lastname])
+    if add_group is True and self.group is not None and self.group != "": s += ' (%s)' % self.group
+    return s
 
   def after_save(self):
     for m in self.memberships:
@@ -193,7 +195,7 @@ class User(Model):
   @classmethod
   def calculate_age(cls,born):
     if not isinstance(born,datetime.date):
-      born = self.parse_date(value)
+      born = cls.parse_date(born)
       if born == '': born = False
 
     if born:
@@ -204,3 +206,8 @@ class User(Model):
 
   def is_inscription_payed(self):
     return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where('description', 'Insc%', comparission = 'like')) > 0
+
+  @classmethod
+  def birthday_today(cls):
+    today = datetime.datetime.now().date()
+    return cls.where('birthday', '%%%s' % (today.strftime('-%m-%d'),), comparission='LIKE')
