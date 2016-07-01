@@ -31,7 +31,7 @@ class User(Model):
     self._dni = ''
     self.cellphone = ''
     self.alt_phone = ''
-    self.birthday = ''
+    self._birthday = ''
     self._age = 0
     self.address = ''
     self._male = True
@@ -102,6 +102,17 @@ class User(Model):
       self._age = int(value)
     except:
       self._age = 0
+
+  @property
+  def birthday(self):
+    return self._birthday
+
+  @birthday.setter
+  def birthday(self,value):
+    if isinstance(value,datetime.date):
+      self._birthday = value
+    else:
+      self._birthday = self.parse_date(value)
 
   @property
   def memberships(self):
@@ -210,4 +221,10 @@ class User(Model):
   @classmethod
   def birthday_today(cls):
     today = datetime.datetime.now().date()
-    return cls.where('birthday', '%%%s' % (today.strftime('-%m-%d'),), comparission='LIKE')
+    m = today.strftime('%m')
+    d = today.strftime('%d')
+    b1 = '%%-%s-%s' % (m,d)
+    m = re.sub(r'\A0*','',m) #hack para aceptar cumpleaños en formato 'dia/mes/año' sin ceros
+    d = re.sub(r'\A0*','',d)
+    b2 = '%%%s/%%%s/%%' % (d,m)
+    return cls.where('birthday LIKE :b1 OR birthday LIKE :b2', {'b1': b1, 'b2': b2})
