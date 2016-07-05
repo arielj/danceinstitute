@@ -226,5 +226,6 @@ class User(Model):
     b1 = '%%-%s-%s' % (m,d)
     m = re.sub(r'\A0*','',m) #hack para aceptar cumpleaños en formato 'dia/mes/año' sin ceros
     d = re.sub(r'\A0*','',d)
-    b2 = '%%%s/%%%s/%%' % (d,m)
-    return cls.where('birthday LIKE :b1 OR birthday LIKE :b2', {'b1': b1, 'b2': b2})
+    b2 = '%s/%%%s/%%' % (d,m)
+    b3 = '0'+b2 #hack para matchear "0X/YY/ZZZZ" cuando el día actual es un solo dígito
+    return cls.where('birthday LIKE :b1 OR birthday LIKE :b2 OR birthday LIKE :b3', {'b1': b1, 'b2': b2, 'b3': b3})
