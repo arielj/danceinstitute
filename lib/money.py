@@ -9,6 +9,7 @@ def convert_to_cents(amount):
   elif isinstance(amount, float):
     c = int(amount*100)
   elif isinstance(amount, str):
+    if amount == '': amount = '0'
     amount = amount.replace(',','.')
     try:
       d = Decimal(amount)
@@ -25,6 +26,9 @@ def convert_to_cents(amount):
 class Money(object):
   def __init__(self, amount):
     self._cents = convert_to_cents(amount)
+
+  def cents(self):
+    return self._cents
 
   def __str__(self):
     s = "%.2f" % (self._cents/100.0)
@@ -59,3 +63,24 @@ class Money(object):
 
   def __int__(self):
     return self._cents/100
+
+  def __float__(self):
+    return self._cents/100.0
+    
+  def __lt__(self, other):
+    return self._cents < Money(other).cents()
+
+  def __le__(self, other):
+    return self._cents <= Money(other).cents()
+  
+  def __eq__(self, other):
+    return self._cents == Money(other).cents()
+
+  def __ne__(self, other):
+    return self._cents != Money(other).cents()
+
+  def __gt__(self, other):
+    return self._cents > Money(other).cents()
+
+  def __ge__(self, other):
+    return self._cents >= Money(other).cents()
