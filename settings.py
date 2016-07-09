@@ -13,6 +13,7 @@ class Settings(object):
     self.tabs_position = 'top'
     self._recharge_after = 0
     self.recharge_value = 0
+    self.second_recharge_value = 0
     self.notes = ''
     self._export_path = ''
     self.date_format = '%Y-%m-%d'

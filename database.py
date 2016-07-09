@@ -250,6 +250,10 @@ class Conn(object):
         cls.execute('ALTER TABLE users ADD COLUMN inactive BOOLEAN default 0;')
         cls.execute('ALTER TABLE memberships ADD COLUMN inactive BOOLEAN default 0;')
       version = cls.set_version('1.4')
+      
+    if version == '1.4':
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('second_recharge_value','')''')
+      version = cls.set_version('1.5')
 
   @classmethod
   def set_version(cls,version):
@@ -287,8 +291,9 @@ class Conn(object):
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('name','Instituto Superior de Danzas Sharife')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('opening','18:00')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('closing','24:00')''')
-    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_after','10')''')
-    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_value','50')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_after','6')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('recharge_value','10%')''')
+    cls.execute('''INSERT INTO settings (`key`, value) VALUES ('second_recharge_value','20%')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('startup_size','')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('language','es')''')
     cls.execute('''INSERT INTO settings (`key`, value) VALUES ('tabs_position','top')''')

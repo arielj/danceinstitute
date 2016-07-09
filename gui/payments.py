@@ -167,15 +167,21 @@ class AddPaymentForm(FormFor):
 
     if payment.installment is not None:
       if payment.installment.get_recharge() > 0:
-        self.ignore_recharge = gtk.CheckButton('Ignorar recargo')
+        self.ignore_second_recharge = gtk.CheckButton('Ignorar recargo por mes vencido')
+        self.ignore_second_recharge.connect('toggled',self.on_ignore_recharge_toggled)
+        self.fields.pack_start(self.ignore_second_recharge, False)
+        self.ignore_recharge = gtk.CheckButton('Ignorar recargo por fecha')
         self.ignore_recharge.connect('toggled',self.on_ignore_recharge_toggled)
         self.fields.pack_start(self.ignore_recharge, False)
+        if Settings.get_settings().recharge_value == '': self.ignore_recharge.set_no_show_all(True)
+        if Settings.get_settings().second_recharge_value == '': self.ignore_second_recharge.set_no_show_all(True)
     
     self.pack_start(self.fields, False)
 
   def get_values(self):
     data = {'date': self.date_e.get_text(), 'amount': self.amount_e.get_text(), 'receipt_number': self.receipt_number_e.get_text(), 'description': self.description_e.get_text(), 'ignore_recharge': True}
     if ('ignore_recharge' in vars(self)): data['ignore_recharge'] = self.ignore_recharge.get_active()
+    if ('ignore_second_recharge' in vars(self)): data['ignore_second_recharge'] = self.ignore_second_recharge.get_active()
 
     return data
 
@@ -189,7 +195,7 @@ class AddPaymentForm(FormFor):
     dialog.destroy()
 
   def on_ignore_recharge_toggled(self, widget):
-    self.amount_e.set_text(str(self.object.installment.to_pay(ignore_recharge=widget.get_active())))
+    self.amount_e.set_text(str(self.object.installment.to_pay(ignore_recharge=self.ignore_recharge.get_active(), ignore_second_recharge=self.ignore_second_recharge.get_active())))
 
 class PaymentsTab(gtk.VBox):
   def __init__(self, user, done = False):

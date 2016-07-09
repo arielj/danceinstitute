@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from translations import _t, _a
 from model import Model
@@ -26,6 +26,7 @@ class Installment(Model):
     self._payments = None
     self._status = 'waiting'
     self.ignore_recharge = False
+    self.ignore_second_recharge = False
     
     Model.__init__(self, data)
 
@@ -61,28 +62,36 @@ class Installment(Model):
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
 
-  def total(self, ignore_recharge = None):
+  def total(self, ignore_recharge = None, ignore_second_recharge = None):
     if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
-    recharge = 0 if self.ignore_recharge else self.get_recharge()
-    return self.amount+recharge
+    if ignore_second_recharge is not None: self.ignore_second_recharge = ignore_second_recharge
+    return self.amount+self.get_recharge()
 
-  def get_recharge(self, after_day = None, recharge_value = None):
+  def get_recharge(self, after_day = None, recharge_value = None, second_recharge_value = None):
     sets = settings.Settings.get_settings()
     
     if after_day is None: after_day = sets.recharge_after
     if recharge_value is None: recharge_value = sets.recharge_value
+    if second_recharge_value is None: second_recharge_value = sets.second_recharge_value
 
     recharge = 0
     
     sets = settings.Settings.get_settings()
     today = self.__class__._today().date()
+    beginning_of_month = date(today.year, today.month, 1)
     
     if self._status != 'paid':
-      if self.date(after_day) < today:
-        if re.match('^\d+%$',recharge_value):
-          recharge = self.amount*(int(recharge_value[0:-1]))/100
-        elif re.match('^\d+$',recharge_value):
-          recharge = int(recharge_value)
+      rv = ''
+      if second_recharge_value != '' and self.date() < beginning_of_month and not self.ignore_second_recharge:
+        rv = second_recharge_value
+      elif recharge_value != '' and self.date(after_day) < today and not self.ignore_recharge:
+        rv = recharge_value
+      
+      if rv != '':
+        if re.match('^\d+%$',rv):
+          recharge = self.amount*(int(rv[0:-1]))/100
+        elif re.match('^\d+$',rv):
+          recharge = int(rv)
     
     return recharge
 
@@ -103,9 +112,10 @@ class Installment(Model):
   def detailed_to_pay(self):
     return '$'+str(self.to_pay())
 
-  def to_pay(self, ignore_recharge = None):
+  def to_pay(self, ignore_recharge = None, ignore_second_recharge = None):
     if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
-    return self.total(self.ignore_recharge)-self.paid()
+    if ignore_second_recharge is not None: self.ignore_second_recharge = ignore_second_recharge
+    return self.total()-self.paid()
   
   def month_name(self):
     return _t('months')[self.month]

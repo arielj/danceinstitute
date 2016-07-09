@@ -44,6 +44,8 @@ class Config(gtk.ScrolledWindow):
     self.recharge_after_e.set_text(str(getattr(self.settings,'recharge_after')))
     self.recharge_value_e = self.add_field('Valor del recargo (formato: 10 o 10%)', attrs=10)
     self.recharge_value_e.set_text(str(getattr(self.settings,'recharge_value')))
+    self.second_recharge_value_e = self.add_field('Valor del recargo por mes vencido (formato: 10 o 10%)', attrs=10)
+    self.second_recharge_value_e.set_text(str(getattr(self.settings,'second_recharge_value')))
     
     self.language_e = self.add_field('Idioma', attrs=2)
     self.language_e.set_text(str(getattr(self.settings,'language')))
@@ -87,7 +89,7 @@ class Config(gtk.ScrolledWindow):
     return "Configuración"
 
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'fees': self.fees_ls.get_fees(), 'use_hour_fees': self.hour_fees_check.get_active()}
+    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'second_recharge_value': self.second_recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'fees': self.fees_ls.get_fees(), 'use_hour_fees': self.hour_fees_check.get_active()}
 
 
 class FeesList(gtk.TreeView):
