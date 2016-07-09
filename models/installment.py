@@ -55,6 +55,9 @@ class Installment(Model):
       v = 0
     self._amount = v
 
+  def description(self):
+    return self.membership.klass_or_package.name + ' ' + self.month_name() + ' ' + str(self.year)
+
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
 

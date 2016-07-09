@@ -55,16 +55,16 @@ class Payment(Model):
   @property
   def description(self):
     descs = []
-    if self._description:
-      descs.append(self._description)
+    if self._description: descs.append(self._description)
     
-    ins = self.installment
-    if ins:
-      descs.append(ins.membership.klass_or_package.name + ' ' + ins.month_name() + ' ' + str(ins.year))
+    if self.installment:
+      ins = self.installment
+      if self._description != ins.description(): descs.append(ins.description())
     
-    li = self.liability
-    if li:
-      descs.append(li.description)
+    if self.liability:
+      li = self.liability
+      if self._description != li.description: descs.append(li.description)
+
     return '. '.join(descs)
 
   @description.setter
@@ -154,11 +154,15 @@ class Payment(Model):
     self.validate_presence_of('date')
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self._description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self.description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id}
 
   def to_s(self):
     s = self.date.strftime(Settings.get_settings().date_format) + ": $" + str(self.amount)
-    if self._description: s += ' ('+self._description+')'
+
+    if self._description:
+      d = self.installment.description() if self.installment else ''
+      if self._description != d: s += ' ('+self._description+')'
+
     if self.receipt_number is not None: s += ' (R.N°:'+str(self.receipt_number)+')'
     return s
 
