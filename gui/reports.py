@@ -9,6 +9,7 @@ import exporter
 import string
 import re
 from settings import Settings
+from translations import _t
 
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -551,7 +552,7 @@ class MovementsList(gtk.TreeView):
 
 
 
-class OverdueInstallments(gtk.VBox):
+class InstallmentsReport(gtk.VBox):
   def __init__(self, installments, klasses):
     self.installments = installments
     gtk.VBox.__init__(self, False, 5)
@@ -560,7 +561,7 @@ class OverdueInstallments(gtk.VBox):
     self.pack_start(content, True)
     
     klasses_model = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
-    klasses_model.append((None,'Todas las clases'))
+    klasses_model.append((None,'Todas'))
     for klass in klasses:
       klasses_model.append((klass, klass.name))
     
@@ -572,7 +573,22 @@ class OverdueInstallments(gtk.VBox):
     self.klass.child.set_completion(completion)
     self.klass.set_active(0)
     
-    self.include_inactive = gtk.CheckButton('Incluir usuarios inactivos')
+    self.year_e = gtk.Entry(4)
+    
+    store = gtk.ListStore(int, str)
+    store.append((-1,''))
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.month_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.month_e.pack_start(cell, True)
+    self.month_e.add_attribute(cell, 'text', 1)
+    
+    self.only_active = gtk.CheckButton('Mostrar sólo de usuarios activos')
+    
+    self.include_paid = gtk.CheckButton('Incluir cuotas pagadas')
+    
+    self.only_overdue = gtk.CheckButton('Mostrar sólo cuotas con recargo')
     
     self.filter = gtk.Button('Buscar')
     
@@ -580,8 +596,16 @@ class OverdueInstallments(gtk.VBox):
     label = gtk.Label()
     label.set_markup('<big><b>Filtrar:</b></big>')
     self.form.pack_start(label, False)
+    self.form.pack_start(gtk.Label('Clase:'), False)
     self.form.pack_start(self.klass, False)
-    self.form.pack_start(self.include_inactive, False)
+    self.form.pack_start(gtk.Label('Año:'), False)
+    self.form.pack_start(self.year_e, False)
+    self.form.pack_start(gtk.Label('Mes:'), False)
+    self.form.pack_start(self.month_e, False)
+    
+    self.form.pack_start(self.only_active, False)
+    self.form.pack_start(self.include_paid, False)
+    self.form.pack_start(self.only_overdue, False)
     self.form.pack_start(self.filter, False)
     
     content.pack_start(self.form, False)
@@ -612,13 +636,13 @@ class OverdueInstallments(gtk.VBox):
     self.show_all()
 
   def get_tab_label(self):
-    return "Cuotas atrasadas"
+    return "Cuotas"
 
   def sum_total(self, installments):
     return str(sum(map(lambda i: i.to_pay(), installments)))
 
   def to_html(self):
-    h1_content = "Cuotas atrasadas"
+    h1_content = "Cuotas"
     k = self.get_selected_klass()
     if k is not None: h1_content += ' de la clase %s' % k.name
     
@@ -633,7 +657,7 @@ class OverdueInstallments(gtk.VBox):
     return st
 
   def csv_filename(self):
-    f = 'cuotas_atrasadas'
+    f = 'cuotas'
     k = self.get_selected_klass()
     if k is not None: f += '_clase_%s' % str_to_filename(k.name)
     return f+'.csv'
@@ -659,9 +683,23 @@ class OverdueInstallments(gtk.VBox):
       return self.klass.get_model().get_value(itr,0)
     else:
       return None
+  
+  def get_selected_month(self):
+    itr = self.month_e.get_active_iter()
+    if itr is not None:
+      m = self.month_e.get_model().get_value(itr,0)
+      return m if m != -1 else None
+    else:
+      return None
+  
+  def get_year(self):
+    return self.year_e.get_text()
 
-  def should_include_inactive_users(self):
-    return self.include_inactive.get_active()
+  def is_only_active(self):
+    return self.only_active.get_active()
+
+  def is_only_overdue(self):
+    return self.only_overdue.get_active()
 
   def on_klass_match_selected(self, completion, model, itr):
     klass = model.get_value(itr,0)
@@ -682,9 +720,9 @@ class OverdueInstallments(gtk.VBox):
     else:
       self.klass.set_active_iter(klasses_model.get_iter_first())
 
-gobject.type_register(OverdueInstallments)
+gobject.type_register(InstallmentsReport)
 gobject.signal_new('student-edit', \
-                   OverdueInstallments, \
+                   InstallmentsReport, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 

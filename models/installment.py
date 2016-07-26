@@ -203,7 +203,25 @@ class Installment(Model):
     return True
 
   @classmethod
-  def overdues(cls, recharge_after = None, klass = None, include_inactive = False):
+  def for_klass(cls, klass, q = None):
+    if q is None: q = Query(cls)
+    where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'
+    args = {'klass_id': klass.id}
+    packages = package.Package.with_klass(klass)
+    if packages.anything():
+      where = '('+where+') OR (memberships.for_id IN (:p_ids) AND memberships.for_type = "Package")'
+      args['p_ids'] = ','.join(map(lambda p: str(p.id), packages))
+
+    return q.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id').where(where,args)
+
+  @classmethod
+  def only_active_users(cls, q = None):
+    if q is None: q = Query(cls)
+    return q.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').where('users.inactive = 0')
+
+  @classmethod
+  def overdues(cls, recharge_after = None, q = None):
+    if q is None: q = Query(cls)
     today = cls._today()
     if recharge_after is None: recharge_after = settings.Settings.get_settings().recharge_after
 
@@ -214,21 +232,7 @@ class Installment(Model):
       month = 11
       year = year-1
 
-    q = cls.where('status = "waiting" AND ((year = :year AND month <= :month) OR year < :year)', {'year': year, 'month': month}).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('users.name ASC, users.lastname ASC')
-    
-    if klass is not None:
-      where = 'memberships.for_id = :klass_id AND memberships.for_type = "Klass"'
-      args = {'klass_id': klass.id}
-      packages = package.Package.with_klass(klass)
-      if packages.anything():
-        where = '('+where+') OR (memberships.for_id IN (:p_ids) AND memberships.for_type = "Package")'
-        args['p_ids'] = ','.join(map(lambda p: str(p.id), packages))
-
-      q.where(where,args)
-    
-    if include_inactive is False: q.where('users.inactive = 0')
-    
-    return q
+    return q.where('status = "waiting" AND ((year = :year AND month <= :month) OR year < :year)', {'year': year, 'month': month})
 
   @classmethod
   def to_pay_for(cls,user):

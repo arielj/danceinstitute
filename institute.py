@@ -78,7 +78,7 @@ class Controller(gobject.GObject):
     self.window.menu.search_student.connect('activate', self.search_student)
     self.window.menu.payments.connect('activate', self.payments_report)
     self.window.menu.daily_cash.connect('activate', self.daily_cash)
-    self.window.menu.overdue_installments.connect('activate', self.overdue_installments)
+    self.window.menu.installments.connect('activate', self.installments_report)
     self.window.menu.debts.connect('activate', self.debts)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
@@ -1083,8 +1083,8 @@ class Controller(gobject.GObject):
     self.export_csv(page.to_csv(),page.csv_filename())
 
 
-  def overdue_installments(self, menu_item):
-    page = OverdueInstallments(Installment.overdues(), Klass.all())
+  def installments_report(self, menu_item):
+    page = InstallmentsReport(Installment.overdues(), Klass.all())
     page.filter.connect_object('clicked', self.filter_overdues, page)
     page.export_html.connect_object('clicked', self.export_overdue_installments_report_html, page)
     page.export_csv.connect_object('clicked', self.export_overdue_installments_report_csv, page)
@@ -1093,9 +1093,20 @@ class Controller(gobject.GObject):
     return page
 
   def filter_overdues(self, page):
+    installments = Installment.order_by('users.name ASC, users.lastname ASC')
+
     klass = page.get_selected_klass()
-    inactive = page.should_include_inactive_users()
-    installments = Installment.overdues(klass=klass,include_inactive=inactive)
+    if klass is not None: installments = Installment.for_klass(klass,installments)
+    if page.is_only_overdue(): installments = Installment.overdues(None, installments)
+    if not page.include_paid.get_active(): installments.where('status','waiting')
+    if page.get_selected_month() is not None: installments.where('month', page.get_selected_month())
+    if page.get_year() != '': installments.where('year', page.get_year())
+    
+    if page.is_only_active(): installments = Installment.only_active_users(installments)
+    else:
+      #hago join para que ande el order_by
+      installments.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id')
+
     page.update(installments)
 
   def export_overdue_installments_report_html(self, page):

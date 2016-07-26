@@ -348,15 +348,18 @@ class SearchStudent(gtk.VBox):
     gtk.VBox.__init__(self, False, 8)
     self.set_border_width(4)
     
+    content = gtk.HBox(False, 5)
+    self.pack_start(content, True)
+    
     self.form = SearchForm()
     self.form.submit.connect('clicked', self.on_search)
     self.form.entry.connect('activate', self.on_search)
     self.form.entry_2.connect('activate', self.on_search)
-    self.pack_start(self.form, False)
+    content.pack_start(self.form, False)
     
     self.results = StudentsList([])
     self.results.connect('student-activated', self.on_student_activated)
-    self.pack_start(self.results, True)
+    content.pack_start(self.results, True)
     
     self.actions = gtk.HBox(False, 4)
     self.add = gtk.Button('Agregar')
@@ -381,6 +384,7 @@ class SearchStudent(gtk.VBox):
     self.results.update_table(students)
     self.edit.set_sensitive(False)
     self.delete.set_sensitive(False)
+    self.form.update_total(students)
 
   def on_search(self, widget, student = None, new_record = None):
     self.emit('search', self.form.get_value(), self.form.get_group())
@@ -424,27 +428,43 @@ gobject.signal_new('student-delete', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 
-class SearchForm(gtk.HBox):
+class SearchForm(gtk.VBox):
   def __init__(self):
-    gtk.HBox.__init__(self)
+    gtk.VBox.__init__(self, False, 5)
 
+    label = gtk.Label()
+    label.set_markup('<big><b>Filtrar:</b></big>')
+    self.pack_start(label, False)
+    
     self.label = gtk.Label('Nombre, Apellido o D.N.I: ')
     self.entry = gtk.Entry(100)
     self.label_2 = gtk.Label('Grupo: ')
     self.entry_2 = gtk.Entry(255)
     self.submit = gtk.Button('Buscar')
-    
+       
     self.pack_start(self.label, False)
     self.pack_start(self.entry, False)
     self.pack_start(self.label_2, False)
     self.pack_start(self.entry_2, False)
     self.pack_start(self.submit, False)
+    
+    self.totals_label = gtk.Label('Total: 0')
+    
+    al = gtk.Alignment(yalign=1)
+    al.add(self.totals_label)
+    self.pack_start(al, True)
 
   def get_value(self):
     return self.entry.get_text()
   
   def get_group(self):
     return self.entry_2.get_text()
+
+  def update_total(self, students):
+    if students is None:
+      self.totals_label.set_text('Total: 0')
+    else:
+      self.totals_label.set_text('Total: %d' % students.count())
 
 gobject.type_register(SearchForm)
 gobject.signal_new('search', \
@@ -563,12 +583,16 @@ class StudentsListDialog(gtk.Dialog):
                         ())
     self.set_size_request(700,400)
     self.list = StudentsList(klass.get_students())
+    self.total_label = gtk.Label("Total: %d" % klass.get_students().count())
     self.export_csv = gtk.Button('Exportar CSV')
     self.export_html = gtk.Button('Exportar HTML')
     exports = gtk.HBox()
     exports.pack_start(self.export_csv, True)
     exports.pack_start(self.export_html, True)
     self.vbox.pack_start(self.list, True)
+    al = gtk.Alignment(xalign=0)
+    al.add(self.total_label)
+    self.vbox.pack_start(al, False)
     self.vbox.pack_start(exports, False)
     
     self.show_all()
