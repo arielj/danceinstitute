@@ -47,9 +47,9 @@ class Query(object):
     q = 'SELECT '+self.select_str+' FROM ' + self.from_str
     if self.join_str: q = q + ' ' + self.join_str
     if self.wheres: q = q + self.get_wheres()
-    if self.order is not None: q = q + ' ORDER BY %s' % self.order
-    if self.offset is not None: q = q + ' OFFSET %i' % self.offset
+    if self.order is not None: q = q + ' ORDER BY "%s"' % self.order
     if self.limit is not None: q = q + ' LIMIT %i' % self.limit
+    if self.offset is not None: q = q + ' OFFSET %i' % self.offset
     return q
 
   def where(self, field, value=None, comparission=None, placeholder=None):
