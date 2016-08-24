@@ -21,11 +21,11 @@ import exporter
 class Controller(gobject.GObject):
   def main(self):
     gtk.main()
-  
+
   #skip delete event so destroy event is triggered
   def delete_event(self, widget, event, data=None):
     return gtk.FALSE
-  
+
   #stop app
   def quit(self, widget, data=None):
     Conn.close()
@@ -50,12 +50,12 @@ class Controller(gobject.GObject):
       self.window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     else:
       self.window.maximize()
-    
+
     self.bind_status_signals()
     self.connected_signals = {}
-    
+
     self.connect('settings-changed', self.on_settings_changed)
-    
+
     self.home(None)
 
   def close_tab(self, window, page):
@@ -136,7 +136,7 @@ class Controller(gobject.GObject):
     dialog = AddMovementDialog(movement)
     dialog.connect('response', self.on_add_movement, page)
     dialog.run()
-  
+
   def on_add_movement(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
@@ -254,7 +254,7 @@ class Controller(gobject.GObject):
   def refresh_rooms(self, widget, room, created, page):
     rooms = Room.all()
     page.refresh_list(rooms)
-    
+
 
 
   #teachers controls
@@ -314,7 +314,7 @@ class Controller(gobject.GObject):
   def add_teacher_payment(self, page):
     payment = Payment()
     payment.user = page.object
-    
+
     dialog = AddPaymentDialog(payment)
     dialog.connect('response', self.on_add_payment, page, True)
     dialog.run()
@@ -365,13 +365,13 @@ class Controller(gobject.GObject):
     dialog = AddFamilyDialog(User.where('(family IS NULL OR family != :family) AND id != :id', {'family': page.object.family, 'id': page.object.id}))
     dialog.connect('response', self.on_add_family_response, page)
     dialog.run()
-  
+
   def on_add_family_response(self, dialog, response, page):
     if response == gtk.RESPONSE_ACCEPT:
       page.object.add_family_member(dialog.get_selected_user())
       page.refresh_family()
     dialog.destroy()
-  
+
   def on_remove_family_clicked(self, widget, page):
     page.object.remove_family_member(page.get_selected_family_member())
     page.refresh_family()
@@ -405,8 +405,10 @@ class Controller(gobject.GObject):
     students = Student.search(value, group).order_by(attr)
     page.update_results(students)
 
-  def on_student_search(self, page, value, group = None):
+  def on_student_search(self, page, value, group = None, active_status = None):
     students = Student.search(value, group)
+    if active_status != 2:
+      students = students.where('inactive', active_status)
     page.update_results(students)
 
   def open_fb(self, page):
@@ -454,11 +456,11 @@ class Controller(gobject.GObject):
     if room and time:
       klass.build_schedule({'from_time': time, 'room': room, 'day': day_idx})
     page = self.klass_form(widget, klass)
-  
+
   def edit_klass(self, widget, klass_id):
     klass = Klass.find(klass_id)
     page = self.klass_form(widget, klass)
-  
+
   def klass_form(self, widget, klass):
     if klass.is_not_new_record():
       current = self.window.get_page_by_object(klass)
@@ -518,11 +520,11 @@ class Controller(gobject.GObject):
   def refresh_schedules(self, widget, kls, created, page):
     klasses = Klass.by_room_and_time(self.settings.get_opening_h(), self.settings.get_closing_h())
     page.refresh_tables(klasses)
-  
+
   def refresh_klasses(self, widget, kls, created, page):
     klasses = Klass.all()
     page.refresh_list(klasses)
-  
+
   def submit_klass(self, form):
     kls = form.object
     new_record = kls.is_new_record()
@@ -613,10 +615,10 @@ class Controller(gobject.GObject):
   def add_schedule(self, page):
     schedule = Schedule()
     self.show_schedule_dialog(schedule, page)
-  
+
   def edit_schedule(self, page, schedule):
     self.show_schedule_dialog(schedule, page)
-  
+
   def show_schedule_dialog(self, schedule, page):
     dialog = ScheduleDialog(schedule)
     dialog.connect('response', self.schedule_dialog_response, schedule, page)
@@ -676,7 +678,7 @@ class Controller(gobject.GObject):
     package = Package()
     klasses = Klass.all()
     return self.package_form(package, klasses)
-  
+
   def edit_user_package(self, page, package):
     dialog = EditUserPackageDialog(package, Klass.by_day())
     dialog.connect('response', self.on_update_user_package, page)
@@ -753,13 +755,13 @@ class Controller(gobject.GObject):
           created = membership.create_installments(datetime.date.today().year, dialog.form.get_initial_month(), dialog.form.get_final_month(), dialog.form.get_amount())
 
           if created is True: page.update()
-        
+
         dialog.destroy()
       else:
         ErrorMessage("No se puede crear el paquete:", 'Tenés que elegir al menos una clase').run()
     else:
       dialog.destroy()
-  
+
   def on_update_user_package(self, dialog, response, page):
     if response == gtk.RESPONSE_ACCEPT:
       klasses = dialog.form.get_checked_klasses()
@@ -786,7 +788,7 @@ class Controller(gobject.GObject):
     membership = Membership()
     klasses = Klass.all()
     packages = Package.where('for_user', 0)
-    
+
     options = klasses.do_get() + packages.do_get()
 
     for m in page.object.memberships:
@@ -838,7 +840,7 @@ class Controller(gobject.GObject):
     dialog = AddInstallmentsDialog(membership)
     dialog.connect('response', self.on_add_installments, page)
     dialog.run()
-  
+
   def on_add_installments(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
@@ -899,17 +901,17 @@ class Controller(gobject.GObject):
       dialog = AddPaymentDialog(payment)
       dialog.connect('response', self.on_add_payment, page, related)
       dialog.run()
-    
+
   def add_payments(self, page):
     installments = Installment.to_pay_for(page.object)
-    
+
     if len(installments) == 0:
       ErrorMessage('No se pueden cargar pagos:', 'No hay cuotas para pagar.').run()
     else:
       dialog = AddPaymentsDialog(installments)
       dialog.connect('response', self.on_add_payments, page)
       dialog.run()
-  
+
   def on_add_payment(self, dialog, response, page, related = None):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
@@ -953,7 +955,7 @@ class Controller(gobject.GObject):
         else:
           amount_paid = dialog.get_amount()
           total = sum(map(lambda i: i.to_pay(), installments))
-          
+
           if total < amount_paid:
             ErrorMessage('No se pueden cargar los pagos:', 'El monto ingresado es mayor al monto a pagar').run()
             destroy_dialog = False
@@ -967,7 +969,7 @@ class Controller(gobject.GObject):
                 rest -= amount
             self.emit('payment-changed', None, True)
             page.update()
-            
+
       else:
         ErrorMessage('No se pueden cargar los pagos:', 'No se seleccionó ninguna cuota.').run()
         destroy_dialog = False
@@ -997,7 +999,7 @@ class Controller(gobject.GObject):
     dialog = AddLiabilityDialog(page.object.new_liability())
     dialog.connect('response', self.on_add_liability, page)
     dialog.run()
-  
+
   def on_add_liability(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
@@ -1027,8 +1029,8 @@ class Controller(gobject.GObject):
         self.emit('liability-deleted', l)
 
     dialog.destroy()
-    
-    
+
+
 
 
   #reports
@@ -1055,10 +1057,10 @@ class Controller(gobject.GObject):
 
   def export_payments_report_html(self, page):
     self.export_html(page.to_html())
-    
+
   def export_payments_report_csv(self, page):
     self.export_csv(page.to_csv(), page.csv_filename())
-      
+
 
   def daily_cash(self, menu_item):
     today = datetime.datetime.today().date()
@@ -1101,7 +1103,7 @@ class Controller(gobject.GObject):
     if not page.include_paid.get_active(): installments.where('status','waiting')
     if page.get_selected_month() is not None: installments.where('month', page.get_selected_month())
     if page.get_year() != '': installments.where('year', page.get_year())
-    
+
     if page.is_only_active(): installments = Installment.only_active_users(installments)
     else:
       #hago join para que ande el order_by
@@ -1163,7 +1165,7 @@ class Controller(gobject.GObject):
     dialog.connect('response', self.on_export_csv_file, csv_content)
     dialog.set_do_overwrite_confirmation(True)
     dialog.run()
-  
+
   def on_export_csv_file(self, dialog, response, csv_content):
     if response == gtk.RESPONSE_OK:
       self.settings.export_path = dialog.get_current_folder()
@@ -1172,7 +1174,7 @@ class Controller(gobject.GObject):
       f = open(path, 'w')
       f.write(csv_content)
       f.close()
-    
+
     dialog.destroy()
 
 
@@ -1191,7 +1193,7 @@ gobject.signal_new('klass-changed', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, bool ))
                    #klass object, creation(True value means the klass just got created)
-                   
+
 gobject.signal_new('package-changed', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
@@ -1283,4 +1285,3 @@ def main(argv):
 
 if __name__ == "__main__":
   main(sys.argv[1:])
-
