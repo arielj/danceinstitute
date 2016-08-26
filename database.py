@@ -97,7 +97,7 @@ class Conn(object):
                                                   host=d['host'],
                                                   database=d['database'])
               cls._adapter = 'mysql'
-              
+
               res = cls.execute_plain("SELECT COUNT(DISTINCT `table_name`) FROM `information_schema`.`columns` WHERE `table_schema` = '" + d['database'] + "'").fetchone()[0]
               if res == 0:
                 create_db = True
@@ -111,7 +111,7 @@ class Conn(object):
               else:
                 print(cls._conn.cursor().fetchall())
                 print(err)
-        
+
         if cls._conn is None:
           if not os.path.isfile(FILENAME):
             create_db = True
@@ -120,18 +120,18 @@ class Conn(object):
           cls._conn = sqlite3.connect(FILENAME)
           cls._conn.row_factory = sqlite3.Row
           cls._conn.text_factory = str
-      
+
       if cls._adapter == 'sqlite':
         cls._conn.create_collation('spanish', spanish_order)
 
       if create_db: cls.create_tables()
 
       cls.check_version()
-      
+
       if seed_db: cls.seed()
-      
+
       if dev_data: cls.dev_data()
-      
+
 
   @classmethod
   def create_tables(cls):
@@ -172,7 +172,7 @@ class Conn(object):
       version = result[0]
     else:
       version = '0.1'
-    
+
     if version == '0.1':
       if cls._adapter == 'sqlite':
         cls.execute('''ALTER TABLE users ADD COLUMN age integer;''')
@@ -180,15 +180,15 @@ class Conn(object):
         cls.execute('''ALTER TABLE users ADD COLUMN age INT;''')
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("version","0.2")')
       version = '0.2'
-    
+
     if version == '0.2':
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("notes", "")')
       version = cls.set_version('0.3')
-    
+
     if version == '0.3':
       cls.create('movements')
       version = cls.set_version('0.4')
-    
+
     if version == '0.4':
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE payments ADD COLUMN receipt_number integer;')
@@ -199,49 +199,49 @@ class Conn(object):
     if version == '0.5':
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("export_path", "")')
       version = cls.set_version('0.6')
-    
+
     if version == '0.6':
       cls.execute('INSERT INTO settings (`key`, value) VALUES ("date_format", "%Y-%m-%d")')
       version = cls.set_version('0.7')
-    
+
     if version == '0.7':
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE users ADD COLUMN family integer;')
       else:
         cls.execute('ALTER TABLE users ADD COLUMN family INT;')
       version = cls.set_version('0.8')
-    
+
     if version == '0.8':
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE users ADD COLUMN "group" text;')
       else:
         cls.execute('ALTER TABLE users ADD COLUMN "group" VARCHAR(255);')
       version = cls.set_version('0.9')
-    
+
     if version == '0.9':
       cls.create('liabilities')
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE payments ADD COLUMN liability_id integer;')
       else:
         cls.execute('ALTER TABLE payments ADD COLUMN liability_id INT;')
-      
+
       version = cls.set_version('1.0')
-    
+
     if version == '1.0':
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE packages ADD COLUMN for_user integer default 0;')
       else:
         cls.execute('ALTER TABLE packages ADD COLUMN for_user BOOLEAN default 0;')
       version = cls.set_version('1.1')
-    
+
     if version == '1.1':
       cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('fees','{}')''')
       version = cls.set_version('1.2')
-    
+
     if version == '1.2':
       cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('use_hour_fees','1')''')
       version = cls.set_version('1.3')
-      
+
     if version == '1.3':
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE users ADD COLUMN inactive integer default 0;')
@@ -250,7 +250,7 @@ class Conn(object):
         cls.execute('ALTER TABLE users ADD COLUMN inactive BOOLEAN default 0;')
         cls.execute('ALTER TABLE memberships ADD COLUMN inactive BOOLEAN default 0;')
       version = cls.set_version('1.4')
-      
+
     if version == '1.4':
       cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('second_recharge_value','')''')
       version = cls.set_version('1.5')
@@ -267,7 +267,7 @@ class Conn(object):
     cls.execute('''INSERT INTO rooms (name) VALUES ('Fuego')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 4, 300, 1, 'paid')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2015, 5, 300, 1, 'paid')''')
-    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2016, 6, 400, 1, 'waiting')''')
+    cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2016, 6, 400, 2, 'waiting')''')
     cls.execute('''INSERT INTO installments (year, month, amount, membership_id, status) VALUES (2016, 6, 400, 2, 'waiting')''')
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 20000, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
@@ -276,6 +276,7 @@ class Conn(object):
     cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.datetime.today().date(),))
     cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
+    cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 2, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (5, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (1, 2000, 2130, 3, 0)''')
     cls.execute('''INSERT INTO schedules (klass_id, from_time, to_time, room_id, day) VALUES (1, 2000, 2130, 3, 3)''')

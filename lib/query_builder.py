@@ -12,6 +12,7 @@ class Query(object):
     self.select_str = cls.table+'.*'
     self.from_str = cls.table
     self.join_str = None
+    self.group_str = None
 
   def _do_query(self, force = False):
     if self.query_result is None or force is True:
@@ -23,7 +24,7 @@ class Query(object):
 
   def __contains__(self,item):
     ids = map(lambda i: i.id, self._do_query())
-    
+
     if isinstance(item, list):
       found = all(map(lambda i: i.id in ids, item))
     else:
@@ -47,7 +48,8 @@ class Query(object):
     q = 'SELECT '+self.select_str+' FROM ' + self.from_str
     if self.join_str: q = q + ' ' + self.join_str
     if self.wheres: q = q + self.get_wheres()
-    if self.order is not None: q = q + ' ORDER BY "%s"' % self.order
+    if self.group_str is not None: q = q + ' ' + self.group_str
+    if self.order is not None: q = q + ' ORDER BY %s' % self.order
     if self.limit is not None: q = q + ' LIMIT %i' % self.limit
     if self.offset is not None: q = q + ' OFFSET %i' % self.offset
     return q
@@ -73,10 +75,10 @@ class Query(object):
           else:
             if comparission is None: comparission = '='
             aux = ':'+placeholder
-          
+
           table_field = field.split('.')
           field = '.'.join(map(lambda x: self._fix_field(x), table_field))
-          
+
           self.wheres.append(field+" "+comparission+" "+aux)
           self.values[placeholder] = value
       else:
@@ -114,6 +116,11 @@ class Query(object):
     self.from_str = f
     return self
 
+  def group_by(self, s):
+    self.query_result = None
+    self.group_str = s
+    return self
+
   def get_wheres(self):
     return ' WHERE ' + ' AND '.join(self.wheres)
 
@@ -141,7 +148,7 @@ class Query(object):
 
   def first(self):
     return self.cls.get_one(self.query(), self.values)
-  
+
   def delete_all(self):
     q = 'DELETE FROM ' + self.from_str
     if self.wheres: q = q + self.get_wheres()
