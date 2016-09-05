@@ -127,7 +127,7 @@ class Membership(Model):
 
   @classmethod
   def for_student(cls,st_id):
-    return cls.set_select('memberships.*, installments.year').where('student_id', st_id).set_join('LEFT JOIN installments ON memberships.id = installments.membership_id').group_by('GROUP BY memberships.id HAVING MAX(year)').order_by('installments.year DESC')
+    return cls.set_select('memberships.*, installments.year').where('student_id', st_id).set_join('LEFT JOIN installments ON memberships.id = installments.membership_id').group_by('GROUP BY memberships.id HAVING MAX(year) OR year IS NULL').order_by('installments.year DESC')
 
   @classmethod
   def for_klass_or_package(cls,k_or_p):

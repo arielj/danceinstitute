@@ -12,7 +12,7 @@ class MetaModel(type):
   def __getattr__(cls,name):
     if name in ['all','where','empty','anything','set_offset',
                 'order_by','set_limit','set_join','set_select',
-                'set_from','count','exists','first']:
+                'set_from','count','exists','first','last']:
       return getattr(Query(cls),name)
     else:
       raise AttributeError
@@ -21,7 +21,7 @@ class Model(object):
   __metaclass__ = MetaModel
 
   default_order = None
-  
+
   def __str__(self):
     h = {}
     for att in vars(self):
@@ -31,12 +31,12 @@ class Model(object):
   def __init__(self, attrs = {}):
     self.id = None
     self.errors = {}
-    
+
     self.set_attrs(attrs)
 
   def parse_date(self, date_str):
     return Model.parse_date(date_str)
-  
+
   @classmethod
   def parse_date(cls, date_str):
     for format in ['%Y/%m/%d','%Y/%d/%m','%Y-%m-%d','%Y-%d-%m','%d-%m-%Y','%d/%m/%Y']:
@@ -44,14 +44,14 @@ class Model(object):
         return datetime.datetime.strptime(date_str,format).date()
       except:
         continue
-    return ''  
+    return ''
 
   @classmethod
   def create(cls, attrs = {}):
     obj = cls(attrs)
     obj.save()
     return obj
-    
+
   def set_attrs(self, data = {}):
     if data:
       for attr in data.keys():
@@ -67,7 +67,7 @@ class Model(object):
 
   def full_errors(self):
     return "\n".join(sum(self.errors.values(),[]))
-  
+
   def is_valid(self):
     self.clear_errors()
     self._is_valid()
@@ -85,7 +85,7 @@ class Model(object):
       extra = False
       try:
         v = int(v) if only_integer else Decimal(str(v).replace(',','.'))
-        
+
         if great_than is not None and v <= great_than:
           err = 'field_not_greate_than'
           extra = {'than': great_than}
@@ -100,7 +100,7 @@ class Model(object):
           extra = {'than': less_than_or_equal}
       except:
         err = 'field_not_number'
-      
+
       if err:
         args = {'field': field_name}
         if extra:
@@ -115,11 +115,11 @@ class Model(object):
           expr = '^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\'\s]+$'
           if message is None:
             message = _e('only_letters') % {'field': field_name}
-      
+
       if expr is not None and not re.match(expr, getattr(self,field)):
         if message is None:
           message = _e('wrong_format') % {'field': field_name}
-        
+
         self.add_error(field, message)
 
   def validate_quantity_of(self, field, great_than = None, less_than = None, message = None):
@@ -130,7 +130,7 @@ class Model(object):
       err = 'wrong_quantity'
     if less_than is not None and q >= less_than:
       err = 'wrong_quantity'
-    
+
     if err:
       if message is None:
         message = _e(err) % {'field': field_name}
@@ -147,7 +147,7 @@ class Model(object):
     if value:
       q = Query(self.__class__).where(field,value)
       if self.id: q.where('id',self.id,comparission='!=')
-      
+
       if q.anything():
         self.add_error(field, _e('already_in_use') % {'field': _a(self.cls_name(),field)})
 
@@ -222,7 +222,7 @@ class Model(object):
   def get_one(cls, query, params = ()):
     r = Conn.execute(query,params).fetchone()
     return cls.from_db(r) if r else False
-  
+
   @classmethod
   def from_db(cls,r):
     return cls(r)

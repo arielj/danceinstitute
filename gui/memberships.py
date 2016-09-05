@@ -16,11 +16,11 @@ class MembershipsTab(gtk.VBox):
 
     self.membership_data = MembershipData(None)
     self.membership_data.connect('edit-package', self.on_edit_package_clicked)
-    
+
     self.memberships = gtk.ComboBoxEntry()
     self.memberships.connect('changed', self.on_membership_selected)
     self.completion = gtk.EntryCompletion()
-    
+
     self.pack_start(self.memberships, False)
     self.pack_start(self.membership_data, True)
 
@@ -32,9 +32,9 @@ class MembershipsTab(gtk.VBox):
     self.actions.pack_start(self.create_package_b, False)
     self.actions.pack_start(self.enroll_b, False)
     self.actions.pack_start(self.delete_b, False)
-    
+
     self.pack_start(self.actions, False)
-    
+
     self.set_model(self.user.memberships)
     m = self.user.memberships[0] if len(self.user.memberships) > 0 else None
     self.membership_data.set_membership(m)
@@ -44,7 +44,7 @@ class MembershipsTab(gtk.VBox):
     self.membership_data.add_payment_b.connect('clicked', self.on_add_payment_clicked)
     self.membership_data.delete_installments_b.connect('clicked', self.on_delete_installments_clicked)
     self.membership_data.list.connect('row-activated', self.on_row_activated)
-  
+
   def set_model(self, memberships):
     current_membership = self.membership_data.membership
     current_present = False
@@ -56,7 +56,7 @@ class MembershipsTab(gtk.VBox):
         current_membership = m
         current_present = True
       memberships_model.append((m, m.klass_or_package.name))
-      
+
     self.memberships.set_model(memberships_model)
     self.memberships.set_text_column(1)
     self.completion.set_model(memberships_model)
@@ -66,7 +66,7 @@ class MembershipsTab(gtk.VBox):
     if current_present is True: self.select_membership(current_membership)
     elif len(memberships) > 0: self.memberships.set_active(0)
     else: self.membership_data.set_membership(None)
-  
+
   def refresh(self):
     self.set_model(self.user.reload_memberships())
     self.membership_data.refresh()
@@ -113,7 +113,7 @@ class MembershipsTab(gtk.VBox):
 
   def on_add_payments_clicked(self, widget):
     self.emit('add-payments')
-    
+
   def on_delete_installments_clicked(self, widget):
     self.emit('delete-installments', self.membership_data.get_selected_installments())
 
@@ -158,21 +158,21 @@ gobject.signal_new('edit-package', \
 class MembershipData(gtk.VBox):
   def __init__(self, membership):
     gtk.VBox.__init__(self)
-    
+
     self.info_vbox = gtk.VBox()
     self.pack_start(self.info_vbox, False)
 
     #installment, year, month, base, status, payments
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,int,str,str,str,str)
-    
+
     self.list = gtk.TreeView(self.store)
     self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
     self.selection = self.list.get_selection()
     self.selection.connect('changed', self.on_selection_changed)
-    
+
     self.list.set_rubber_banding(True)
     self.selection.set_mode(gtk.SELECTION_MULTIPLE)
-    
+
     self.add_column('Año',1)
     self.add_column('Mes',2)
     self.add_column('Monto',3)
@@ -184,28 +184,28 @@ class MembershipData(gtk.VBox):
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.list)
     self.scrolled.add(viewport)
-    
+
     self.pack_start(self.scrolled, True)
-    
+
     self.actions = gtk.HBox(True, 2)
-    
+
     self.add_installments_b = gtk.Button('Agregar Cuotas')
     self.add_payments_b = gtk.Button('Agregar Pagos')
     self.add_payment_b = gtk.Button('Agregar Pago')
     self.add_payment_b.set_sensitive(False)
     self.delete_installments_b = gtk.Button('Eliminar Cuota(s)')
     self.delete_installments_b.set_sensitive(False)
-    
+
     self.actions.pack_start(self.add_payment_b, False)
     self.actions.pack_start(self.add_payments_b, False)
     self.actions.pack_start(self.add_installments_b, False)
     self.actions.pack_start(self.delete_installments_b, False)
-    
+
     self.pack_start(self.actions, False)
-    
+
     self.membership = None
     self.set_membership(membership)
-    
+
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
     col.set_expand(True)
@@ -231,7 +231,7 @@ class MembershipData(gtk.VBox):
   def refresh(self):
     self.set_membership_info()
     self.store.clear()
-    
+
     if self.membership is not None:
       for ins in self.membership.installments:
         self.store.append((ins,ins.year,ins.month_name(),ins.detailed_total(), ins.status, ins.payments_details()))
@@ -257,7 +257,7 @@ class MembershipData(gtk.VBox):
   def set_membership(self, membership):
     self.membership = membership
     self.refresh()
-  
+
   def on_edit_package_clicked(self, button):
     if self.membership.is_package() is True: self.emit('edit-package', self.membership.klass_or_package)
 
@@ -276,13 +276,13 @@ class MembershipDialog(gtk.Dialog):
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
     self.vbox.pack_start(self.form, False)
     self.vbox.show_all()
-    
+
 class MembershipForm(FormFor):
   def __init__(self, membership, options):
     FormFor.__init__(self, membership)
-    
+
     self.fields = gtk.VBox()
-    
+
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
     for o in options:
       store.append((o.id,o.name,o))
@@ -294,9 +294,9 @@ class MembershipForm(FormFor):
     self.klass_or_package_e.child.set_completion(completion)
     self.klass_or_package_e.set_active(0)
     self.fields.pack_start(self.klass_or_package_e, False)
-    
+
     self.add_field('info', attrs = 250)
-    
+
     self.pack_start(self.fields, False)
 
   def get_values(self):
@@ -350,7 +350,7 @@ class AddInstallmentsForm(gtk.VBox):
   def __init__(self):
     gtk.VBox.__init__(self, True, 8)
     self.set_border_width(4)
-    
+
     field = gtk.VBox()
     self.year_l = gtk.Label('Año')
     self.year_e = gtk.Entry(4)
@@ -358,7 +358,7 @@ class AddInstallmentsForm(gtk.VBox):
     field.pack_start(self.year_l, False)
     field.pack_start(self.year_e, False)
     self.pack_start(field, False)
-    
+
     field = gtk.VBox()
     self.initial_month_l = gtk.Label('Mes inicial')
     store = gtk.ListStore(int, str)
@@ -400,7 +400,7 @@ class AddInstallmentsForm(gtk.VBox):
   def get_selected_initial_month(self):
     itr = self.initial_month_e.get_active_iter()
     return self.initial_month_e.get_model().get_value(itr,0)
-  
+
   def get_selected_final_month(self):
     itr = self.final_month_e.get_active_iter()
     return self.final_month_e.get_model().get_value(itr,0)
@@ -414,21 +414,21 @@ class DeleteInstallmentDialog(gtk.Dialog):
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-    
+
     self.set_border_width(5)
-    
+
     desc = "\n".join(map(lambda i: i.to_label(), installments))
-    
+
     message = "Vas a borrar la(s) cuota(s) de:\n"+desc+"\n\n¿Estás seguro?"
-    
+
     self.vbox.pack_start(gtk.Label(message), False)
-    
+
     self.payments_check = gtk.CheckButton('¿Borrar también los pagos de la cuota?')
-    
+
     self.vbox.pack_start(self.payments_check, False)
-    
+
     self.vbox.show_all()
-  
+
   def delete_payments(self):
     return self.payments_check.get_active();
 
@@ -438,20 +438,20 @@ class DeleteLiabilitiesDialog(gtk.Dialog):
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-    
+
     self.set_border_width(5)
-    
+
     desc = "\n".join(map(lambda l: l.to_label(), liabilities))
-    
+
     message = "Vas a borrar la(s) deuda(s):\n"+desc+"\n\n¿Estás seguro?"
-    
+
     self.vbox.pack_start(gtk.Label(message), False)
-    
+
     self.payments_check = gtk.CheckButton('¿Borrar también los pagos de cada deuda?')
-    
+
     self.vbox.pack_start(self.payments_check, False)
-    
+
     self.vbox.show_all()
-  
+
   def delete_payments(self):
     return self.payments_check.get_active();

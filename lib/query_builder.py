@@ -149,6 +149,9 @@ class Query(object):
   def first(self):
     return self.cls.get_one(self.query(), self.values)
 
+  def last(self):
+    return self.cls.order_by('id DESC').get_one(self.query(), self.values)
+
   def delete_all(self):
     q = 'DELETE FROM ' + self.from_str
     if self.wheres: q = q + self.get_wheres()
