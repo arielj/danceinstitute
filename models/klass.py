@@ -16,7 +16,7 @@ class Klass(Model):
   fields_for_save = ['name', 'normal_fee', 'half_fee', 'once_fee',
                      'inscription_fee', 'min_age', 'max_age', 'quota', 'info']
   default_order = 'name ASC'
-  
+
   def __init__(self, data = {}):
     self.name = ''
     self.normal_fee = 0
@@ -31,7 +31,7 @@ class Klass(Model):
     self._schedules = None
     self._teachers_remove = []
     self._schedules_remove = []
-    
+
     Model.__init__(self, data)
 
   def can_delete(self):
@@ -72,7 +72,7 @@ class Klass(Model):
       args = {'klass_id': self.id, 'teacher_id': t.id}
       if Query(self.__class__).set_from('klasses_teachers').where(args).empty():
         self.__class__.get_conn().execute('INSERT INTO klasses_teachers (klass_id,teacher_id) VALUES (:klass_id,:teacher_id)', args)
-    
+
     for s in self._schedules_remove: s.delete()
     self._schedules_remove = []
     for sch in self.schedules: sch.save(validate = False)
@@ -91,7 +91,7 @@ class Klass(Model):
           klasses[r][h2] = {}
           for d in _t('abbr_days','en'):
             klasses[r][h2][d] = None
-   
+
     for kls in cls.all():
       for sch in kls.schedules:
         for interval in sch.get_intervals():
@@ -99,7 +99,7 @@ class Klass(Model):
             klasses[sch.room.name][interval][sch.day_abbr()] = kls
           except KeyError as e:
             print e, kls.name
-    
+
     return klasses
 
   @classmethod
@@ -110,14 +110,14 @@ class Klass(Model):
         klasses[h2] = {}
         for r in schedule.Schedule.possible_rooms():
           klasses[h2][r] = None
-   
+
     for kls in cls.all():
       for sch in kls.schedules:
         if sch.day_abbr() == _t('abbr_days','en')[day]:
           for interval in sch.get_intervals():
             if interval in klasses:
               klasses[interval][sch.room.name] = kls
-    
+
     return klasses
 
   @classmethod
@@ -189,13 +189,13 @@ class Klass(Model):
     if ignore_time is False:
       if sch_label != '': sch_label += ' '
       sch_label += sch.str_from_time() + '-' + sch.str_to_time()
-    
+
     if sch_label != '': sch_label = ' (' + sch_label + ')'
     return self.name + sch_label
 
   def teacher_ids(self):
     return map(lambda t: t.id,self.teachers)
-  
+
   def get_duration(self):
     d = sum(map(lambda s: s.duration(), self.schedules))
     return int(d) if d == int(d) else d
@@ -206,14 +206,14 @@ class Klass(Model):
 
   def get_students(self, include_inactive = False):
     ms = membership.Membership.for_klass_or_package(self).do_get()
-    
+
     for p in package.Package.with_klass(self):
       ms = ms + membership.Membership.for_klass_or_package(p).do_get()
-    
+
     uids = map(lambda m: str(m.student_id), ms)
 
     q = student.Student.where('id IN ('+','.join(uids)+')')
 
     if include_inactive is False: q.where('inactive = 0')
-    
+
     return q
