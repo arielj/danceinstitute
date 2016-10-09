@@ -13,7 +13,7 @@ class Package(Model):
   table = 'packages'
   fields_for_save = ['name','fee','alt_fee','for_user']
   default_order = 'name ASC'
-  
+
   def __init__(self, attrs = {}):
     self.name = ''
     self._klasses = None
@@ -25,7 +25,7 @@ class Package(Model):
   @property
   def fee(self):
     return self._fee/100
-  
+
   @fee.setter
   def fee(self,value):
     try:
@@ -36,7 +36,7 @@ class Package(Model):
   @property
   def alt_fee(self):
     return self._alt_fee/100
-  
+
   @alt_fee.setter
   def alt_fee(self,value):
     try:
@@ -61,17 +61,17 @@ class Package(Model):
 
   def klasses_names(self, separator = ', '):
     return separator.join(map(lambda x: x.name, self.klasses))
-    
+
   @property
   def for_user(self):
-    return bool(self._for_user)
+    return self._for_user
 
   @for_user.setter
   def for_user(self,value):
     self._for_user = int(value)
 
   def to_db(self):
-    return {'name': self.name, 'fee': self.fee, 'alt_fee': self.alt_fee, 'for_user': self._for_user}
+    return {'name': self.name, 'fee': self.fee, 'alt_fee': self.alt_fee, 'for_user': self.for_user}
 
   def after_save(self):
     c = self.__class__.get_conn()
@@ -82,9 +82,9 @@ class Package(Model):
 
   def _is_valid(self):
     self.validate_presence_of('name')
-    if self.for_user is False: self.validate_numericallity_of('fee', great_than = 0)
+    if self.for_user == 0: self.validate_numericallity_of('fee', great_than = 0)
     if self.is_new_record():
-      if self.for_user is False:
+      if self.for_user == 0:
         self.validate_quantity_of('klasses', great_than = 1, message = 'Tenés que elegir por lo menos dos clases')
       else:
         self.validate_quantity_of('klasses', great_than = 0, message = 'Tenés que elegir por lo menos una clase')
@@ -102,6 +102,10 @@ class Package(Model):
     p.klasses = klasses
     p.save()
     return p
+
+  @classmethod
+  def for_user(cls, user):
+    return cls.find_by('for_user', user.id)
 
   def can_delete(self):
     if membership.Membership.for_klass_or_package(self).anything():

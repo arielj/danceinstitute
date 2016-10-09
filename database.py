@@ -231,7 +231,7 @@ class Conn(object):
       if cls._adapter == 'sqlite':
         cls.execute('ALTER TABLE packages ADD COLUMN for_user integer default 0;')
       else:
-        cls.execute('ALTER TABLE packages ADD COLUMN for_user BOOLEAN default 0;')
+        cls.execute('ALTER TABLE packages ADD COLUMN for_user INT default 0;')
       version = cls.set_version('1.1')
 
     if version == '1.1':

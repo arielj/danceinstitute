@@ -743,7 +743,9 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       klasses = dialog.form.get_checked_klasses()
       if len(klasses) > 0:
-        package = Package.for_user_with_klasses(klasses)
+        package = Package.for_user(page.user)
+        if not package:
+          package = Package.for_user_with_klasses(klasses)
         package.fee = dialog.form.get_amount()
         package.save()
         membership = Membership()
@@ -767,12 +769,20 @@ class Controller(gobject.GObject):
       klasses = dialog.form.get_checked_klasses()
       if len(klasses) > 0:
         p = dialog.package
+        old_p = False
+        if p.for_user != page.user.id:
+          old_p = p
+          p = Package()
+          p.for_user = page.user.id
         p.klasses = klasses
         ids = sorted(map(lambda k: k.id, klasses))
         p.name = 'Clases ' + str(datetime.date.today().year) + ' (' + ','.join(map(lambda i: str(i), ids)) + ')'
         p.fee = dialog.form.get_amount()
-        p.save()
         if p.save() is True:
+          if old_p:
+            m = Membership.for_student_and_klass_or_package(page.user, old_p)
+            m.klass_or_package = p
+            m.save()
           page.update()
           dialog.destroy()
         else:
@@ -781,7 +791,6 @@ class Controller(gobject.GObject):
         ErrorMessage("No se puede crear el paquete:", 'Tenés que elegir al menos una clase').run()
     else:
       dialog.destroy()
-
 
   # memberships
   def new_membership(self, page):

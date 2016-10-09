@@ -132,3 +132,7 @@ class Membership(Model):
   @classmethod
   def for_klass_or_package(cls,k_or_p):
     return cls.where({'for_id': k_or_p.id, 'for_type': k_or_p.cls_name()}).set_join("LEFT JOIN installments ON memberships.id = installments.membership_id AND installments.year = " + str(datetime.datetime.today().year) + " AND (installments.month = " + str(datetime.datetime.today().month) + " OR installments.month = " + str(datetime.datetime.today().month-1)+")").where('installments.id IS NOT NULL')
+
+  @classmethod
+  def for_student_and_klass_or_package(cls, st, k_or_p):
+    return cls.where({'student_id': st.id, 'for_id': k_or_p.id, 'for_type': k_or_p.cls_name()}).first()
