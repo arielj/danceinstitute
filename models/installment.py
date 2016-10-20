@@ -7,6 +7,7 @@ from decimal import Decimal
 from translations import _t, _a
 from model import Model
 from lib.query_builder import Query
+from lib.money import Money
 import payment
 import membership
 import package
@@ -27,7 +28,7 @@ class Installment(Model):
     self._status = 'waiting'
     self.ignore_recharge = False
     self.ignore_second_recharge = False
-    
+
     Model.__init__(self, data)
 
   @property
@@ -69,30 +70,30 @@ class Installment(Model):
 
   def get_recharge(self, after_day = None, recharge_value = None, second_recharge_value = None):
     sets = settings.Settings.get_settings()
-    
+
     if after_day is None: after_day = sets.recharge_after
     if recharge_value is None: recharge_value = sets.recharge_value
     if second_recharge_value is None: second_recharge_value = sets.second_recharge_value
 
     recharge = 0
-    
+
     sets = settings.Settings.get_settings()
     today = self.__class__._today().date()
     beginning_of_month = date(today.year, today.month, 1)
-    
+
     if self._status != 'paid':
       rv = ''
       if second_recharge_value != '' and self.date() < beginning_of_month and not self.ignore_second_recharge:
         rv = second_recharge_value
       elif recharge_value != '' and self.date(after_day) < today and not self.ignore_recharge:
         rv = recharge_value
-      
+
       if rv != '':
         if re.match('^\d+%$',rv):
           recharge = self.amount*(int(rv[0:-1]))/100
         elif re.match('^\d+$',rv):
           recharge = int(rv)
-    
+
     return recharge
 
   def date(self, after_day = None):
@@ -116,7 +117,7 @@ class Installment(Model):
     if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
     if ignore_second_recharge is not None: self.ignore_second_recharge = ignore_second_recharge
     return self.total()-self.paid()
-  
+
   def month_name(self):
     return _t('months')[self.month]
 
@@ -155,8 +156,8 @@ class Installment(Model):
     if data is None: data = {}
     if 'ignore_recharge' in data: self.ignore_recharge = data['ignore_recharge']
     if 'amount' not in data: data['amount'] = self.to_pay()
-    amount = Decimal(data['amount'])
-    
+    amount = Money(data['amount'])
+
     if amount <= self.to_pay():
       data['installment_id'] = self.id
       p = payment.Payment(data)
@@ -239,7 +240,7 @@ class Installment(Model):
     today = cls._today()
     w = 'status = "waiting" AND (memberships.student_id = :student_id OR users.family = :family)'
     args = {'student_id': user.id, 'family': user.family}
-    
+
     return cls.where(w,args).set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id').order_by('year ASC, month ASC')
 
   @classmethod
