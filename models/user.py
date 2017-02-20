@@ -43,13 +43,13 @@ class User(Model):
     self.family = None
     self.group = ''
     self.inactive = False
-    
+
     Model.__init__(self,data)
 
   @property
   def name(self):
     return self._name
-  
+
   @name.setter
   def name(self,value):
     #str.title() broken if str has accented chars
@@ -67,7 +67,7 @@ class User(Model):
   @property
   def male(self):
     return bool(self._male)
-  
+
   @male.setter
   def male(self,value):
     self._male = int(value)
@@ -75,7 +75,7 @@ class User(Model):
   @property
   def is_teacher(self):
     return bool(self._is_teacher)
-  
+
   @is_teacher.setter
   def is_teacher(self,value):
     self._is_teacher = int(value)
@@ -95,7 +95,7 @@ class User(Model):
   @property
   def age(self):
     return self._age
-  
+
   @age.setter
   def age(self,value):
     try:
@@ -165,7 +165,7 @@ class User(Model):
 
   def get_liabilities(self):
     return liability.Liability.to_pay_for(self.id)
-  
+
   def new_liability(self):
     return liability.Liability({'user_id': self.id})
 
@@ -183,7 +183,7 @@ class User(Model):
         self.family = family_id
         user.family = family_id
         Conn.execute('UPDATE users SET family = :family WHERE id IN (:id1, :id2)', {'family': family_id, 'id1': self.id, 'id2': user.id})
-  
+
   def remove_family_member(self, user):
     if self.id != user.id:
       if user.family == self.family and self.family is not None:
@@ -216,7 +216,7 @@ class User(Model):
       return False
 
   def is_inscription_payed(self):
-    return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where('description', 'Insc%', comparission = 'like')) > 0
+    return len(payment.Payment.for_user(self.id, include_installments = False, done = None).where("strftime('%Y', datetime(date))", str(datetime.date.today().year), placeholder = 'year', no_escape = True).where('description', 'Insc%', comparission = 'like')) > 0
 
   @classmethod
   def birthday_today(cls):

@@ -54,7 +54,7 @@ class Query(object):
     if self.offset is not None: q = q + ' OFFSET %i' % self.offset
     return q
 
-  def where(self, field, value=None, comparission=None, placeholder=None):
+  def where(self, field, value=None, comparission=None, placeholder=None, no_escape=False):
     if isinstance(field,dict):
       for f in field:
         self.where(f,field[f])
@@ -76,8 +76,9 @@ class Query(object):
             if comparission is None: comparission = '='
             aux = ':'+placeholder
 
-          table_field = field.split('.')
-          field = '.'.join(map(lambda x: self._fix_field(x), table_field))
+          if no_escape is False:
+            table_field = field.split('.')
+            field = '.'.join(map(lambda x: self._fix_field(x), table_field))
 
           self.wheres.append(field+" "+comparission+" "+aux)
           self.values[placeholder] = value
@@ -159,5 +160,5 @@ class Query(object):
     return Conn.execute_plain(q, self.values)
 
   def _fix_field(self, f):
-    f =  f if f.startswith('`') else "`"+f+"` "
+    f = f if f.startswith('`') else "`"+f+"` "
     return f
