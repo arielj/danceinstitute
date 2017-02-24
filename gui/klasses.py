@@ -20,22 +20,22 @@ class KlassForm(FormFor):
     self.add_schedules_table()
     self.relationships_hbox.pack_start(gtk.VSeparator(),False)
     self.add_teachers_table()
-    
+
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit, False)
-    
+
     self.pack_start(self.fields, True)
-    
+
     self.students = gtk.Button('Ver Alumnos')
     self.students.set_sensitive(self.object.is_not_new_record())
     self.students.connect('clicked',self.on_show_students_clicked)
     self.students_hbox.pack_start(self.students,False)
-    
+
     self.show_all()
 
   def get_tab_label(self):
     return 'Editar Clase:\n' + self.object.name if self.object.is_not_new_record() else 'Agregar Clase'
-  
+
   def create_form_fields(self):
     self.fields = gtk.VBox(False, 5)
     self.add_field('name', attrs=30)
@@ -53,15 +53,15 @@ class KlassForm(FormFor):
     self.add_field('quota', attrs=2, box=students_hbox_inner)
     self.students_hbox.pack_end(students_hbox_inner, True)
     self.fields.pack_start(self.students_hbox, False)
-    
+
     f, l, e = self.add_field('info', field_type = 'text')
     e.set_size_request(-1,200)
     f.set_child_packing(e,True,True,0,gtk.PACK_START)
-  
+
   def get_info_text(self):
     buff = self.info_e.get_buffer()
     return buff.get_text(buff.get_start_iter(), buff.get_end_iter())
-  
+
   def get_values(self):
     return {'name': self.name_e.get_text(), 'normal_fee': self.normal_fee_e.get_text(), 'half_fee': self.half_fee_e.get_text(), 'once_fee': self.once_fee_e.get_text(), 'min_age': self.min_age_e.get_text(), 'max_age': self.max_age_e.get_text(), 'quota': self.quota_e.get_text(), 'info': self.get_info_text()}
 
@@ -76,23 +76,23 @@ class KlassForm(FormFor):
     field.pack_start(self.schedules_l, False)
     field.pack_start(self.schedules_ls, True)
     self.relationships_hbox.pack_start(field, True)
-    
+
   def add_teachers_table(self):
     self.teachers_l = gtk.Label('Profesores/as')
     self.teachers_ls = TeachersList(self.object.teachers, with_actions=False)
     self.teachers_ls.set_border_width(0)
     self.teachers_ls.connect('selection-changed', self.on_selection_changed)
-    
+
     actions = gtk.HBox()
     self.assign_b = gtk.Button('Asignar')
     self.assign_b.connect('clicked', self.on_assign_clicked)
     actions.pack_start(self.assign_b, False)
-    
+
     self.remove_b = gtk.Button('Quitar')
     self.remove_b.connect('clicked', self.on_remove_clicked)
     self.remove_b.set_sensitive(False)
     actions.pack_start(self.remove_b, False)
-    
+
     self.teachers_ls.pack_start(actions, False)
 
     field = gtk.VBox()
@@ -100,7 +100,7 @@ class KlassForm(FormFor):
     field.pack_start(self.teachers_l, False)
     field.pack_start(self.teachers_ls, True)
     self.relationships_hbox.pack_start(field, True)
-  
+
   def add_schedule(self, schedule):
     self.object.add_schedule(schedule)
     self.update_schedules()
@@ -113,7 +113,7 @@ class KlassForm(FormFor):
 
   def on_schedule_add(self, widget):
     self.emit('schedule-add')
-  
+
   def on_schedule_edit(self, widget, schedule):
     self.emit('schedule-edit', schedule)
 
@@ -165,17 +165,17 @@ class SchedulesTables(gtk.ScrolledWindow):
     self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_ALWAYS)
     self.set_shadow_type(gtk.SHADOW_NONE)
     self.set_border_width(4)
-    
+
     self.klasses = klasses
-    
+
     self.vbox = gtk.VBox(False, 10)
-    
+
     self.schedules_by_room_cb = gtk.CheckButton('Separar horarios por sala')
     self.schedules_by_room_cb.set_active(True)
     self.schedules_by_room_cb.connect('toggled',self.on_schedules_by_room_toggled)
 
     self.vbox.pack_start(self.schedules_by_room_cb,False)
-    
+
     self.rooms_vbox = gtk.VBox(False, 4)
     self.room_table = {}
     for room in klasses.iterkeys():
@@ -194,15 +194,15 @@ class SchedulesTables(gtk.ScrolledWindow):
     self.mixed_table = RoomKlassesTable(None, self.klasses)
     vbox.pack_start(self.mixed_table, False)
     self.mixed_vbox.pack_start(vbox, False)
-    
+
     self.vbox.pack_start(self.rooms_vbox, False)
     self.vbox.pack_start(self.mixed_vbox, False)
-      
+
     viewport = gtk.Viewport()
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.vbox)
     self.add(viewport)
-    
+
     self.show_all()
     self.mixed_vbox.hide()
 
@@ -231,7 +231,7 @@ class SchedulesTables(gtk.ScrolledWindow):
     for room in self.klasses:
       self.room_table[room].refresh(self.klasses[room])
     self.mixed_table.refresh(self.klasses)
-    
+
 
   def on_schedules_by_room_toggled(self, check):
     if check.get_active():
@@ -240,13 +240,13 @@ class SchedulesTables(gtk.ScrolledWindow):
     else:
       self.rooms_vbox.hide()
       self.mixed_vbox.show()
-    
+
 gobject.type_register(SchedulesTables)
 gobject.signal_new('klass-edit', \
                    SchedulesTables, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-                   
+
 gobject.signal_new('klass-add', \
                    SchedulesTables, \
                    gobject.SIGNAL_RUN_FIRST, \
@@ -256,11 +256,11 @@ class RoomKlassesTable(gtk.TreeView):
   def __init__(self, room, klasses):
     self.room = room
     self.create_store(klasses)
-    
+
     gtk.TreeView.__init__(self,self.store)
-    
+
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     col = self.add_column('Horario', 0, 'hour',-1)
     col.set_expand(False)
 
@@ -270,17 +270,17 @@ class RoomKlassesTable(gtk.TreeView):
     self.add_column('Jueves', 4, 'thu',3)
     self.add_column('Viernes', 5, 'fri',4)
     self.add_column('Sábado', 6, 'sat',5)
-    self.add_column('Domingo', 7, 'sun',6) 
-  
+    self.add_column('Domingo', 7, 'sun',6)
+
   def add_column(self, label, idx, name, day_idx):
     col = ListColumn(label, idx, name, day_idx)
     self.append_column(col)
     return col
-  
+
   def create_store(self, klasses):
     # hour, monday, tuesday, wednesday, thursday, friday, saturday, sunday
     self.store = gtk.ListStore(str,str,str,str,str,str,str,str)
-    
+
     self.refresh(klasses)
 
   def refresh(self, klasses):
@@ -296,7 +296,7 @@ class RoomKlassesTable(gtk.TreeView):
         rooms = [self.room]
       else:
         rooms = klasses.iterkeys()
-      
+
       for room in rooms:
         if self.room:
           k = klasses[h]
@@ -310,7 +310,7 @@ class RoomKlassesTable(gtk.TreeView):
             do_insert = True
           insert.append(kls_name)
         if do_insert or self.room:
-          self.store.append(insert)      
+          self.store.append(insert)
 
 class ListColumn(gtk.TreeViewColumn):
   def __init__(self, label, idx, name, day_idx):
@@ -326,17 +326,20 @@ class KlassesList(gtk.VBox):
     self.set_border_width(4)
     self.klasses = klasses
     self.with_actions = with_actions
-    
+
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    
-    store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
-    for k in klasses: store.append((k.id,k.name,k))
+
     self.klass_e = gtk.Entry(255)
-    
+
     hbox = gtk.HBox(False, 5)
     hbox.pack_start(gtk.Label('Buscar:'), False)
     hbox.pack_start(self.klass_e, False)
+
+    hbox.pack_start(gtk.Label('Incluir inactivas:'), False)
+    self.include_inactive_cb = gtk.CheckButton()
+    self.include_inactive_cb.set_active(False)
+    hbox.pack_start(self.include_inactive_cb, False)
     self.pack_start(hbox, False)
 
     self.klasses_t = KlassesTable(klasses)
@@ -346,24 +349,32 @@ class KlassesList(gtk.VBox):
 
     self.scroll.add(self.klasses_t)
     self.pack_start(self.scroll, True)
-    
+
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
       self.edit_b = gtk.Button('Editar')
       self.edit_b.set_sensitive(False)
       self.delete_b = gtk.Button('Borrar')
       self.delete_b.set_sensitive(False)
+      self.deactivate_b = gtk.Button('Desactivar')
+      self.deactivate_b.set_sensitive(False)
+      self.reactivate_b = gtk.Button('Reactivar')
+      self.reactivate_b.set_sensitive(False)
       self.add_b.connect('clicked', self.on_add_clicked)
       self.edit_b.connect('clicked', self.on_edit_clicked)
       self.delete_b.connect('clicked', self.on_delete_clicked)
-      
+      self.deactivate_b.connect('clicked', self.on_deactivate_clicked)
+      self.reactivate_b.connect('clicked', self.on_reactivate_clicked)
+
       self.actions = gtk.HBox()
       self.actions.pack_start(self.add_b, False)
       self.actions.pack_start(self.edit_b, False)
       self.actions.pack_start(self.delete_b, False)
-      
+      self.actions.pack_start(self.deactivate_b, False)
+      self.actions.pack_start(self.reactivate_b, False)
+
       self.pack_start(self.actions, False)
-    
+
     self.show_all()
 
   @classmethod
@@ -387,6 +398,16 @@ class KlassesList(gtk.VBox):
       model, iter = selection.get_selected()
       self.edit_b.set_sensitive(iter is not None)
       self.delete_b.set_sensitive(iter is not None)
+
+      can_deactivate = False
+      can_reactivate = False
+      if iter is not None:
+        klass = model.get_value(iter, 0)
+        can_deactivate = not klass.inactive
+        can_reactivate = klass.inactive
+
+      self.deactivate_b.set_sensitive(iter is not None and can_deactivate)
+      self.reactivate_b.set_sensitive(iter is not None and can_reactivate)
     self.emit('selection-changed', selection)
 
   def on_add_clicked(self, btn):
@@ -402,9 +423,22 @@ class KlassesList(gtk.VBox):
     if klass is not None:
       self.emit('klass-delete', klass)
 
+  def on_deactivate_clicked(self, btn):
+    klass = self.get_selected()
+    if klass is not None:
+      self.emit('klass-deactivate', klass)
+
+  def on_reactivate_clicked(self, btn):
+    klass = self.get_selected()
+    if klass is not None:
+      self.emit('klass-reactivate', klass)
+
   def get_selected(self):
     model, iter = self.t_selection.get_selected()
     return model.get_value(iter,0) if iter is not None else None
+
+  def include_inactive(self):
+    return self.include_inactive_cb.get_active()
 
 gobject.type_register(KlassesList)
 gobject.signal_new('klass-edit', \
@@ -412,6 +446,14 @@ gobject.signal_new('klass-edit', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
 gobject.signal_new('klass-delete', \
+                   KlassesList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('klass-deactivate', \
+                   KlassesList, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('klass-reactivate', \
                    KlassesList, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
@@ -427,11 +469,11 @@ gobject.signal_new('selection-changed', \
 class KlassesTable(gtk.TreeView):
   def __init__(self, klasses):
     self.create_store(klasses)
-    
+
     gtk.TreeView.__init__(self,self.store)
-    
+
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     self.add_column('Nombre', 1)
 
   def add_column(self, label, text_idx):
@@ -439,7 +481,7 @@ class KlassesTable(gtk.TreeView):
     col.set_expand(True)
     self.append_column(col)
     return col
-  
+
   def create_store(self, klasses):
     # klass, name
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str)
@@ -448,8 +490,9 @@ class KlassesTable(gtk.TreeView):
   def update(self, klasses):
     self.store.clear()
     self.set_model(klasses)
-  
+
   def set_model(self, klasses):
     for k in klasses:
-      self.store.append((k,k.name))
-
+      name = k.name
+      if k.inactive is True: name += ' (Desactivada)'
+      self.store.append((k,name))

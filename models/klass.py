@@ -14,8 +14,8 @@ import student
 
 class Klass(Model):
   table = 'klasses'
-  fields_for_save = ['name', 'normal_fee', 'half_fee', 'once_fee',
-                     'inscription_fee', 'min_age', 'max_age', 'quota', 'info']
+  fields_for_save = ['name', 'normal_fee', 'half_fee', 'once_fee', 'inscription_fee',
+                     'min_age', 'max_age', 'quota', 'info', 'inactive']
   default_order = 'name ASC'
 
   def __init__(self, data = {}):
@@ -32,6 +32,7 @@ class Klass(Model):
     self._schedules = None
     self._teachers_remove = []
     self._schedules_remove = []
+    self._inactive = False
 
     Model.__init__(self, data)
 
@@ -45,6 +46,14 @@ class Klass(Model):
       self._normal_fee = int(Decimal(value)*100)
     except:
       self._normal_fee = 0
+
+  @property
+  def inactive(self):
+    return bool(self._inactive)
+
+  @inactive.setter
+  def inactive(self,value):
+    self._inactive = int(value)
 
   def can_delete(self):
     if package.Package.with_klass(self).anything():
@@ -60,7 +69,7 @@ class Klass(Model):
     return True
 
   def to_db(self):
-    return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info}
+    return {'name': self.name, 'normal_fee': self.normal_fee, 'half_fee': self.half_fee, 'once_fee': self.once_fee, 'inscription_fee': self.inscription_fee, 'min_age': self.min_age, 'max_age': self.max_age, 'quota': self.quota, 'info': self.info, 'inactive': self.inactive}
 
   def _is_valid(self):
     self.validate_presence_of('name')
@@ -94,7 +103,7 @@ class Klass(Model):
       sch.klass_id = self.id
 
   @classmethod
-  def by_room_and_time(cls, from_time, to_time):
+  def by_room_and_time(cls, from_time, to_time, include_inactive = False):
     klasses = {}
     for r in schedule.Schedule.possible_rooms():
       klasses[r] = {}
@@ -104,7 +113,9 @@ class Klass(Model):
           for d in _t('abbr_days','en'):
             klasses[r][h2][d] = None
 
-    for kls in cls.all():
+    query = cls.all() if include_inactive is True else cls.active()
+
+    for kls in query:
       for sch in kls.schedules:
         for interval in sch.get_intervals():
           try:
@@ -115,7 +126,7 @@ class Klass(Model):
     return klasses
 
   @classmethod
-  def for_day(cls, from_time, to_time, day):
+  def for_day(cls, from_time, to_time, day, include_inactive = False):
     klasses = {}
     for h in range(from_time, to_time, 1):
       for h2 in [str(h) + ':00', str(h) + ':30']:
@@ -123,7 +134,9 @@ class Klass(Model):
         for r in schedule.Schedule.possible_rooms():
           klasses[h2][r] = None
 
-    for kls in cls.all():
+    query = cls.all() if include_inactive is True else cls.active()
+
+    for kls in query:
       for sch in kls.schedules:
         if sch.day_abbr() == _t('abbr_days','en')[day]:
           for interval in sch.get_intervals():
@@ -133,9 +146,11 @@ class Klass(Model):
     return klasses
 
   @classmethod
-  def by_day(cls):
+  def by_day(cls, include_inactive = False):
     klasses = {}
-    for kls in cls.all():
+    query = cls.all() if include_inactive is True else cls.active()
+
+    for kls in query:
       for sch in kls.schedules:
         if klasses.has_key(sch.day) is False: klasses[sch.day] = []
         klasses[sch.day].append(kls)
@@ -225,6 +240,14 @@ class Klass(Model):
     d = sum(map(lambda s: s.duration(), self.schedules))
     return int(d) if d == int(d) else d
 
+  def inactivate(self):
+    self.inactive = True
+    self.save()
+
+  def reactivate(self):
+    self.inactive = False
+    self.save()
+
   @classmethod
   def for_package(cls,package_id):
     return cls.set_from('klasses_packages').set_join('LEFT JOIN klasses ON klasses_packages.klass_id = klasses.id').where('package_id',package_id)
@@ -242,3 +265,7 @@ class Klass(Model):
     if include_inactive is False: q.where('inactive = 0')
 
     return q
+
+  @classmethod
+  def active(cls):
+    return cls.where('inactive', False)

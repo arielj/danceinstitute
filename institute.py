@@ -92,6 +92,8 @@ class Controller(gobject.GObject):
     self.connect_object('installment-deleted', self.show_status, 'Cuota eliminada.')
     self.connect_object('package-changed', self.show_status, 'Paquete guardado.')
     self.connect_object('klass-deleted', self.show_status, 'Clase borrada.')
+    self.connect_object('klass-deactivated', self.show_status, 'Clase desactivada.')
+    self.connect_object('klass-reactivated', self.show_status, 'Clase reactivada.')
 
   def on_user_changed(self, widget, user, new_record):
     self.show_status(translations._m(user.cls_name())+' guardado.')
@@ -499,22 +501,27 @@ class Controller(gobject.GObject):
       self.window.focus_page(current)
       return current
 
-    klasses = Klass.all()
+    klasses = Klass.active()
     page = KlassesList(klasses)
     self.window.add_page(page)
     page.connect('klass-edit', self.edit_klass)
     page.connect('klass-add', self.add_klass)
     page.connect('klass-delete', self.ask_delete_klass)
+    page.connect('klass-deactivate', self.deactivate_klass)
+    page.connect('klass-reactivate', self.reactivate_klass)
     page.klass_e.connect('changed',self.filter_klasses, page)
+    page.include_inactive_cb.connect('toggled', self.filter_klasses, page)
     self.save_signal(self.connect('klass-changed', self.refresh_klasses, page), page)
+    self.save_signal(self.connect('klass-reactivated', self.refresh_klasses, None, page), page)
+    self.save_signal(self.connect('klass-deactivated', self.refresh_klasses, None, page), page)
     self.save_signal(self.connect('klass-deleted', self.refresh_klasses, None, page), page)
     return page
 
   def filter_klasses(self, entry, page):
-    t = entry.get_text().strip()
-    klasses = Klass.all()
+    t = page.klass_e.get_text().strip()
+    klasses = Klass.all() if page.include_inactive() else Klass.active()
     if t != '':
-      klasses = klasses.where('name LIKE :name',{'name': '%'+entry.get_text()+'%'})
+      klasses = klasses.where('name LIKE :name',{'name': '%'+page.klass_e.get_text()+'%'})
     page.refresh_list(klasses)
 
   def refresh_schedules(self, widget, kls, created, page):
@@ -522,7 +529,7 @@ class Controller(gobject.GObject):
     page.refresh_tables(klasses)
 
   def refresh_klasses(self, widget, kls, created, page):
-    klasses = Klass.all()
+    klasses = Klass.all() if page.include_inactive() else Klass.active()
     page.refresh_list(klasses)
 
   def submit_klass(self, form):
@@ -554,6 +561,15 @@ class Controller(gobject.GObject):
       else:
         ErrorMessage("No se puede borrar la clase:", deleted).run()
     dialog.destroy()
+
+  def deactivate_klass(self, widget, klass):
+    klass.inactivate()
+    self.emit('klass-deactivated', klass)
+
+  def reactivate_klass(self, widget, klass):
+    klass.reactivate()
+    self.emit('klass-reactivated', klass)
+
 
   def show_select_teacher_dialog(self, page):
     teachers = Teacher.get(exclude = page.object.teacher_ids())
@@ -1222,6 +1238,18 @@ gobject.signal_new('payment-changed', \
                    #payment object, creation(True value means the payment just got created)
 
 gobject.signal_new('klass-deleted', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+                   #klass id
+
+gobject.signal_new('klass-deactivated', \
+                   Controller, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+                   #klass id
+
+gobject.signal_new('klass-reactivated', \
                    Controller, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
