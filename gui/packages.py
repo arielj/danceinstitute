@@ -14,14 +14,14 @@ class PackagesList(gtk.VBox):
     self.set_border_width(4)
     self.packages = packages
     self.with_actions = with_actions
-    
+
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 
     store = gtk.ListStore(int, str, gobject.TYPE_PYOBJECT)
     for p in packages: store.append((p.id,p.name,p))
     self.package_e = gtk.Entry(255)
-    
+
     hbox = gtk.HBox(False, 5)
     hbox.pack_start(gtk.Label('Buscar:'), False)
     hbox.pack_start(self.package_e, False)
@@ -31,10 +31,10 @@ class PackagesList(gtk.VBox):
     self.packages_t.connect('row-activated', self.on_row_activated)
     self.t_selection = self.packages_t.get_selection()
     self.t_selection.connect('changed', self.on_selection_changed)
-    
+
     self.scroll.add(self.packages_t)
     self.pack_start(self.scroll, True)
-    
+
     if self.with_actions:
       self.add_b = gtk.Button('Agregar')
       self.edit_b = gtk.Button('Editar')
@@ -44,14 +44,14 @@ class PackagesList(gtk.VBox):
       self.add_b.connect('clicked', self.on_add_clicked)
       self.edit_b.connect('clicked', self.on_edit_clicked)
       self.delete_b.connect('clicked', self.on_delete_clicked)
-      
+
       self.actions = gtk.HBox()
       self.actions.pack_start(self.add_b, False)
       self.actions.pack_start(self.edit_b, False)
       self.actions.pack_start(self.delete_b, False)
-      
+
       self.pack_start(self.actions, False)
-    
+
     self.show_all()
 
   @classmethod
@@ -115,11 +115,11 @@ gobject.signal_new('selection-changed', \
 class PackagesTable(gtk.TreeView):
   def __init__(self, packages):
     self.create_store(packages)
-    
+
     gtk.TreeView.__init__(self,self.store)
-    
+
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     self.add_column('Nombre', 1)
     self.add_column('Clases', 2)
 
@@ -128,7 +128,7 @@ class PackagesTable(gtk.TreeView):
     col.set_expand(True)
     self.append_column(col)
     return col
-  
+
   def create_store(self, packages):
     # package, name, klasses names
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str)
@@ -137,7 +137,7 @@ class PackagesTable(gtk.TreeView):
   def update(self, packages):
     self.store.clear()
     self.set_model(packages)
-  
+
   def set_model(self, packages):
     for p in packages:
       self.store.append((p,p.name,p.klasses_names()))
@@ -149,12 +149,12 @@ class PackageForm(FormFor):
     self.klasses= klasses
 
     self.create_form_fields()
-    
+
     self.submit = gtk.Button('Guardar')
     self.fields.pack_start(self.submit,False)
-    
+
     self.pack_start(self.fields, True)
-    
+
     self.show_all()
 
   def get_tab_label(self):
@@ -162,7 +162,7 @@ class PackageForm(FormFor):
       return "Editar paquete:\n" + self.object.name
     else:
       return 'Agregar paquete'
-  
+
   def create_form_fields(self):
     self.fields = gtk.VBox()
     self.add_field('name', attrs=100)
@@ -191,7 +191,7 @@ class PackageForm(FormFor):
         if c.get_active():
           kls.append(c.k)
     return kls
-  
+
   def get_values(self):
     values = {'name': self.name_e.get_text(), 'fee': self.fee_e.get_text(), 'alt_fee': self.alt_fee_e.get_text()}
     kls = self.get_klasses()
@@ -214,7 +214,7 @@ class NewUserPackageForm(gtk.VBox):
     gtk.VBox.__init__(self, False, 4)
     label = gtk.Label('Clases')
     self.pack_start(label)
-    
+
     self.checks = {}
     self.day_checks = {}
     for day in klasses:
@@ -222,30 +222,31 @@ class NewUserPackageForm(gtk.VBox):
       day_box.pack_start(gtk.Label(_t('days')[day]))
       self.day_checks[day] = day_box
       for klass in sorted(klasses[day]):
-        check = gtk.CheckButton(klass.get_full_name(ignore_day = True))
+        sch = klass.schedule_for_day(day)
+        check = gtk.CheckButton(sch.get_full_name(add_day = False))
         check.connect('toggled', self.on_klass_toggled)
-        self.checks[check] = klass
+        self.checks[check] = sch
         day_box.pack_start(check)
-    
+
     self.days_wrapper = gtk.HBox(False, 2)
     for day in sorted(self.day_checks):
       self.days_wrapper.pack_start(self.day_checks[day])
-    
+
     self.pack_start(self.days_wrapper)
-    
+
     self.create_installments = gtk.CheckButton('Agregar cuotas?')
     self.create_installments.set_active(True)
     self.pack_start(self.create_installments)
-    
+
     label2 = gtk.Label('Precio')
     self.pack_start(label2)
-    
+
     self.fee_e = gtk.Entry(10)
     self.fee_e.set_text('0')
     self.pack_start(self.fee_e)
 
     self.months = gtk.HBox(False, 4)
-    
+
     field = gtk.VBox()
     self.initial_month_l = gtk.Label('Mes inicial')
     store = gtk.ListStore(int, str)
@@ -278,26 +279,36 @@ class NewUserPackageForm(gtk.VBox):
     field.pack_start(self.final_month_l, False)
     field.pack_start(self.final_month_e, False)
     self.months.pack_start(field, True)
-    
+
     self.pack_start(self.months, False)
 
   def on_klass_toggled(self, check):
-    if Settings.get_settings().use_hour_fees is True:
-      duration = sum(map(lambda k: k.get_duration(), self.get_checked_klasses()))
-      if duration == int(duration): duration = int(duration)
+    hours = 0
+    fixed_fee_klasses = []
+    for sch in self.get_checked_schedules():
+      if int(sch.klass.normal_fee) > 0:
+        if not [k for k in fixed_fee_klasses if k.id == sch.klass.id]:
+          fixed_fee_klasses.append(sch.klass)
+      else:
+        hours += sch.duration()
 
-      klasses_fee = Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
-    else:
-      fees = map(lambda k: k.normal_fee, self.get_checked_klasses())
-      
-      klasses_fee = sum(fees)
-      
-    self.fee_e.set_text(str(klasses_fee))
+    if hours == int(hours): hours = int(hours)
+    hours_fee = Settings.get_settings().get_fee_for(str(hours)) if hours > 0 else 0
+    fixed_fee = sum(map((lambda k: k.normal_fee), fixed_fee_klasses))
+
+    self.fee_e.set_text(str(hours_fee+fixed_fee))
+
+  def get_checked_schedules(self):
+    checked = []
+    for (c,sch) in self.checks.items():
+      if c.get_active() is True: checked.append(sch)
+    return checked
 
   def get_checked_klasses(self):
     checked = []
-    for (c,k) in self.checks.items():
-      if c.get_active() is True: checked.append(k)
+    for (c,sch) in self.checks.items():
+      if c.get_active() is True:
+        if not [k for k in checked if k.id == sch.klass.id]: checked.append(sch.klass)
     return checked
 
   def should_create_installments(self):
@@ -306,7 +317,7 @@ class NewUserPackageForm(gtk.VBox):
   def get_initial_month(self):
     itr = self.initial_month_e.get_active_iter()
     return self.initial_month_e.get_model().get_value(itr,0)
-  
+
   def get_final_month(self):
     itr = self.final_month_e.get_active_iter()
     return self.final_month_e.get_model().get_value(itr,0)

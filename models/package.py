@@ -45,10 +45,18 @@ class Package(Model):
       self._alt_fee = 0
 
   def get_hours_fee(self):
-    duration = sum(map(lambda k: k.get_duration(), self.klasses))
-    if duration == int(duration): duration = int(duration)
+    hours = 0
+    fixed_fee = 0
+    for klass in self.klasses():
+      if klass.normal_fee > 0:
+        fixed_fee += int(klass.normal_fee)
+      else:
+        hours += klass.get_duration()
 
-    return Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
+    if hours == int(hours): hours = int(hours)
+    hours_fee = Settings.get_settings().get_fee_for(str(hours)) if hours > 0 else 0
+
+    return str(hours_fee+fixed_fee)
 
   @property
   def klasses(self):

@@ -9,33 +9,33 @@ class Config(gtk.ScrolledWindow):
     gtk.ScrolledWindow.__init__(self)
     self.set_border_width(4)
     self.settings = settings.get_settings()
-    
+
     self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-    
+
     self.vbox = gtk.VBox(False, 5)
     self.hbox = gtk.HBox(False, 8)
-    
+
     self.vbox.pack_start(self.hbox, True)
-    
+
     self.left = gtk.VBox()
     self.right = gtk.VBox()
-    
+
     self.hbox.pack_start(self.left, True)
     self.hbox.pack_start(self.right, True)
-    
+
     self.create_form()
-    
+
     viewport = gtk.Viewport()
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.vbox)
     self.add(viewport)
-    
+
     self.show_all()
 
   def create_form(self):
     self.name_e = self.add_field('Nombre del instituto/academia', attrs=100)
     self.name_e.set_text(str(getattr(self.settings,'name')))
-    
+
     self.opening_e = self.add_field('Horario de apertura', attrs=5)
     self.opening_e.set_text(str(getattr(self.settings,'opening')))
     self.closing_e = self.add_field('Horario de cierre', attrs=5)
@@ -46,7 +46,7 @@ class Config(gtk.ScrolledWindow):
     self.recharge_value_e.set_text(str(getattr(self.settings,'recharge_value')))
     self.second_recharge_value_e = self.add_field('Valor del recargo por mes vencido (formato: 10 o 10%)', attrs=10)
     self.second_recharge_value_e.set_text(str(getattr(self.settings,'second_recharge_value')))
-    
+
     self.language_e = self.add_field('Idioma', attrs=2)
     self.language_e.set_text(str(getattr(self.settings,'language')))
 
@@ -57,32 +57,29 @@ class Config(gtk.ScrolledWindow):
 
     self.date_format_e = self.add_field('Formato de fechas', attrs=15)
     self.date_format_e.set_text(str(getattr(self.settings,'date_format')))
-    
-    self.fees_l = gtk.Label('Precios')
-    self.hour_fees_check = gtk.CheckButton('¿Calcular precios según horas de clase?')
-    self.hour_fees_check.set_active(getattr(self.settings, 'use_hour_fees'))
+
+    self.fees_l = gtk.Label('Precios por horas de clase')
     self.fees_ls = FeesList(self.settings.fees)
 
     field = gtk.VBox()
     field.pack_start(self.fees_l, False)
-    field.pack_start(self.hour_fees_check, False)
     field.pack_start(self.fees_ls, True)
     self.right.pack_start(field, False)
 
     self.submit = gtk.Button('Guardar')
-    
+
     self.vbox.pack_start(self.submit, False)
 
   def add_field(self, label, attrs=None, box=None):
     field = gtk.VBox()
     label = gtk.Label(label)
     entry = gtk.Entry(attrs)
-    
+
     field.pack_start(label, False)
     field.pack_start(entry, False)
-    
+
     self.left.pack_start(field, False)
-    
+
     return entry
 
   def get_tab_label(self):
@@ -95,11 +92,11 @@ class Config(gtk.ScrolledWindow):
 class FeesList(gtk.TreeView):
   def __init__(self, fees):
     self.create_store(fees)
-    
+
     gtk.TreeView.__init__(self,self.store)
-    
+
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     self.add_column('Referencia', 0)
     self.add_column('Precio', 1)
 
@@ -119,7 +116,7 @@ class FeesList(gtk.TreeView):
 
   def compact_and_add_new(self):
     self.update(self.get_values())
-  
+
   def create_store(self, fees):
     # hours, fee
     self.store = gtk.ListStore(str, str)
@@ -128,12 +125,12 @@ class FeesList(gtk.TreeView):
   def update(self, fees):
     self.store.clear()
     self.set_model(fees)
-  
+
   def set_model(self, fees):
     for k in sorted(fees.keys()):
       self.store.append((k,str(fees[k])))
     self.store.append(('',''))
-  
+
   def get_values(self):
     d = {}
     for row in self.store:

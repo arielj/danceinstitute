@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+from decimal import Decimal
 from translations import _t
 from settings import Settings
 from model import Model
@@ -19,7 +20,7 @@ class Klass(Model):
 
   def __init__(self, data = {}):
     self.name = ''
-    self.normal_fee = 0
+    self._normal_fee = 0
     self.half_fee = 0
     self.once_fee = 0
     self.inscription_fee = 0
@@ -33,6 +34,17 @@ class Klass(Model):
     self._schedules_remove = []
 
     Model.__init__(self, data)
+
+  @property
+  def normal_fee(self):
+    return self._normal_fee/100
+
+  @normal_fee.setter
+  def normal_fee(self,value):
+    try:
+      self._normal_fee = int(Decimal(value)*100)
+    except:
+      self._normal_fee = 0
 
   def can_delete(self):
     if package.Package.with_klass(self).anything():
@@ -52,7 +64,7 @@ class Klass(Model):
 
   def _is_valid(self):
     self.validate_presence_of('name')
-    self.validate_numericallity_of('normal_fee', great_than = 0, only_integer = False)
+    self.validate_numericallity_of('normal_fee', great_than_or_equal = 0, only_integer = False)
     self.validate_numericallity_of('half_fee', great_than_or_equal = 0, only_integer = False)
     self.validate_numericallity_of('once_fee', great_than_or_equal = 0, only_integer = False)
     self.validate_numericallity_of('inscription_fee', great_than_or_equal = 0, only_integer = False)
@@ -167,6 +179,13 @@ class Klass(Model):
         self.schedules.remove(s)
         self._schedules_remove.append(s)
 
+  def schedule_for_day(self, day):
+    sch = None
+    for s in self.schedules:
+      if s.day == day:
+        sch = s
+    return sch
+
   def remove_teacher(self, teacher):
     for t in self.teachers:
       if t.id == teacher.id:
@@ -182,11 +201,17 @@ class Klass(Model):
 
     return Settings.get_settings().get_fee_for(str(duration)) if duration > 0 else 0
 
-  def get_full_name(self, ignore_day = False, ignore_time = False):
-    sch = self.schedules[0]
+  def get_full_name(self, day = None, add_day = True, add_time = True):
+    sch = None
+    if day is not None:
+      for sc in self.schedules:
+        if sc.day == day:
+          sch = sc
+    if sch is None: sch = self.schedules[0]
+
     sch_label = ''
-    if ignore_day is False: sch_label += sch.day_name()
-    if ignore_time is False:
+    if add_day is True: sch_label += sch.day_name()
+    if add_time is True:
       if sch_label != '': sch_label += ' '
       sch_label += sch.str_from_time() + '-' + sch.str_to_time()
 

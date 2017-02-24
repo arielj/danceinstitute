@@ -51,7 +51,7 @@ class Schedule(Model):
   def str_from_time(self):
     st = str(self.from_time).zfill(4)
     return st[0:2]+':'+st[2:4]
-  
+
   @property
   def to_time(self):
     return self._to_time
@@ -94,7 +94,7 @@ class Schedule(Model):
     to = datetime.datetime.strptime(self.str_to_time(), '%H:%M')
     fr = datetime.datetime.strptime(self.str_from_time(), '%H:%M')
     return (to-fr).seconds/3600.0
-  
+
   def day_name(self):
     return _t('days')[self.day]
 
@@ -115,7 +115,7 @@ class Schedule(Model):
   # internal use for "get_intervals"
   def _get_from_datetime(self):
     return self._get_datetime(self.str_from_time())
-  
+
   def _get_to_datetime(self):
     return self._get_datetime(self.str_to_time())
 
@@ -126,6 +126,9 @@ class Schedule(Model):
     if self.from_time >= self.to_time:
       self.add_error('from_time', 'Desde debe ser anterior a Hasta.')
     self.validate_presence_of('room')
+
+  def get_full_name(self, add_day = True, add_time = True):
+    return self.klass.get_full_name(day = self.day, add_day = add_day, add_time = add_time)
 
   def to_db(self):
     return {'klass_id': self.klass.id, 'from_time': self.from_time, 'to_time': self.to_time, 'day': self.day, 'room_id': self.room_id}
