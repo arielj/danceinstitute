@@ -3,6 +3,7 @@
 
 import gtk
 import settings
+from translations import _t
 
 class Config(gtk.ScrolledWindow):
   def __init__(self, settings):
@@ -58,6 +59,37 @@ class Config(gtk.ScrolledWindow):
     self.date_format_e = self.add_field('Formato de fechas', attrs=15)
     self.date_format_e.set_text(str(getattr(self.settings,'date_format')))
 
+    installments_vbox = gtk.VBox()
+    installments_vbox.pack_start(gtk.Label('Preseleccionar cuotas al suscribir:'), False)
+    installments_hbox = gtk.HBox(False, 5)
+    self.installments_from_l = gtk.Label('Cuotas desde:')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.installments_from_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.installments_from_e.pack_start(cell, True)
+    self.installments_from_e.add_attribute(cell, 'text', 1)
+    self.installments_from_e.set_active(getattr(self.settings,'installments_from'))
+
+    self.installments_to_l = gtk.Label('Cuotas hasta:')
+    store = gtk.ListStore(int, str)
+    for i,m in enumerate(_t('months')):
+      store.append((i,m))
+    self.installments_to_e = gtk.ComboBox(store)
+    cell = gtk.CellRendererText()
+    self.installments_to_e.pack_start(cell, True)
+    self.installments_to_e.add_attribute(cell, 'text', 1)
+    self.installments_to_e.set_active(getattr(self.settings,'installments_to'))
+
+    installments_hbox.pack_start(self.installments_from_l, False)
+    installments_hbox.pack_start(self.installments_from_e, False)
+    installments_hbox.pack_start(self.installments_to_l, False)
+    installments_hbox.pack_start(self.installments_to_e, False)
+
+    installments_vbox.pack_start(installments_hbox, False)
+    self.left.pack_start(installments_vbox, False)
+
     self.fees_l = gtk.Label('Precios por horas de clase')
     self.fees_ls = FeesList(self.settings.fees)
 
@@ -86,7 +118,7 @@ class Config(gtk.ScrolledWindow):
     return "Configuración"
 
   def get_values(self):
-    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'second_recharge_value': self.second_recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'fees': self.fees_ls.get_fees(), 'use_hour_fees': self.hour_fees_check.get_active()}
+    return {'name': self.name_e.get_text(), 'opening': self.opening_e.get_text(), 'closing': self.closing_e.get_text(), 'tabs_position': self.tabs_position_e.get_text(), 'startup_size': self.startup_size_e.get_text(), 'language': self.language_e.get_text(), 'recharge_after': self.recharge_after_e.get_text(), 'recharge_value': self.recharge_value_e.get_text(), 'second_recharge_value': self.second_recharge_value_e.get_text(), 'date_format': self.date_format_e.get_text(), 'fees': self.fees_ls.get_fees(), 'installments_from': self.installments_from_e.get_active(), 'installments_to': self.installments_to_e.get_active()}
 
 
 class FeesList(gtk.TreeView):

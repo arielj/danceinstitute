@@ -262,6 +262,11 @@ class Conn(object):
         cls.execute('ALTER TABLE klasses ADD COLUMN inactive BOOLEAN default 0;')
       version = cls.set_version('1.6')
 
+    if version == '1.6':
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('installments_from','0')''')
+      cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('installments_to','11')''')
+      version = cls.set_version('1.7')
+
   @classmethod
   def set_version(cls,version):
     cls.execute('UPDATE settings SET value = :version WHERE `key` = "version"',{'version': version})

@@ -19,6 +19,8 @@ class Settings(object):
     self.date_format = '%Y-%m-%d'
     self.fees = {}
     self._use_hour_fees = '0'
+    self._installments_from = 0
+    self._installments_to = 11
 
   @property
   def export_path(self):
@@ -40,6 +42,28 @@ class Settings(object):
       self._recharge_after = 10
 
   @property
+  def installments_from(self):
+    return self._installments_from
+
+  @installments_from.setter
+  def installments_from(self, value):
+    try:
+      self._installments_from = int(value)
+    except:
+      self._installments_from = 0
+
+  @property
+  def installments_to(self):
+    return self._installments_to
+
+  @installments_to.setter
+  def installments_to(self, value):
+    try:
+      self._installments_to = int(value)
+    except:
+      self._installments_to = 11
+
+  @property
   def use_hour_fees(self):
     return self._use_hour_fees == '1'
 
@@ -52,7 +76,7 @@ class Settings(object):
 
   def get_opening_h(self):
     return int(self.opening.split(':')[0])
-  
+
   def get_closing_h(self):
     return int(self.closing.split(':')[0])
 
@@ -68,7 +92,7 @@ class Settings(object):
         setattr(cls._settings,r['key'], json.loads(r['value']))
       else:
         setattr(cls._settings,r['key'], r['value'])
-        
+
     return cls._settings
 
   def set_values(self, data):
@@ -80,11 +104,13 @@ class Settings(object):
       if k.startswith('_'): k = k.replace('_','',1)
       v = json.dumps(getattr(self, k)) if k == 'fees' else None
       if k == 'use_hour_fees': v = getattr(self, '_use_hour_fees')
+      if k == 'installments_from': v = getattr(self, '_installments_from')
+      if k == 'installments_to': v = getattr(self, '_installments_to')
 
       self.save_attr(k, v)
 
     return True
-  
+
   def save_attr(self, k, value = None):
     if value is None: value = getattr(self, k)
     Conn.execute('UPDATE settings SET value=:value WHERE `key`=:key', {'key': k, 'value': value})
@@ -92,4 +118,3 @@ class Settings(object):
   @classmethod
   def get_fee_for(cls, k):
     return cls.get_settings().fees[k]
-    
