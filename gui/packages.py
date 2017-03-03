@@ -331,8 +331,8 @@ class EditUserPackageDialog(NewUserPackageDialog):
   def __init__(self, package, klasses):
     NewUserPackageDialog.__init__(self, klasses, 'Editar Paquete')
     self.package = package
-    for (c,k) in self.form.checks.items():
-      if k in package.klasses: c.set_active(True)
+    for (c,sch) in self.form.checks.items():
+      if sch.klass in package.klasses: c.set_active(True)
     self.form.months.set_no_show_all(True)
     self.form.create_installments.set_no_show_all(True)
     self.form.months.hide()
