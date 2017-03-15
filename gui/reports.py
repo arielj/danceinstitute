@@ -349,6 +349,7 @@ class DailyCashReport(gtk.VBox):
     self.payment_headings = ['Detalle', 'Entrada', 'Salida', 'Alumno/Profesor']
 
     self.p_list = PaymentsList(payments, self.payment_headings, self.p_to_row)
+    self.p_list.connect('row-activated', self.on_payment_row_activated)
 
     self.p_scroll = gtk.ScrolledWindow()
     self.p_scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -513,6 +514,19 @@ class DailyCashReport(gtk.VBox):
       if re.search(self.get_desc_filter(), self.p_to_row(p)[1], flags=re.I): ps.append(p)
     return ps
 
+  def on_payment_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('student-edit', payment.user_id, payment)
+
+gobject.type_register(DailyCashReport)
+gobject.signal_new('student-edit', \
+                   DailyCashReport, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT))
+
+
 class MovementsList(gtk.TreeView):
   def __init__(self, movements, headings, to_row = None):
     if to_row is not None:
@@ -675,7 +689,7 @@ class InstallmentsReport(gtk.VBox):
     model = tree.get_model()
     itr = model.get_iter(path)
     installment = model.get_value(itr, 0)
-    self.emit('student-edit', installment.membership.student_id)
+    self.emit('student-edit', installment.membership.student_id, installment)
 
   def get_selected_klass(self):
     itr = self.klass.get_active_iter()
@@ -724,7 +738,7 @@ gobject.type_register(InstallmentsReport)
 gobject.signal_new('student-edit', \
                    InstallmentsReport, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT))
 
 class InstallmentsList(gtk.TreeView):
   def __init__(self, installments, headings, to_row = None):

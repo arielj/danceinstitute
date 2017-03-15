@@ -123,7 +123,7 @@ class Controller(gobject.GObject):
     movements = movement.Movement.by_date(today)
     today_birthdays = user.User.birthday_today()
     page = Home(klasses, notes, installments, payments, movements, today_birthdays)
-    page.connect('user-edit', self.edit_student)
+    page.connect('student-edit', self.edit_student)
     page.notes.save.connect_object('clicked',self.save_notes, page)
     page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
     page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
@@ -330,7 +330,9 @@ class Controller(gobject.GObject):
   def edit_student(self, widget, student_id, extra = None):
     student = Student.find(student_id)
     page = self.user_form(student)
-    if isinstance(extra, Payment): page.show_payment(extra)
+    if isinstance(extra, Payment):
+      if extra.installment is not None: page.show_installment(extra.installment)
+    if isinstance(extra, Installment): page.show_installment(extra)
 
   def user_form(self, user):
     if user.is_not_new_record():
@@ -1094,6 +1096,7 @@ class Controller(gobject.GObject):
     page.export_html.connect_object('clicked', self.export_daily_cash_html, page)
     page.export_csv.connect_object('clicked', self.export_daily_cash_csv, page)
     page.filter.connect_object('clicked', self.filter_daily_cash, page)
+    page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
 
