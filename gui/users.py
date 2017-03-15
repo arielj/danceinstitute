@@ -294,6 +294,11 @@ class UserForm(FormFor):
   def refresh_family(self):
     self.family_list.update_table(self.object.family_members())
 
+  def show_payment(self, payment):
+    if payment.installment is not None:
+      self.tabs.set_current_page(self.tabs.page_num(self.memberships))
+      self.memberships.show_payment(payment)
+
 gobject.type_register(UserForm)
 gobject.signal_new('ask-delete-membership', \
                    UserForm, \

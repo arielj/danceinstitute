@@ -133,6 +133,9 @@ class MembershipsTab(gtk.VBox):
   def on_edit_package_clicked(self, data, package):
     self.emit('edit-package', package)
 
+  def show_payment(self, payment):
+    self.select_membership(payment.installment.membership)
+
 gobject.type_register(MembershipsTab)
 gobject.signal_new('add-installments', \
                    MembershipsTab, \

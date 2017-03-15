@@ -327,9 +327,10 @@ class Controller(gobject.GObject):
     student = Student()
     page = self.user_form(student)
 
-  def edit_student(self, widget, student_id):
+  def edit_student(self, widget, student_id, extra = None):
     student = Student.find(student_id)
     page = self.user_form(student)
+    if isinstance(extra, Payment): page.show_payment(extra)
 
   def user_form(self, user):
     if user.is_not_new_record():
