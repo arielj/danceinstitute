@@ -210,7 +210,7 @@ class PaymentsTab(gtk.VBox):
     self.pack_start(self.info_vbox, False)
 
     #payment, date, description, amount, receipt_number
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str)
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,bool)
 
     self.refresh()
 
@@ -226,6 +226,9 @@ class PaymentsTab(gtk.VBox):
     self.add_column('Descripción',2)
     self.add_column('Monto',3)
     self.add_column('Recibo N°',4)
+    renderer_checkbox = gtk.CellRendererToggle()
+    self.list.append_column(gtk.TreeViewColumn("Impr?", renderer_checkbox, active = 5))
+    renderer_checkbox.connect('toggled', self.on_toggle_payment)
 
     self.scrolled = gtk.ScrolledWindow()
     viewport = gtk.Viewport()
@@ -240,9 +243,12 @@ class PaymentsTab(gtk.VBox):
     self.add_b = gtk.Button('Agregar Pago')
     self.delete_b = gtk.Button('Eliminar Pago(s)')
     self.delete_b.set_sensitive(False)
+    self.print_b = gtk.Button('Imprimir')
+    self.print_b.set_sensitive(False)
 
     self.actions.pack_start(self.add_b, False)
     self.actions.pack_start(self.delete_b, False)
+    self.actions.pack_start(self.print_b, False)
 
     self.pack_start(self.actions, False)
 
@@ -257,7 +263,7 @@ class PaymentsTab(gtk.VBox):
 
     if self.user.is_not_new_record():
       for p in self.user.get_payments(include_installments = False, done = self.done).order_by('date DESC, id DESC'):
-        self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+p.amount, str(p.receipt_number or '')))
+        self.store.append((p,p.date.strftime(Settings.get_settings().date_format),p.description, '$'+p.amount, str(p.receipt_number or ''),False))
 
   def on_selection_changed(self, selection):
     model, pathlist = selection.get_selected_rows()
@@ -273,3 +279,17 @@ class PaymentsTab(gtk.VBox):
 
   def on_payment_deleted(self, p_id):
     self.refresh()
+
+  def on_toggle_payment(self, renderer, path):
+    itr = self.store.get_iter(path)
+    current_val = self.store.get_value(itr,5)
+    self.store.set(itr, 5, not current_val)
+    self.print_b.set_sensitive(self.printable_payments() != [])
+
+  def printable_payments(self):
+    selected = []
+    itr = self.store.get_iter_first()
+    while itr is not None:
+      if self.store.get_value(itr,5): selected.append(self.store.get_value(itr,0))
+      itr = self.store.iter_next(itr)
+    return selected

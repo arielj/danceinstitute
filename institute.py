@@ -354,6 +354,7 @@ class Controller(gobject.GObject):
     page.connect('delete-installments', self.ask_delete_installments)
     page.connect('delete-liabilities', self.ask_delete_liabilities)
     page.connect('edit-package', self.edit_user_package)
+    page.connect('print-payments', self.print_payments)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -1016,6 +1017,13 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
+  def print_payments(self, page, payments):
+    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    window.set_title("Recibo:")
+    self.area = Receipt(payments)
+    window.add(self.area)
+    self.area.show()
+    window.show()
 
 
 

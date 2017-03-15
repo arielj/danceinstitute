@@ -172,6 +172,7 @@ class UserForm(FormFor):
     self.tabs.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
     t.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t)
     t.add_b.connect_object('clicked', self.on_add_payment_clicked, t, None)
+    t.print_b.connect_object('clicked', self.on_print_payments_clicked, t)
 
     self.liabilities = LiabilitiesTab(self.user)
     self.tabs.append_page(self.liabilities, gtk.Label('Deudas'))
@@ -249,6 +250,9 @@ class UserForm(FormFor):
 
   def on_add_payments_clicked(self, tab):
     self.emit('add-payments')
+
+  def on_print_payments_clicked(self, tab):
+    self.emit('print-payments', tab.printable_payments())
 
   def on_add_installments_clicked(self, tab):
     self.emit('add-installments', tab.get_current_membership())
@@ -336,6 +340,10 @@ gobject.signal_new('create-user-package', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 gobject.signal_new('edit-package', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('print-payments', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))

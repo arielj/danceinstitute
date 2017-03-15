@@ -12,3 +12,4 @@ from rooms import *
 from reports import *
 from movements import *
 from liabilities import *
+from receipt import *

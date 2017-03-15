@@ -10,4 +10,3 @@ from schedule import Schedule
 from package import Package
 from movement import Movement
 from liability import Liability
-
