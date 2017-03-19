@@ -167,11 +167,13 @@ class UserForm(FormFor):
       self.tabs.append_page(t2,gtk.Label('Pagos al profesor'))
       t2.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t2)
       t2.add_b.connect_object('clicked', self.on_add_payment_clicked, t2, None, True)
+      t2.list.connect('row-activated', self.on_edit_payment)
 
     t = PaymentsTab(self.user)
     self.tabs.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
     t.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t)
     t.add_b.connect_object('clicked', self.on_add_payment_clicked, t, None)
+    t.list.connect('row-activated', self.on_edit_payment)
 
     self.liabilities = LiabilitiesTab(self.user)
     self.tabs.append_page(self.liabilities, gtk.Label('Deudas'))
@@ -306,6 +308,12 @@ class UserForm(FormFor):
     self.tabs.set_current_page(self.tabs.page_num(self.memberships))
     self.memberships.show_installment(installment)
 
+  def on_edit_payment(self, tree, path, view_column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('edit-payment', payment)
+
 gobject.type_register(UserForm)
 gobject.signal_new('ask-delete-membership', \
                    UserForm, \
@@ -356,6 +364,10 @@ gobject.signal_new('edit-installment', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('edit-installment-payments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-payment', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))

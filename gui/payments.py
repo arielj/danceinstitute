@@ -45,7 +45,8 @@ class AddPaymentDialog(gtk.Dialog):
   def __init__(self,payment):
     self.payment = payment
     self.form = AddPaymentForm(payment)
-    gtk.Dialog.__init__(self, 'Agregar pago', None,
+    title = 'Editar pago' if payment.is_persisted() else 'Agregar pago'
+    gtk.Dialog.__init__(self, title, None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))

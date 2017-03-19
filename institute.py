@@ -359,6 +359,7 @@ class Controller(gobject.GObject):
     page.connect('edit-package', self.edit_user_package)
     page.connect('edit-installment', self.edit_installment)
     page.connect('edit-installment-payments', self.edit_installment_payments)
+    page.connect('edit-payment', self.edit_payment)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -910,9 +911,19 @@ class Controller(gobject.GObject):
   def on_edit_installment(self, dialog, response, page):
     destroy_dialog = True
     if response == gtk.RESPONSE_ACCEPT:
-      print "acá updateo"
+      ins = dialog.installment
+      amount = dialog.get_amount()
+      if amount < ins.paid():
+        ErrorMessage('No se pueden editar la cuota:', 'Tiene pagos cargados por un valor mayor.').run()
+        destroy_dialog = False
+      elif ins.amount != Money(amount):
+        ins.amount = amount
+        ins.update_status()
+        page.update()
 
     if destroy_dialog: dialog.destroy()
+
+
 
 
 
@@ -1052,17 +1063,42 @@ class Controller(gobject.GObject):
           payment = Payment.find(p_id)
           if p_data['remove']:
             payment.delete()
+            self.emit('payment-deleted', payment)
           else:
             if payment.str_date() != p_data['date'] or payment.amount != Money(p_data['amount']) or payment.description != p_data['description']:
               payment.date = p_data['date']
               payment.amount = Money(p_data['amount'])
               payment.description = p_data['description']
               #payment.receipt_number = p_data['receipt_number']
-              payment.save()
+              if payment.save(): self.emit('payment-changed', payment, False)
         dialog.installment.update_status()
         page.update()
 
     if destroy_dialog: dialog.destroy()
+
+  def edit_payment(self, widget, payment):
+    dialog = AddPaymentDialog(payment)
+    dialog.connect('response', self.on_edit_payment, widget)
+    dialog.run()
+
+  def on_edit_payment(self, dialog, response, page):
+    if response == gtk.RESPONSE_ACCEPT:
+      data = dialog.form.get_values()
+      payment = dialog.payment
+      if payment.str_date() != data['date'] or payment.amount != data['amount'] or payment.description != data['description']:
+        payment.date = data['date']
+        payment.amount = data['amount']
+        payment.description = data['description']
+        #payment.receipt_number = p_data['receipt_number']
+        if payment.save():
+          self.emit('payment-changed', payment, False)
+          page.update()
+
+    dialog.destroy()
+
+
+
+
 
   #liabilities controls
   def add_liability(self, page):

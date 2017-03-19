@@ -148,6 +148,9 @@ class MembershipsTab(gtk.VBox):
   def on_edit_installment_payments(self, data, installment):
     self.emit('edit-installment-payments', installment)
 
+  def on_payment_deleted(self, p_id):
+    return
+
 gobject.type_register(MembershipsTab)
 gobject.signal_new('add-installments', \
                    MembershipsTab, \
@@ -546,3 +549,13 @@ class EditInstallmentDialog(gtk.Dialog):
                          gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
 
     self.installment = installment
+
+    self.vbox.pack_start(gtk.Label('Monto'))
+    self.amount_e = gtk.Entry(10)
+    self.amount_e.set_text(str(installment.amount))
+    self.vbox.pack_start(self.amount_e)
+
+    self.show_all()
+
+  def get_amount(self):
+    return self.amount_e.get_text()

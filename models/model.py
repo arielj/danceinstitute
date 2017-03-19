@@ -52,6 +52,9 @@ class Model(object):
     obj.save()
     return obj
 
+  def is_persisted(self):
+    return self.id is not None
+
   def set_attrs(self, data = {}):
     if data:
       for attr in data.keys():
