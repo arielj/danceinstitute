@@ -33,7 +33,7 @@ class Payment(Model):
     self._done = False
     self._receipt_number = None
     Model.__init__(self, attrs)
-    
+
   @classmethod
   def from_db(cls, r):
     m = cls(r)
@@ -56,11 +56,11 @@ class Payment(Model):
   def description(self):
     descs = []
     if self._description: descs.append(self._description)
-    
+
     if self.installment:
       ins = self.installment
       if self._description != ins.description(): descs.append(ins.description())
-    
+
     if self.liability:
       li = self.liability
       if self._description != li.description: descs.append(li.description)
@@ -80,7 +80,7 @@ class Payment(Model):
       else:
         self._user = teacher.Teacher.find(self.user_id)
     return self._user
-    
+
   @user.setter
   def user(self, u):
     if u is None:
@@ -104,7 +104,7 @@ class Payment(Model):
     else:
       self.installment_id = ins.id
     self._installment = ins
-    
+
   @property
   def liability(self):
     if self.liability_id and self._liability is None:
@@ -130,6 +130,9 @@ class Payment(Model):
     else:
       self._date = self.parse_date(value)
 
+  def str_date(self):
+    return self.date.strftime(Settings.get_settings().date_format)
+
   @property
   def done(self):
     return bool(self._done)
@@ -141,7 +144,7 @@ class Payment(Model):
   @property
   def receipt_number(self):
     return self._receipt_number
-  
+
   @receipt_number.setter
   def receipt_number(self, value):
     try:
@@ -157,7 +160,7 @@ class Payment(Model):
     return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self.description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id}
 
   def to_s(self):
-    s = self.date.strftime(Settings.get_settings().date_format) + ": $" + str(self.amount)
+    s = self.str_date() + ": $" + str(self.amount)
 
     if self._description:
       d = self.installment.description() if self.installment else ''
@@ -188,7 +191,7 @@ class Payment(Model):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
-    
+
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
     if q_term != '': q.where('description', '%%%s%%' % q_term, comparission = 'LIKE')
@@ -208,12 +211,11 @@ class Payment(Model):
         where = 'memberships.for_id = :package_id AND memberships.for_type = "Package"'
         args = {'package_id': k_or_p.id}
         where = '('+where+') OR (memberships.for_id IN (%s) AND memberships.for_type = "Klass")' % ','.join(map(lambda k: str(k.id), k_or_p.klasses))
-          
+
       q.set_join('LEFT JOIN installments ON installments.id = payments.installment_id LEFT JOIN memberships ON installments.membership_id = memberships.id').where(where,args)
-    
+
     if group:
       q.set_join('LEFT JOIN users ON users.id = payments.user_id')
       q = q.where('group', '%'+group+'%', comparission = 'LIKE')
 
     return q
-

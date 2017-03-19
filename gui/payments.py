@@ -273,3 +273,65 @@ class PaymentsTab(gtk.VBox):
 
   def on_payment_deleted(self, p_id):
     self.refresh()
+
+class EditInstallmentPaymentsDialog(gtk.Dialog):
+  def __init__(self, installment):
+    gtk.Dialog.__init__(self, 'Editar pagos de cuota', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+    self.installment = installment
+
+    self.payments = {}
+
+    hbox = gtk.HBox()
+    self.vbox.pack_start(hbox)
+
+    dates_vbox = gtk.VBox()
+    hbox.pack_start(dates_vbox)
+    dates_vbox.pack_start(gtk.Label('Fecha'))
+
+    descs_vbox = gtk.VBox()
+    hbox.pack_start(descs_vbox)
+    descs_vbox.pack_start(gtk.Label('Descripción'))
+
+    amounts_vbox = gtk.VBox()
+    hbox.pack_start(amounts_vbox)
+    amounts_vbox.pack_start(gtk.Label('Monto'))
+
+    removes_vbox = gtk.VBox()
+    hbox.pack_start(removes_vbox)
+    removes_vbox.pack_start(gtk.Label('Eliminar'))
+
+    for p in installment.payments:
+      hbox = gtk.HBox()
+      date_e = gtk.Entry(10)
+      date_e.set_text(p.date.strftime(Settings.get_settings().date_format))
+      dates_vbox.pack_start(date_e)
+
+      desc_e = gtk.Entry(100)
+      if p._description: desc_e.set_text(p._description)
+      descs_vbox.pack_start(desc_e)
+
+      amount_e = gtk.Entry(10)
+      amount_e.set_text(str(p.amount))
+      amounts_vbox.pack_start(amount_e)
+
+      receipt_e = gtk.Entry(10)
+      if p._receipt_number: receipt_e.set_text(str(p._receipt_number))
+      #hbox.pack_start(receipt_e)
+
+      remove_e = gtk.CheckButton()
+      removes_vbox.pack_start(remove_e)
+
+      self.payments[p.id] = {'date': date_e, 'desc': desc_e, 'amount': amount_e, 'receipt': receipt_e, 'remove': remove_e}
+
+    self.show_all()
+
+  def get_payments_data(self):
+    data = {}
+    for p_id, p_data in self.payments.iteritems():
+      data[p_id] = {'date': p_data['date'].get_text(), 'description': p_data['desc'].get_text(), 'amount': p_data['amount'].get_text(), 'receipt_number': p_data['receipt'].get_text(), 'remove': p_data['remove'].get_active()}
+
+    return data

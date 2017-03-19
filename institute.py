@@ -357,6 +357,8 @@ class Controller(gobject.GObject):
     page.connect('delete-installments', self.ask_delete_installments)
     page.connect('delete-liabilities', self.ask_delete_liabilities)
     page.connect('edit-package', self.edit_user_package)
+    page.connect('edit-installment', self.edit_installment)
+    page.connect('edit-installment-payments', self.edit_installment_payments)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -900,7 +902,17 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
+  def edit_installment(self, widget, installment):
+    dialog = EditInstallmentDialog(installment)
+    dialog.connect('response', self.on_edit_installment, widget)
+    dialog.run()
 
+  def on_edit_installment(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      print "acá updateo"
+
+    if destroy_dialog: dialog.destroy()
 
 
 
@@ -1019,8 +1031,38 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
+  def edit_installment_payments(self, widget, installment):
+    dialog = EditInstallmentPaymentsDialog(installment)
+    dialog.connect('response', self.on_edit_installment_payments, widget)
+    dialog.run()
 
+  def on_edit_installment_payments(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      data = dialog.get_payments_data()
+      total = Money(0)
+      for p_id, p_data in data.iteritems():
+        if not p_data['remove']: total += Money(p_data['amount'])
 
+      if total > dialog.installment.total():
+        ErrorMessage('No se pueden editar los pagos:', 'El total de los pagos es mayor que el valor de la cuota.').run()
+        destroy_dialog = False
+      else:
+        for p_id, p_data in data.iteritems():
+          payment = Payment.find(p_id)
+          if p_data['remove']:
+            payment.delete()
+          else:
+            if payment.str_date() != p_data['date'] or payment.amount != Money(p_data['amount']) or payment.description != p_data['description']:
+              payment.date = p_data['date']
+              payment.amount = Money(p_data['amount'])
+              payment.description = p_data['description']
+              #payment.receipt_number = p_data['receipt_number']
+              payment.save()
+        dialog.installment.update_status()
+        page.update()
+
+    if destroy_dialog: dialog.destroy()
 
   #liabilities controls
   def add_liability(self, page):

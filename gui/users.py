@@ -189,6 +189,8 @@ class UserForm(FormFor):
     self.memberships.connect('add-payments', self.on_add_payments_clicked)
     self.memberships.connect('delete-installments', self.on_delete_installments_clicked)
     self.memberships.connect('edit-package', self.on_edit_package_clicked)
+    self.memberships.connect('edit-installment', self.on_edit_installment_clicked)
+    self.memberships.connect('edit-installment-payments', self.on_edit_installment_payments_clicked)
 
   def get_comments_text(self):
     buff = self.comments_e.get_buffer()
@@ -268,6 +270,12 @@ class UserForm(FormFor):
   def on_edit_package_clicked(self, memberships, package):
     self.emit('edit-package', package)
 
+  def on_edit_installment_clicked(self, memberships, installment):
+    self.emit('edit-installment', installment)
+
+  def on_edit_installment_payments_clicked(self, memberships, installment):
+    self.emit('edit-installment-payments', installment)
+
   def on_payment_deleted(self, emmiter, p_id):
     for tab in self.tabs.get_children():
       tab.on_payment_deleted(p_id)
@@ -340,6 +348,14 @@ gobject.signal_new('create-user-package', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, ())
 gobject.signal_new('edit-package', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment-payments', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))

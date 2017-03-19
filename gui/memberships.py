@@ -16,6 +16,9 @@ class MembershipsTab(gtk.VBox):
 
     self.membership_data = MembershipData(None)
     self.membership_data.connect('edit-package', self.on_edit_package_clicked)
+    self.membership_data.connect('add-payment', self.on_add_payment)
+    self.membership_data.connect('edit-installment', self.on_edit_installment)
+    self.membership_data.connect('edit-installment-payments', self.on_edit_installment_payments)
 
     self.memberships = gtk.ComboBoxEntry()
     self.memberships.connect('changed', self.on_membership_selected)
@@ -121,7 +124,7 @@ class MembershipsTab(gtk.VBox):
     model = tree.get_model()
     itr = model.get_iter(path)
     installment = model.get_value(itr, 0)
-    self.emit('add-payment', installment, False)
+    self.emit('add-payment', [installment], False)
 
   def on_memberships_match_selected(self, completion, model, itr):
     membership = model.get_value(itr,0)
@@ -135,6 +138,15 @@ class MembershipsTab(gtk.VBox):
 
   def show_installment(self, installment):
     self.select_membership(installment.membership)
+
+  def on_add_payment(self, data, installment):
+    self.emit('add-payment', [installment], False)
+
+  def on_edit_installment(self, data, installment):
+    self.emit('edit-installment', installment)
+
+  def on_edit_installment_payments(self, data, installment):
+    self.emit('edit-installment-payments', installment)
 
 gobject.type_register(MembershipsTab)
 gobject.signal_new('add-installments', \
@@ -157,6 +169,14 @@ gobject.signal_new('edit-package', \
                    MembershipsTab, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment', \
+                   MembershipsTab, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment-payments', \
+                   MembershipsTab, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class MembershipData(gtk.VBox):
   def __init__(self, membership):
@@ -175,6 +195,8 @@ class MembershipData(gtk.VBox):
 
     self.list.set_rubber_banding(True)
     self.selection.set_mode(gtk.SELECTION_MULTIPLE)
+
+    self.list.connect('button-press-event', self.on_list_row_clicked)
 
     self.add_column('Año',1)
     self.add_column('Mes',2)
@@ -264,8 +286,61 @@ class MembershipData(gtk.VBox):
   def on_edit_package_clicked(self, button):
     if self.membership.is_package() is True: self.emit('edit-package', self.membership.klass_or_package)
 
+  def on_list_row_clicked(self, treeview, event):
+    if event.button == 3:
+      pthinfo = treeview.get_path_at_pos(int(event.x), int(event.y))
+      if pthinfo is not None:
+        path, col, cellx, celly = pthinfo
+        model = treeview.get_model()
+        itr = model.get_iter(path)
+        installment = model.get_value(itr,0)
+
+        popup = gtk.Menu()
+
+        edit_ins = gtk.MenuItem('Editar cuota')
+        popup.append(edit_ins)
+        edit_ins.show()
+        edit_ins.connect('activate', self.on_installment_popup_edit, installment)
+
+        if not installment.is_paid():
+          add_pay = gtk.MenuItem('Agregar pago')
+          popup.append(add_pay)
+          add_pay.show()
+          add_pay.connect('activate', self.on_installment_popup_add_payment, installment)
+
+        if installment.payments:
+          edit_pay = gtk.MenuItem('Editar pagos')
+          popup.append(edit_pay)
+          edit_pay.show()
+          edit_pay.connect('activate', self.on_installment_popup_edit_payments, installment)
+
+        popup.popup(None, None, None, event.button, event.time)
+
+      return True
+
+  def on_installment_popup_add_payment(self, menu_item, installment):
+    self.emit('add-payment', installment)
+
+  def on_installment_popup_edit(self, menu_item, installment):
+    self.emit('edit-installment', installment)
+
+  def on_installment_popup_edit_payments(self, menu_item, installment):
+    self.emit('edit-installment-payments', installment)
+
 gobject.type_register(MembershipData)
 gobject.signal_new('edit-package', \
+                   MembershipData, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('add-payment', \
+                   MembershipData, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment', \
+                   MembershipData, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment-payments', \
                    MembershipData, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
@@ -462,3 +537,12 @@ class DeleteLiabilitiesDialog(gtk.Dialog):
 
   def delete_payments(self):
     return self.payments_check.get_active();
+
+class EditInstallmentDialog(gtk.Dialog):
+  def __init__(self, installment):
+    gtk.Dialog.__init__(self, 'Editar cuota', None,
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
+                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+    self.installment = installment
