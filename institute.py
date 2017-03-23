@@ -1046,10 +1046,8 @@ class Controller(gobject.GObject):
   def print_payments(self, page, payments):
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
     window.set_title("Recibo:")
-    self.area = Receipt(payments)
-    window.add(self.area)
-    self.area.show()
-    window.show()
+    r = Receipt(payments)
+    r.do_print()
 
   def edit_installment_payments(self, widget, installment):
     dialog = EditInstallmentPaymentsDialog(installment)

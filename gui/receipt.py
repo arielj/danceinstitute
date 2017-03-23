@@ -5,69 +5,135 @@ import gtk
 import datetime
 import pango
 
-class Receipt(gtk.DrawingArea):
+class Receipt():
   def __init__(self, payments):
-    gtk.DrawingArea.__init__(self)
     self.user = payments[0].user
-    self.set_size_request(600, 300)
+    self.items_offset = 30
+    self.payments = payments
+    self.context = None
+    self.width = 0
+    self.height = 0
 
-    self.connect("expose-event", self.area_expose_cb, payments)
-
-    self.items_offset = 40
-
-
-  def area_expose_cb(self, area, event, payments):
-    self.gc = self.style.fg_gc[gtk.STATE_NORMAL]
-    self.add_header()
-    self.add_payments(payments)
-    self.add_footer()
-    return True
+  def default_page_setup(self):
+    setup = gtk.PageSetup()
+    setup.set_orientation(gtk.PAGE_ORIENTATION_LANDSCAPE)
+    setup.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
+    setup.set_top_margin(10, gtk.UNIT_MM)
+    setup.set_bottom_margin(10, gtk.UNIT_MM)
+    setup.set_left_margin(10, gtk.UNIT_MM)
+    setup.set_right_margin(10, gtk.UNIT_MM)
+    return setup
 
   def do_print(self):
     print_op = gtk.PrintOperation()
+    print_op.set_default_page_setup(self.default_page_setup())
     print_op.set_n_pages(1)
+    print_op.set_job_name("Recibo #...")
     print_op.connect("draw_page", self.print_text)
-    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PRINT_DIALOG, None)
+    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PREVIEW, None)
 
   def add_header(self):
-    user_name = self.create_pango_layout(self.user.to_label())
-    self.window.draw_layout(self.gc, 10, 10, user_name)
+    cr = self.context.get_cairo_context()
+    user_name = self.context.create_pango_layout()
+    user_name.set_text(self.user.to_label())
+    cr.move_to(0,0)
+    cr.show_layout(user_name)
 
-    number = self.create_pango_layout('2')
+    number = self.context.create_pango_layout()
+    number.set_text('2')
     number.set_width(20)
     number.set_alignment(pango.ALIGN_CENTER)
-    self.window.draw_layout(self.gc, 290, 10, number)
+    cr.move_to(self.width/2-10,0)
+    cr.show_layout(number)
 
-    date = self.create_pango_layout(str(datetime.date.today()))
-    date.set_alignment(pango.ALIGN_RIGHT)
-    date.set_width(100)
-    self.window.draw_layout(self.gc, 500, 10, date)
+    date = self.context.create_pango_layout()
+    date.set_text(datetime.date.today().strftime("%d de %B, %Y"))
+    date.set_width(-1)
+    cr.move_to(self.width-100,0)
+    cr.show_layout(date)
 
-  def add_payments(self, payments):
+  def add_payments(self):
+    cr = self.context.get_cairo_context()
+
+    h_font_desc = pango.FontDescription()
+    h_font_desc.set_weight(pango.WEIGHT_BOLD)
+
+    h_desc = self.context.create_pango_layout()
+    h_desc.set_text('DESCRIPCIÓN')
+    h_desc.set_font_description(h_font_desc)
+    cr.move_to(20, self.items_offset)
+    cr.show_layout(h_desc)
+
+    h_amount = self.context.create_pango_layout()
+    h_amount.set_text('MONTO')
+    h_amount.set_font_description(h_font_desc)
+    cr.move_to(self.width-70, self.items_offset)
+    cr.show_layout(h_amount)
+
+    self.items_offset += 15
+    cr.set_source_rgb(0, 0, 0)
+    cr.set_line_width(0.7)
+    cr.move_to(20, self.items_offset)
+    cr.line_to(self.width-20, self.items_offset)
+    cr.stroke()
+
+    cr.set_line_width(0.3)
+
+    self.items_offset += 5
+
     summ = None
-    for p in payments:
-      desc = self.create_pango_layout(p.description)
-      self.window.draw_layout(self.gc, 30, self.items_offset, desc)
-      summ = p.amount if summ is None else summ + p.amount
-      amount = self.create_pango_layout(str(p.amount))
-      self.window.draw_layout(self.gc, 400, self.items_offset, amount)
-      self.items_offset += 18
+    for p in self.payments:
+      desc = self.context.create_pango_layout()
+      desc.set_text(p.description)
+      cr.move_to(20, self.items_offset)
+      cr.show_layout(desc)
 
-    total_label = self.create_pango_layout("Total:")
-    self.window.draw_layout(self.gc, 350, self.items_offset+18, total_label)
-    total = self.create_pango_layout(str(summ))
-    self.window.draw_layout(self.gc, 400, self.items_offset+18, total)
+      summ = p.amount if summ is None else summ + p.amount
+
+      amount = self.context.create_pango_layout()
+      amount.set_text(str(p.amount))
+      cr.move_to(self.width-50, self.items_offset)
+      cr.show_layout(amount)
+
+      self.items_offset += 15
+      cr.move_to(20, self.items_offset)
+      cr.line_to(self.width-20, self.items_offset)
+      cr.stroke()
+
+      self.items_offset += 3
+
+    cr.set_line_width(0.5)
+    cr.move_to(self.width-100, self.height-75)
+    cr.line_to(self.width-20, self.height-75)
+    cr.stroke()
+
+    total_label = self.context.create_pango_layout()
+    total_label.set_text("Total:")
+    cr.move_to(self.width-100, self.height-70)
+    cr.show_layout(total_label)
+
+    total = self.context.create_pango_layout()
+    total.set_text(str(summ))
+    cr.move_to(self.width-50, self.height-70)
+    cr.show_layout(total)
 
   def add_footer(self):
-    mara = self.create_pango_layout('Instituto de danzas Mara Micolich')
-    self.window.draw_layout(self.gc, 10, self.items_offset+80, mara)
+    cr = self.context.get_cairo_context()
+    mara = self.context.create_pango_layout()
+    mara.set_text('Instituto de danzas Mara Micolich')
+    cr.move_to(0, self.height-20)
+    cr.show_layout(mara)
 
-    sign = self.create_pango_layout('.............')
+    sign = self.context.create_pango_layout()
+    sign.set_text('.............')
     sign.set_alignment(pango.ALIGN_RIGHT)
-    self.window.draw_layout(self.gc, 400, self.items_offset+80, sign)
+    cr.move_to(self.width-50, self.height)
+    cr.show_layout(sign)
 
   def print_text(self, operation=None, context=None, page_nr=None):
-    self.pangolayout = context.create_pango_layout()
-    self.format_text()
-    cairo_context = context.get_cairo_context()
-    cairo_context.show_layout(self.pangolayout)
+    self.context = context
+    self.width = context.get_width()
+    self.height = context.get_height()
+    self.add_header()
+    self.add_payments()
+    self.add_footer()
