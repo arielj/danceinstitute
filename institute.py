@@ -123,7 +123,7 @@ class Controller(gobject.GObject):
     movements = movement.Movement.by_date(today)
     today_birthdays = user.User.birthday_today()
     page = Home(klasses, notes, installments, payments, movements, today_birthdays)
-    page.connect('user-edit', self.edit_student)
+    page.connect('student-edit', self.edit_student)
     page.notes.save.connect_object('clicked',self.save_notes, page)
     page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
     page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
@@ -327,9 +327,12 @@ class Controller(gobject.GObject):
     student = Student()
     page = self.user_form(student)
 
-  def edit_student(self, widget, student_id):
+  def edit_student(self, widget, student_id, extra = None):
     student = Student.find(student_id)
     page = self.user_form(student)
+    if isinstance(extra, Payment):
+      if extra.installment is not None: page.show_installment(extra.installment)
+    if isinstance(extra, Installment): page.show_installment(extra)
 
   def user_form(self, user):
     if user.is_not_new_record():
@@ -355,6 +358,9 @@ class Controller(gobject.GObject):
     page.connect('delete-liabilities', self.ask_delete_liabilities)
     page.connect('edit-package', self.edit_user_package)
     page.connect('print-payments', self.print_payments)
+    page.connect('edit-installment', self.edit_installment)
+    page.connect('edit-installment-payments', self.edit_installment_payments)
+    page.connect('edit-payment', self.edit_payment)
     page.add_family.connect('clicked', self.on_add_family_clicked, page)
     page.remove_family.connect('clicked', self.on_remove_family_clicked, page)
     self.save_signal(self.connect('membership-deleted', page.on_membership_deleted), page)
@@ -898,6 +904,26 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
+  def edit_installment(self, widget, installment):
+    dialog = EditInstallmentDialog(installment)
+    dialog.connect('response', self.on_edit_installment, widget)
+    dialog.run()
+
+  def on_edit_installment(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      ins = dialog.installment
+      amount = dialog.get_amount()
+      if amount < ins.paid():
+        ErrorMessage('No se pueden editar la cuota:', 'Tiene pagos cargados por un valor mayor.').run()
+        destroy_dialog = False
+      elif ins.amount != Money(amount):
+        ins.amount = amount
+        ins.update_status()
+        page.update()
+
+    if destroy_dialog: dialog.destroy()
+
 
 
 
@@ -1025,6 +1051,61 @@ class Controller(gobject.GObject):
     self.area.show()
     window.show()
 
+  def edit_installment_payments(self, widget, installment):
+    dialog = EditInstallmentPaymentsDialog(installment)
+    dialog.connect('response', self.on_edit_installment_payments, widget)
+    dialog.run()
+
+  def on_edit_installment_payments(self, dialog, response, page):
+    destroy_dialog = True
+    if response == gtk.RESPONSE_ACCEPT:
+      data = dialog.get_payments_data()
+      total = Money(0)
+      for p_id, p_data in data.iteritems():
+        if not p_data['remove']: total += Money(p_data['amount'])
+
+      if total > dialog.installment.total():
+        ErrorMessage('No se pueden editar los pagos:', 'El total de los pagos es mayor que el valor de la cuota.').run()
+        destroy_dialog = False
+      else:
+        for p_id, p_data in data.iteritems():
+          payment = Payment.find(p_id)
+          if p_data['remove']:
+            payment.delete()
+            self.emit('payment-deleted', payment)
+          else:
+            if payment.str_date() != p_data['date'] or payment.amount != Money(p_data['amount']) or payment.description != p_data['description']:
+              payment.date = p_data['date']
+              payment.amount = Money(p_data['amount'])
+              payment.description = p_data['description']
+              #payment.receipt_number = p_data['receipt_number']
+              if payment.save(): self.emit('payment-changed', payment, False)
+        dialog.installment.update_status()
+        page.update()
+
+    if destroy_dialog: dialog.destroy()
+
+  def edit_payment(self, widget, payment):
+    dialog = AddPaymentDialog(payment)
+    dialog.connect('response', self.on_edit_payment, widget)
+    dialog.run()
+
+  def on_edit_payment(self, dialog, response, page):
+    if response == gtk.RESPONSE_ACCEPT:
+      data = dialog.form.get_values()
+      payment = dialog.payment
+      if payment.str_date() != data['date'] or payment.amount != data['amount'] or payment.description != data['description']:
+        payment.date = data['date']
+        payment.amount = data['amount']
+        payment.description = data['description']
+        #payment.receipt_number = p_data['receipt_number']
+        if payment.save():
+          self.emit('payment-changed', payment, False)
+          page.update()
+
+    dialog.destroy()
+
+
 
 
   #liabilities controls
@@ -1101,6 +1182,7 @@ class Controller(gobject.GObject):
     page.export_html.connect_object('clicked', self.export_daily_cash_html, page)
     page.export_csv.connect_object('clicked', self.export_daily_cash_csv, page)
     page.filter.connect_object('clicked', self.filter_daily_cash, page)
+    page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
 

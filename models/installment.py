@@ -63,6 +63,9 @@ class Installment(Model):
   def paid(self):
     return sum(map(lambda p: p.amount, self.payments),0)
 
+  def is_paid(self):
+    return self._status != 'waiting'
+
   def total(self, ignore_recharge = None, ignore_second_recharge = None):
     if ignore_recharge is not None: self.ignore_recharge = ignore_recharge
     if ignore_second_recharge is not None: self.ignore_second_recharge = ignore_second_recharge
@@ -163,18 +166,22 @@ class Installment(Model):
       p = payment.Payment(data)
       p.user = self.get_student()
       if p.save():
-        self.payments.append(p)
-        if int(self.to_pay()) == 0:
-          if self.get_recharge() > 0 and self.ignore_recharge is False:
-            self._status = 'paid_with_interests'
-          else:
-            self._status = 'paid'
-          self.save(validate = False)
+        self.update_status()
         return p
       else:
         return p.full_errors()
     else:
       return "No se puede agregar un pago con mayor valor que el resto a pagar. Saldo: " + str(self.to_pay()) + ", Ingresado: " + str(amount)
+
+  def update_status(self):
+    self._status = 'waiting'
+    self._payments = None
+    if int(self.to_pay()) == 0:
+      if self.get_recharge() > 0 and self.ignore_recharge is False:
+        self._status = 'paid_with_interests'
+      else:
+        self._status = 'paid'
+    self.save()
 
   def get_student_id(self):
     s = self.get_student()

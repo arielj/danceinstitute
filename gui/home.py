@@ -9,26 +9,27 @@ class Home(gtk.HBox):
   def __init__(self, klasses = [], notes = '', installments = [], payments = [], movements = [], today_birthdays = []):
     gtk.HBox.__init__(self, False, 10)
     self.set_border_width(4)
-    
+
     left = gtk.VBox(False, 10)
     self.klasses = TodayKlasses(klasses)
     left.pack_start(self.klasses, False)
     left.pack_start(gtk.HSeparator(), False)
-    
+
     more_info = gtk.HBox(False, 10)
     self.notes = Notes(notes)
     self.birthdays = Birthdays(today_birthdays)
     more_info.pack_start(self.notes, True)
     more_info.pack_start(self.birthdays, False)
-    
+
     left.pack_start(more_info, True)
-    
+
     self.daily_cash = DailyCash(payments,movements)
-    
+    self.daily_cash.payments_l.table.connect('row-activated', self.on_payment_row_activated)
+
     self.pack_start(left)
     self.pack_start(gtk.VSeparator(), False)
     self.pack_start(self.daily_cash)
-    
+
     self.show_all()
 
   @classmethod
@@ -48,11 +49,17 @@ class Home(gtk.HBox):
   def update_payments(self, payments):
     self.daily_cash.update_payments(payments)
 
+  def on_payment_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('student-edit', payment.user_id, payment)
+
 gobject.type_register(Home)
-gobject.signal_new('user-edit', \
+gobject.signal_new('student-edit', \
                    Home, \
                    gobject.SIGNAL_RUN_FIRST, \
-                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT))
 
 class TodayKlasses(gtk.VBox):
   def __init__(self,klasses):
@@ -66,30 +73,30 @@ class TodayKlasses(gtk.VBox):
 class KlassesTable(gtk.TreeView):
   def __init__(self, klasses):
     self.create_store(klasses)
-    
+
     gtk.TreeView.__init__(self,self.store)
-    
+
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     col = self.add_column('Horario', 0)
     col.set_expand(False)
 
     for idx, room in enumerate(klasses[klasses.keys()[0]].keys(),1):
       self.add_column(room, idx)
-  
+
   def add_column(self, label, idx):
     col = gtk.TreeViewColumn(label,gtk.CellRendererText(), text=idx)
     col.set_expand(True)
     self.append_column(col)
     return col
-  
+
   def create_store(self, klasses):
     args = (str,)
     for i in range(0,len(klasses[klasses.keys()[0]].keys())):
       args = args + (str, )
-    
+
     self.store = gtk.ListStore(*args)
-    
+
     self.refresh(klasses)
 
   def refresh(self, klasses):
@@ -121,7 +128,7 @@ class Notes(gtk.VBox):
     e.set_shadow_type(gtk.SHADOW_ETCHED_IN)
     e.set_policy(gtk.POLICY_NEVER,gtk.POLICY_AUTOMATIC)
     self.pack_start(e,True)
-    
+
     self.save = gtk.Button('Guardar nota')
     self.pack_start(self.save, False)
 
@@ -150,12 +157,12 @@ class OverdueInstallments(gtk.VBox):
 
     #installment, user_id, user_label, year, month, klass name
     self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,gobject.TYPE_PYOBJECT,str,str,str, str)
-    
+
     self.refresh()
-    
+
     self.list = gtk.TreeView(self.store)
     self.list.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
-    
+
     self.add_column('Usuario',2)
     self.add_column('Año',3)
     self.add_column('Mes',4)
@@ -166,12 +173,12 @@ class OverdueInstallments(gtk.VBox):
     viewport.set_shadow_type(gtk.SHADOW_NONE)
     viewport.add(self.list)
     self.scrolled.add(viewport)
-    
+
     self.pack_start(self.scrolled, True)
 
   def refresh(self):
     self.store.clear()
-    
+
     for ins in self.installments:
       u = ins.get_student()
       self.store.append((ins,u.id,u.to_label(),ins.year,ins.month_name(),ins.membership.klass_or_package.name))
@@ -190,7 +197,7 @@ class DailyCash(gtk.VBox):
     self.payments_l = PaymentsList(self.payments)
     self.movements_l = MovementsList(self.movements)
 
-    total_in, total_out = self.get_totals()    
+    total_in, total_out = self.get_totals()
     self.totals = gtk.Label(self.get_totals_text(total_in, total_out))
 
     self.pack_start(self.payments_l, True)
@@ -198,7 +205,7 @@ class DailyCash(gtk.VBox):
     self.pack_start(self.movements_l, True)
     self.pack_start(gtk.HSeparator(), False)
     self.pack_start(self.totals, False)
-    
+
   def update_movements(self, movements):
     self.movements = movements
     self.movements_l.update_table(movements)
@@ -227,14 +234,14 @@ class PaymentsList(gtk.VBox):
   def __init__(self, payments):
     gtk.VBox.__init__(self, False, 5)
     self.headings = ['Entrada', 'Salida', 'Descripción', 'Alumno/Profesor']
-    
+
     self.table = PaymentsTable(payments, self.headings)
-    
+
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.scroll.add(self.table)
     self.pack_start(self.scroll, True)
-    
+
     self.totals = gtk.Label(self.get_total_text(payments))
     self.pack_start(self.totals, False)
 
@@ -255,14 +262,14 @@ class PaymentsList(gtk.VBox):
       else:
         total_in += p.amount
     return [total_in, total_out]
-    
+
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments, headings):
     self.create_store(payments)
-    
+
     gtk.TreeView.__init__(self, self.store)
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     for idx, heading in enumerate(headings, 1):
       self.add_column(heading,idx)
 
@@ -280,7 +287,7 @@ class PaymentsTable(gtk.TreeView):
   def update(self, payments):
     self.store.clear()
     self.set_model(payments)
-  
+
   def set_model(self, payments):
     for p in payments:
       if p.done:
@@ -295,16 +302,16 @@ class MovementsList(gtk.VBox):
   def __init__(self, movements):
     gtk.VBox.__init__(self, False, 5)
     self.headings = ['Entrada', 'Salida', 'Descripción']
-    
+
     self.table = MovementsTable(movements, self.headings)
     self.table.get_selection().connect('changed', self.on_selection_changed)
-    
+
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.scroll.add(self.table)
-    
+
     self.pack_start(self.scroll, True)
-    
+
 
     self.totals = gtk.Label(self.get_total_text(movements))
     self.pack_start(self.totals, False)
@@ -349,10 +356,10 @@ class MovementsList(gtk.VBox):
 class MovementsTable(gtk.TreeView):
   def __init__(self, movements, headings):
     self.create_store(movements)
-    
+
     gtk.TreeView.__init__(self, self.store)
     self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
-    
+
     for idx, heading in enumerate(headings, 1):
       self.add_column(heading,idx)
 
@@ -370,7 +377,7 @@ class MovementsTable(gtk.TreeView):
   def update(self, movements):
     self.store.clear()
     self.set_model(movements)
-  
+
   def set_model(self, movements):
     for m in movements:
       if m.is_incoming():
@@ -380,4 +387,3 @@ class MovementsTable(gtk.TreeView):
         amount_out = str(m.amount)
         amount_in = ''
       self.store.append((m, amount_in, amount_out, m.description))
-

@@ -46,6 +46,8 @@ class User(Model):
 
     Model.__init__(self,data)
 
+    if self._birthday: self.age = User.calculate_age(self._birthday)
+
   @property
   def name(self):
     return self._name

@@ -167,12 +167,14 @@ class UserForm(FormFor):
       self.tabs.append_page(t2,gtk.Label('Pagos al profesor'))
       t2.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t2)
       t2.add_b.connect_object('clicked', self.on_add_payment_clicked, t2, None, True)
+      t2.list.connect('row-activated', self.on_edit_payment)
 
     t = PaymentsTab(self.user)
     self.tabs.append_page(t,gtk.Label('Pagos del '+_m(self.user.cls_name().lower())))
     t.delete_b.connect_object('clicked', self.on_delete_payments_clicked, t)
     t.add_b.connect_object('clicked', self.on_add_payment_clicked, t, None)
     t.print_b.connect_object('clicked', self.on_print_payments_clicked, t)
+    t.list.connect('row-activated', self.on_edit_payment)
 
     self.liabilities = LiabilitiesTab(self.user)
     self.tabs.append_page(self.liabilities, gtk.Label('Deudas'))
@@ -190,6 +192,8 @@ class UserForm(FormFor):
     self.memberships.connect('add-payments', self.on_add_payments_clicked)
     self.memberships.connect('delete-installments', self.on_delete_installments_clicked)
     self.memberships.connect('edit-package', self.on_edit_package_clicked)
+    self.memberships.connect('edit-installment', self.on_edit_installment_clicked)
+    self.memberships.connect('edit-installment-payments', self.on_edit_installment_payments_clicked)
 
   def get_comments_text(self):
     buff = self.comments_e.get_buffer()
@@ -272,6 +276,12 @@ class UserForm(FormFor):
   def on_edit_package_clicked(self, memberships, package):
     self.emit('edit-package', package)
 
+  def on_edit_installment_clicked(self, memberships, installment):
+    self.emit('edit-installment', installment)
+
+  def on_edit_installment_payments_clicked(self, memberships, installment):
+    self.emit('edit-installment-payments', installment)
+
   def on_payment_deleted(self, emmiter, p_id):
     for tab in self.tabs.get_children():
       tab.on_payment_deleted(p_id)
@@ -297,6 +307,16 @@ class UserForm(FormFor):
 
   def refresh_family(self):
     self.family_list.update_table(self.object.family_members())
+
+  def show_installment(self, installment):
+    self.tabs.set_current_page(self.tabs.page_num(self.memberships))
+    self.memberships.show_installment(installment)
+
+  def on_edit_payment(self, tree, path, view_column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('edit-payment', payment)
 
 gobject.type_register(UserForm)
 gobject.signal_new('ask-delete-membership', \
@@ -344,6 +364,18 @@ gobject.signal_new('edit-package', \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('print-payments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-installment-payments', \
+                   UserForm, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+gobject.signal_new('edit-payment', \
                    UserForm, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
