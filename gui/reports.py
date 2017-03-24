@@ -106,6 +106,7 @@ class PaymentsReport(gtk.VBox):
 
     self.list = PaymentsList(payments, self.headings)
     self.list.connect('row-activated', self.on_row_activated)
+    self.list.renderer_checkbox.connect('toggled', self.on_toggle_payment)
 
     self.scroll = gtk.ScrolledWindow()
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -121,8 +122,11 @@ class PaymentsReport(gtk.VBox):
     self.actions = gtk.HBox(False, 5)
     self.export_html = gtk.Button('Exportar HTML')
     self.export_csv = gtk.Button('Exportar CSV')
+    self.print_b = gtk.Button('Imprimir')
+    self.print_b.connect('clicked', self.on_print_b_clicked)
     self.actions.pack_start(self.export_html, False)
     self.actions.pack_start(self.export_csv, False)
+    self.actions.pack_start(self.print_b, False)
     self.pack_start(self.actions, False)
 
     self.show_all()
@@ -259,14 +263,38 @@ class PaymentsReport(gtk.VBox):
     else:
       self.klass_or_package.set_active_iter(k_or_p_model.get_iter_first())
 
+  def payments_to_print(self):
+    store = self.list.store
+    selected = []
+    itr = store.get_iter_first()
+    while itr is not None:
+      if store.get_value(itr,6): selected.append(store.get_value(itr,0))
+      itr = store.iter_next(itr)
+    return selected
+
+  def on_toggle_payment(self, renderer, path):
+    store = self.list.store
+    itr = store.get_iter(path)
+    current_val = store.get_value(itr,6)
+    store.set(itr, 6, not current_val)
+    self.print_b.set_sensitive(self.payments_to_print() != [])
+
+  def on_print_b_clicked(self, button):
+    self.emit('print-payments', self.payments_to_print())
+
 gobject.type_register(PaymentsReport)
 gobject.signal_new('student-edit', \
                    PaymentsReport, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT))
+gobject.signal_new('print-payments', \
+                   PaymentsReport, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class PaymentsList(gtk.TreeView):
-  def __init__(self, payments, headings, to_row = None):
+  def __init__(self, payments, headings, to_row = None, printable = True):
+    self.printable = printable
     if to_row is not None:
       self.to_row = to_row
     else:
@@ -280,6 +308,10 @@ class PaymentsList(gtk.TreeView):
     for idx, heading in enumerate(headings, 1):
       self.add_column(heading,idx)
 
+    if printable:
+      self.renderer_checkbox = gtk.CellRendererToggle()
+      self.append_column(gtk.TreeViewColumn("Impr?", self.renderer_checkbox, active = 6))
+
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
     col.set_expand(True)
@@ -287,8 +319,8 @@ class PaymentsList(gtk.TreeView):
     return col
 
   def create_store(self, payments):
-    # payment, user name, date, amount, description, receipt_number
-    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str)
+    # payment, user name, date, amount, description, receipt_number, print
+    self.store = gtk.ListStore(gobject.TYPE_PYOBJECT,str,str,str,str,str,bool)
     self.update(payments)
 
   def update(self, payments):
@@ -300,9 +332,7 @@ class PaymentsList(gtk.TreeView):
         self.store.append(self.to_row(p))
 
   def default_to_row(self, p):
-    return (p,p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount), p.description, str(p.receipt_number or ''))
-
-
+    return (p,p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount), p.description, str(p.receipt_number or ''), False)
 
 class KlassStudents(gtk.VBox):
   def __init__(self, klass, students = {}):
@@ -348,7 +378,7 @@ class DailyCashReport(gtk.VBox):
     p_table = gtk.VBox()
     self.payment_headings = ['Detalle', 'Entrada', 'Salida', 'Alumno/Profesor']
 
-    self.p_list = PaymentsList(payments, self.payment_headings, self.p_to_row)
+    self.p_list = PaymentsList(payments, self.payment_headings, self.p_to_row, False)
     self.p_list.connect('row-activated', self.on_payment_row_activated)
 
     self.p_scroll = gtk.ScrolledWindow()
@@ -418,7 +448,7 @@ class DailyCashReport(gtk.VBox):
   def p_to_row(self,p):
     amount_in = p.amount if not p.done else ''
     amount_out = p.amount if p.done else ''
-    return (p,str(p.description),str(amount_in),str(amount_out),p.user.to_label(),str(p.receipt_number or ''))
+    return (p,str(p.description),str(amount_in),str(amount_out),p.user.to_label(),str(p.receipt_number or ''), False)
 
   def m_to_row(self,m):
     amount_in = m.amount if m.is_incoming() else ''

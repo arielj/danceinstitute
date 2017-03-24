@@ -18,19 +18,26 @@ class Receipt():
     setup = gtk.PageSetup()
     setup.set_orientation(gtk.PAGE_ORIENTATION_LANDSCAPE)
     setup.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
-    setup.set_top_margin(10, gtk.UNIT_MM)
-    setup.set_bottom_margin(10, gtk.UNIT_MM)
-    setup.set_left_margin(10, gtk.UNIT_MM)
-    setup.set_right_margin(10, gtk.UNIT_MM)
+    setup.set_top_margin(6, gtk.UNIT_MM)
+    setup.set_bottom_margin(6, gtk.UNIT_MM)
+    setup.set_left_margin(6, gtk.UNIT_MM)
+    setup.set_right_margin(6, gtk.UNIT_MM)
     return setup
+
+  def print_settings(self):
+    settings = gtk.PrintSettings()
+    settings.set_orientation(gtk.PAGE_ORIENTATION_LANDSCAPE)
+    settings.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
+    return settings
 
   def do_print(self):
     print_op = gtk.PrintOperation()
     print_op.set_default_page_setup(self.default_page_setup())
+    print_op.set_print_settings(self.print_settings())
     print_op.set_n_pages(1)
     print_op.set_job_name("Recibo #...")
     print_op.connect("draw_page", self.print_text)
-    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PREVIEW, None)
+    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PRINT, None)
 
   def add_header(self):
     cr = self.context.get_cairo_context()
@@ -49,7 +56,7 @@ class Receipt():
     date = self.context.create_pango_layout()
     date.set_text(datetime.date.today().strftime("%d de %B, %Y"))
     date.set_width(-1)
-    cr.move_to(self.width-100,0)
+    cr.move_to(self.width-110,0)
     cr.show_layout(date)
 
   def add_payments(self):
@@ -103,31 +110,31 @@ class Receipt():
       self.items_offset += 3
 
     cr.set_line_width(0.5)
-    cr.move_to(self.width-100, self.height-75)
-    cr.line_to(self.width-20, self.height-75)
+    cr.move_to(self.width-110, self.height-70)
+    cr.line_to(self.width-20, self.height-70)
     cr.stroke()
 
     total_label = self.context.create_pango_layout()
     total_label.set_text("Total:")
-    cr.move_to(self.width-100, self.height-70)
+    cr.move_to(self.width-100, self.height-65)
     cr.show_layout(total_label)
 
     total = self.context.create_pango_layout()
     total.set_text(str(summ))
-    cr.move_to(self.width-50, self.height-70)
+    cr.move_to(self.width-50, self.height-65)
     cr.show_layout(total)
 
   def add_footer(self):
     cr = self.context.get_cairo_context()
     mara = self.context.create_pango_layout()
     mara.set_text('Instituto de danzas Mara Micolich')
-    cr.move_to(0, self.height-20)
+    cr.move_to(0, self.height-10)
     cr.show_layout(mara)
 
     sign = self.context.create_pango_layout()
     sign.set_text('.............')
     sign.set_alignment(pango.ALIGN_RIGHT)
-    cr.move_to(self.width-50, self.height)
+    cr.move_to(self.width-50, self.height-7)
     cr.show_layout(sign)
 
   def print_text(self, operation=None, context=None, page_nr=None):

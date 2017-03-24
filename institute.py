@@ -1043,9 +1043,7 @@ class Controller(gobject.GObject):
 
     dialog.destroy()
 
-  def print_payments(self, page, payments):
-    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    window.set_title("Recibo:")
+  def print_payments(self, widget, payments):
     r = Receipt(payments)
     r.do_print()
 
@@ -1151,6 +1149,7 @@ class Controller(gobject.GObject):
     page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all(), Package.all())
     page.export_html.connect_object('clicked', self.export_payments_report_html, page)
     page.export_csv.connect_object('clicked', self.export_payments_report_csv, page)
+    page.connect('print-payments', self.print_payments)
     page.filter.connect_object('clicked', self.filter_payments, page)
     page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
