@@ -38,7 +38,7 @@ class Receipt():
     print_op.set_n_pages(1)
     print_op.set_job_name("Recibo #...")
     print_op.connect("draw_page", self.print_text)
-    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PREVIEW, None)
+    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PRINT, None)
 
   def add_header(self):
     cr = self.context.get_cairo_context()
