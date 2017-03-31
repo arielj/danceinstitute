@@ -27,7 +27,8 @@ class I18n():
       'abbr_days': [
         ['mon','tue','wed','thu','fri','sat','sun'],
         ['lun','mar','mie','jue','vie','sab','dom']
-      ]
+      ],
+      'date_format': ['%(year)d, %(month)s, %(day)d', '%(day)d de %(month)s de %(year)d']
     },
     'models': {
       'installment': ['Installment','Cuota'],
@@ -173,3 +174,9 @@ def _a(model, attr, l = None):
 
 def _e(err, l = None):
   return I18n.ts['errors'][err][I18n.lang_idx(l)]
+
+def _l(date, l = None):
+  l_m = I18n.ts['common']['months'][I18n.lang_idx(l)][date.month-1]
+  frmt = I18n.ts['common']['date_format'][I18n.lang_idx(l)]
+  s = frmt % {'day': date.day, 'month': l_m, 'year': date.year}
+  return s
