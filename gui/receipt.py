@@ -9,7 +9,7 @@ from translations import _l
 class Receipt():
   def __init__(self, payments):
     self.user = payments[0].user
-    self.items_offset = 0.1
+    self.items_offset = 0.03
     self.payments = payments
     self.context = None
     self.width = 0
@@ -50,7 +50,8 @@ class Receipt():
     number = self.context.create_pango_layout()
     number.set_text('2')
     number.set_alignment(pango.ALIGN_CENTER)
-    cr.move_to(int(self.width*0.4975),0)
+    w, h = number.get_size()
+    cr.move_to(int((self.width+w/pango.SCALE)/2),0)
     cr.show_layout(number)
 
     date = self.context.create_pango_layout()
@@ -68,16 +69,16 @@ class Receipt():
     h_desc = self.context.create_pango_layout()
     h_desc.set_text('DESCRIPCIÓN')
     h_desc.set_font_description(h_font_desc)
-    cr.move_to(int(self.width*0.05), int(self.height*(0.1+self.items_offset)))
+    cr.move_to(int(self.width*0.06), int(self.height*(0.1+self.items_offset)))
     cr.show_layout(h_desc)
 
     h_amount = self.context.create_pango_layout()
     h_amount.set_text('MONTO')
     h_amount.set_font_description(h_font_desc)
-    cr.move_to(int(self.width*0.85), int(self.height*(0.1+self.items_offset)))
+    cr.move_to(int(self.width*0.8), int(self.height*(0.1+self.items_offset)))
     cr.show_layout(h_amount)
 
-    self.items_offset += 0.1
+    self.items_offset += 0.07
     cr.set_source_rgb(0, 0, 0)
     cr.set_line_width(0.7)
     cr.move_to(int(self.width*0.05), int(self.height*(0.1+self.items_offset)))
@@ -92,25 +93,26 @@ class Receipt():
     for p in self.payments:
       desc = self.context.create_pango_layout()
       desc.set_text(p.description)
-      cr.move_to(int(self.width*0.05), int(self.height*(0.1+self.items_offset)))
+      cr.move_to(int(self.width*0.09), int(self.height*(0.1+self.items_offset)))
       cr.show_layout(desc)
 
       summ = p.amount if summ is None else summ + p.amount
 
       amount = self.context.create_pango_layout()
       amount.set_text(str(p.amount))
-      cr.move_to(int(self.width*0.85), int(self.height*(0.1+self.items_offset)))
+      w, h = amount.get_size()
+      cr.move_to(int(self.width*0.9-w/pango.SCALE), int(self.height*(0.1+self.items_offset)))
       cr.show_layout(amount)
 
-      self.items_offset += 0.07
+      self.items_offset += 0.06
       cr.move_to(int(self.width*0.05), int(self.height*(0.1+self.items_offset)))
       cr.line_to(int(self.width*0.95), int(self.height*(0.1+self.items_offset)))
       cr.stroke()
 
-      self.items_offset += 0.03
+      self.items_offset += 0.02
 
     cr.set_line_width(0.5)
-    cr.move_to(int(self.width*0.7), int(self.height*0.76))
+    cr.move_to(int(self.width*0.65), int(self.height*0.76))
     cr.line_to(int(self.width*0.95), int(self.height*0.76))
     cr.stroke()
 
@@ -121,7 +123,8 @@ class Receipt():
 
     total = self.context.create_pango_layout()
     total.set_text(str(summ))
-    cr.move_to(int(self.width*0.85), int(self.height*0.76))
+    w, h = total.get_size()
+    cr.move_to(int(self.width*0.9-w/pango.SCALE), int(self.height*0.76))
     cr.show_layout(total)
 
   def add_footer(self):
@@ -134,7 +137,8 @@ class Receipt():
     sign = self.context.create_pango_layout()
     sign.set_text('.............')
     sign.set_alignment(pango.ALIGN_RIGHT)
-    cr.move_to(int(self.width*0.85), int(self.height*0.95))
+    w, h = sign.get_size()
+    cr.move_to(int(self.width-w/pango.SCALE), int(self.height*0.95))
     cr.show_layout(sign)
 
   def print_text(self, operation=None, context=None, page_nr=None):
