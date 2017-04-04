@@ -4,6 +4,7 @@
 import gtk
 import datetime
 import pango
+import os.path
 from translations import _l
 
 class Receipt():
@@ -14,6 +15,9 @@ class Receipt():
     self.context = None
     self.width = 0
     self.height = 0
+    self.settings = None
+    if os.path.isfile('print_settings'): self.settings = gtk.print_settings_new_from_file('print_settings')
+
 
   def default_page_setup(self):
     setup = gtk.PageSetup()
@@ -26,10 +30,13 @@ class Receipt():
     return setup
 
   def print_settings(self):
-    settings = gtk.PrintSettings()
-    settings.set_orientation(gtk.PAGE_ORIENTATION_LANDSCAPE)
-    settings.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
-    return settings
+    if self.settings:
+      return self.settings
+    else:
+      settings = gtk.PrintSettings()
+      settings.set_orientation(gtk.PAGE_ORIENTATION_LANDSCAPE)
+      settings.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
+      return settings
 
   def do_print(self):
     print_op = gtk.PrintOperation()
@@ -38,7 +45,15 @@ class Receipt():
     print_op.set_n_pages(1)
     print_op.set_job_name("Recibo #...")
     print_op.connect("draw_page", self.print_text)
-    res = print_op.run(gtk.PRINT_OPERATION_ACTION_PRINT, None)
+
+    action = gtk.PRINT_OPERATION_ACTION_PRINT_DIALOG
+    if self.settings: action = gtk.PRINT_OPERATION_ACTION_PRINT
+
+    res = print_op.run(action, None)
+
+    if res == gtk.PRINT_OPERATION_RESULT_APPLY:
+      self.settings = print_op.get_print_settings()
+      self.settings.to_file('print_settings')
 
   def add_header(self):
     cr = self.context.get_cairo_context()
