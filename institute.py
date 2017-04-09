@@ -11,6 +11,7 @@ import tempfile
 import webbrowser
 import re
 import datetime
+import constants
 from database import Conn
 from gui import *
 from settings import Settings
@@ -966,7 +967,7 @@ class Controller(gobject.GObject):
 
   def on_add_payment(self, dialog, response, page, related = None):
     destroy_dialog = True
-    if response == gtk.RESPONSE_ACCEPT:
+    if response == gtk.RESPONSE_ACCEPT or response == constants.SAVE_AND_PRINT:
       data = dialog.form.get_values()
       if isinstance(related, Installment):
         added = related.add_payment(data)
@@ -981,7 +982,9 @@ class Controller(gobject.GObject):
         else:
           added = payment
       if added:
-        if isinstance(added, Payment): self.emit('payment-changed', added, True)
+        if isinstance(added, Payment):
+          if response == constants.SAVE_AND_PRINT: Receipt([added]).do_print()
+          self.emit('payment-changed', added, True)
         page.update()
       else:
         ErrorMessage('No se pudo cargar el pago:', added).run()
@@ -992,7 +995,7 @@ class Controller(gobject.GObject):
 
   def on_add_payments(self, dialog, response, page):
     destroy_dialog = True
-    if response == gtk.RESPONSE_ACCEPT:
+    if response == gtk.RESPONSE_ACCEPT or response == constants.SAVE_AND_PRINT:
       installments = dialog.get_selected_installments()
       if installments:
         if len(installments) == 1:
@@ -1013,12 +1016,14 @@ class Controller(gobject.GObject):
             destroy_dialog = False
           else:
             rest = amount_paid
+            payments = []
             for i in installments:
               if rest > 0:
                 amount = i.to_pay()
                 if amount > rest: amount = rest
-                i.add_payment({'date': dialog.date_e.get_text(), 'amount': amount})
+                payments.append(i.add_payment({'date': dialog.date_e.get_text(), 'amount': amount}))
                 rest -= amount
+            if response == constants.SAVE_AND_PRINT: Receipt(payments).do_print()
             self.emit('payment-changed', None, True)
             page.update()
 
@@ -1046,6 +1051,7 @@ class Controller(gobject.GObject):
   def print_payments(self, widget, payments):
     r = Receipt(payments)
     r.do_print()
+    widget.update()
 
   def edit_installment_payments(self, widget, installment):
     dialog = EditInstallmentPaymentsDialog(installment)
@@ -1249,7 +1255,6 @@ class Controller(gobject.GObject):
 
   def export_debts_report_csv(self, page):
     self.export_csv(page.to_csv(), page.csv_filename())
-
 
   #save a reference of signals connected
   def save_signal(self, h_id, obj):

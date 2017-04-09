@@ -1,6 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+import re
 from decimal import Decimal
 from model import Model
 import datetime
@@ -71,6 +72,10 @@ class Payment(Model):
   def description(self, value):
     value = value or ''
     self._description = value
+
+  def receipt_description(self):
+    desc = "%s (%s)" % (self.description, self.user.name)
+    return re.sub(r'Clases[\d\s]+\([\d,]+\) (.*)',r'\1',desc)
 
   @property
   def user(self):
@@ -151,6 +156,11 @@ class Payment(Model):
       self._receipt_number = int(value)
     except:
       self._receipt_number = None
+
+  @classmethod
+  def last_receipt_number(cls):
+    p = cls.where('receipt_number', '', comparission='!=').order_by('receipt_number DESC').first()
+    return p.receipt_number if p else 0
 
   def _is_valid(self):
     self.validate_numericallity_of('amount', great_than = 0, only_integer = False)

@@ -237,3 +237,7 @@ class Model(object):
   @classmethod
   def find_by(cls, field, value):
     return Query(cls).where(field,value).first()
+
+  def update_attribute(self, field, value):
+    setattr(self,field,value)
+    Conn.execute('UPDATE ' + self.table + ' SET `' + field + "`" + '=:' + field + ' WHERE id = :id', {field: value, 'id': self.id})

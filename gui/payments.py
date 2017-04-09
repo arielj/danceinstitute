@@ -7,6 +7,7 @@ from forms import FormFor
 import widgets
 from settings import Settings
 import datetime
+import constants
 
 class PaymentsTable(gtk.TreeView):
   def __init__(self, payments):
@@ -49,7 +50,8 @@ class AddPaymentDialog(gtk.Dialog):
     gtk.Dialog.__init__(self, title, None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                         gtk.STOCK_PRINT, constants.SAVE_AND_PRINT))
     self.vbox.pack_start(self.form, False)
     self.vbox.show_all()
 
@@ -58,7 +60,8 @@ class AddPaymentsDialog(gtk.Dialog):
     gtk.Dialog.__init__(self, 'Agregar pagos', None,
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_NO_SEPARATOR,
                         (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                         gtk.STOCK_PRINT, constants.SAVE_AND_PRINT))
 
     self.selected_payments = []
     self.installments = installments

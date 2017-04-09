@@ -1,6 +1,7 @@
 TODO
 *data.db
 database.config
+print_settings
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

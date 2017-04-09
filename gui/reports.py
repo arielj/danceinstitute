@@ -205,7 +205,7 @@ class PaymentsReport(gtk.VBox):
     if payments is not None:
       self.payments = payments
     self.list.update(self.payments)
-    self.total_label.set_text('Total: $'+self.sum_total(payments))
+    self.total_label.set_text('Total: $'+self.sum_total(self.payments))
 
   def sum_total(self, payments):
     return str(sum(map(lambda p: p.amount, payments)))
