@@ -73,6 +73,9 @@ class PaymentsReport(gtk.VBox):
     self.group_l = gtk.Label('Grupo')
     self.group_e = gtk.Entry(255)
 
+    self.receipt_l = gtk.Label('Recibo')
+    self.receipt_e = gtk.Entry(255)
+
     self.filter_l = gtk.Label('Buscar')
     self.filter_e = gtk.Entry(255)
 
@@ -96,6 +99,8 @@ class PaymentsReport(gtk.VBox):
     self.form.pack_start(self.include_inactive, False)
     self.form.pack_start(self.group_l, False)
     self.form.pack_start(self.group_e, False)
+    self.form.pack_start(self.receipt_l, False)
+    self.form.pack_start(self.receipt_e, False)
     self.form.pack_start(self.filter_l, False)
     self.form.pack_start(self.filter_e, False)
     self.form.pack_start(self.filter, False)
@@ -200,6 +205,9 @@ class PaymentsReport(gtk.VBox):
 
   def get_group(self):
     return self.group_e.get_text()
+
+  def get_receipt_number(self):
+    return self.receipt_e.get_text()
 
   def update(self, payments = None):
     if payments is not None:
@@ -973,3 +981,79 @@ class DebtsList(gtk.TreeView):
 
   def default_to_row(self, d):
     return (d,d.user.to_label(), d.description, d.to_pay())
+
+
+class Receipts(gtk.VBox):
+  def __init__(self):
+    self.payments = []
+    gtk.VBox.__init__(self, False, 5)
+
+    content = gtk.HBox()
+    self.pack_start(content, True)
+
+    self.filter = gtk.Button('Buscar')
+
+    self.filter_l = gtk.Label('Número:')
+    self.filter_e = gtk.Entry(100)
+
+    self.form = gtk.VBox(False, 5)
+    label = gtk.Label()
+    label.set_markup('<big><b>Filtrar:</b></big>')
+    self.form.pack_start(label, False)
+    self.form.pack_start(self.filter_l, False)
+    self.form.pack_start(self.filter_e, False)
+    self.form.pack_start(self.filter, False)
+
+    content.pack_start(self.form, False)
+
+    self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle', 'Recibo N°']
+
+    self.list = PaymentsList(self.payments, self.headings, None, False)
+    self.list.connect('row-activated', self.on_row_activated)
+
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.list)
+
+    content.pack_start(self.scroll, True)
+
+    total_hbox = gtk.HBox()
+    self.total_label = gtk.Label('Total: $'+self.sum_total(self.payments))
+    total_hbox.pack_start(self.total_label, False)
+    self.pack_start(total_hbox, False)
+
+    self.actions = gtk.HBox(False, 5)
+    self.reprint = gtk.Button('Volver a imprimir')
+    self.reprint.set_sensitive(False)
+    self.actions.pack_start(self.reprint, False)
+    self.pack_start(self.actions, False)
+
+    self.show_all()
+
+  def get_tab_label(self):
+    return "Recibos"
+
+  def sum_total(self, payments):
+    return str(sum(map(lambda p: p.amount, payments)))
+
+  def update(self, payments = None):
+    if payments is not None:
+      self.payments = payments
+    self.list.update(self.payments)
+    self.total_label.set_text('Total: $'+self.sum_total(payments))
+    self.reprint.set_sensitive(len(self.payments) > 0)
+
+  def on_row_activated(self, tree, path, column):
+    model = tree.get_model()
+    itr = model.get_iter(path)
+    payment = model.get_value(itr, 0)
+    self.emit('student-edit', payment.user_id)
+
+  def receipt_value(self):
+    return self.filter_e.get_text()
+
+gobject.type_register(Receipts)
+gobject.signal_new('student-edit', \
+                   Receipts, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))

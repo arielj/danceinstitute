@@ -39,7 +39,10 @@ class Receipt():
       settings.set_paper_size(gtk.PaperSize('iso_a6_105x148mm'))
       return settings
 
-  def do_print(self):
+  def do_print(self, set_receipt_number = True):
+    self.set_receipt_number = set_receipt_number
+    if not self.set_receipt_number: self.receipt_number = self.payments[0].receipt_number
+
     print_op = gtk.PrintOperation()
     print_op.set_print_settings(self.print_settings())
     print_op.set_default_page_setup(self.default_page_setup())
@@ -116,7 +119,7 @@ class Receipt():
     p_font_desc = pango.FontDescription()
     p_font_desc.set_size(10*pango.SCALE)
     for p in self.payments:
-      p.update_attribute('receipt_number',self.receipt_number)
+      if self.set_receipt_number: p.update_attribute('receipt_number',self.receipt_number)
       date = self.context.create_pango_layout()
       date.set_text(p.str_date())
       date.set_font_description(p_font_desc)

@@ -81,6 +81,7 @@ class Controller(gobject.GObject):
     self.window.menu.daily_cash.connect('activate', self.daily_cash)
     self.window.menu.installments.connect('activate', self.installments_report)
     self.window.menu.debts.connect('activate', self.debts)
+    self.window.menu.receipts.connect('activate', self.receipts)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
@@ -1164,12 +1165,12 @@ class Controller(gobject.GObject):
   def filter_payments(self, page):
     f = page.get_from()
     t = page.get_to()
-    received = page.get_done_or_received()
+    done_or_received = page.get_done_or_received()
     user = page.get_selected_user()
     k_or_p = page.get_selected_klass_or_package()
     q_term = page.get_filter()
     inactive = page.should_include_inactive()
-    payments = Payment.filter(f,t,received,user,k_or_p,page.get_group(), q_term, inactive)
+    payments = Payment.filter(f,t, done_or_received, user, k_or_p,page.get_group(), page.get_receipt_number(), q_term, inactive)
     page.update(payments)
 
   def export_payments_report_html(self, page):
@@ -1255,6 +1256,23 @@ class Controller(gobject.GObject):
 
   def export_debts_report_csv(self, page):
     self.export_csv(page.to_csv(), page.csv_filename())
+
+
+  def receipts(self, menu_item):
+    page = Receipts()
+    page.filter.connect_object('clicked', self.filter_receipts, page)
+    page.reprint.connect_object('clicked', self.reprint_payments, page)
+    self.window.add_page(page)
+    return page
+
+  def filter_receipts(self, page):
+    receipts = Payment.where('receipt_number', page.receipt_value())
+    page.update(receipts)
+
+  def reprint_payments(self, page):
+    Receipt(page.payments).do_print(False)
+
+
 
   #save a reference of signals connected
   def save_signal(self, h_id, obj):

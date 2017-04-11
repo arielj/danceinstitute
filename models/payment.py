@@ -197,13 +197,14 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', q_term = '', include_inactive = False):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', receipt = '', q_term = '', include_inactive = False):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
 
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
+    if receipt != '': q.where('receipt_number', receipt)
     if q_term != '': q.where('description', '%%%s%%' % q_term, comparission = 'LIKE')
     if include_inactive is False:
       q.set_join('LEFT JOIN users ON users.id = payments.user_id')
