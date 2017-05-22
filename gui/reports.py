@@ -337,7 +337,7 @@ class PaymentsList(gtk.TreeView):
 
   def set_model(self, payments):
     for p in payments:
-        self.store.append(self.to_row(p))
+      self.store.append(self.to_row(p))
 
   def default_to_row(self, p):
     return (p,p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount), p.description, str(p.receipt_number or ''), False)
@@ -380,6 +380,12 @@ class DailyCashReport(gtk.VBox):
     self.form.pack_start(self.desc_filter, False)
     self.form.pack_start(self.filter, False)
 
+    self.since_closer = gtk.CheckButton('Sólo desde cierre')
+
+    self.mark_closers = gtk.Button('Marcar cierre')
+
+    self.form.pack_start(self.since_closer, False)
+    self.form.pack_start(self.mark_closers, False)
     content.pack_start(self.form, False)
 
     self.tables = gtk.HBox(True, 6)

@@ -319,9 +319,11 @@ class MovementsList(gtk.VBox):
     self.add_b = gtk.Button('Agregar Movimiento')
     self.delete_b = gtk.Button('Eliminar Movimiento')
     self.delete_b.set_sensitive(False)
+    self.mark_closers = gtk.Button('Marcar cierre')
     self.movement_actions = gtk.HBox(True, 4)
     self.movement_actions.pack_start(self.add_b)
     self.movement_actions.pack_start(self.delete_b)
+    self.movement_actions.pack_start(self.mark_closers)
     self.pack_start(self.movement_actions, False)
 
   def update_table(self, movements):

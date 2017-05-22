@@ -17,7 +17,7 @@ from settings import Settings
 
 class Payment(Model):
   table = 'payments'
-  fields_for_save = ['amount', 'installment_id', 'user_id', 'user_type', 'date', 'description', 'done', 'receipt_number', 'liability_id']
+  fields_for_save = ['amount', 'installment_id', 'user_id', 'user_type', 'date', 'description', 'done', 'receipt_number', 'liability_id', 'daily_cash_closer']
   default_order = 'date ASC'
 
   def __init__(self, attrs = {}):
@@ -33,6 +33,7 @@ class Payment(Model):
     self._description = ''
     self._done = False
     self._receipt_number = None
+    self.daily_cash_closer = False
     Model.__init__(self, attrs)
 
   @classmethod
@@ -167,7 +168,7 @@ class Payment(Model):
     self.validate_presence_of('date')
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self.description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id}
+    return {'amount': self.amount, 'date': self.date, 'installment_id': self.installment_id, 'user_id': self.user_id, 'user_type': self.user_type, 'description': self.description, 'done': int(self.done), 'receipt_number': self.receipt_number, 'liability_id': self.liability_id, 'daily_cash_closer': int(self.daily_cash_closer)}
 
   def to_s(self):
     s = self.str_date() + ": $" + str(self.amount)
@@ -197,10 +198,17 @@ class Payment(Model):
     return q
 
   @classmethod
-  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', receipt = '', q_term = '', include_inactive = False):
+  def filter(cls, f, t, done = None, user = None, k_or_p = None, group = '', receipt = '', q_term = '', include_inactive = False, since_closer = False):
     if isinstance(f, datetime.datetime): f = f.strftime('%Y-%m-%d')
     if isinstance(t, datetime.datetime): t = t.strftime('%Y-%m-%d')
     q = cls.where('date', f, comparission = '>=', placeholder = 'from').where('date', t, comparission = '<=', placeholder = 'to')
+
+    last_closer = None
+    if since_closer:
+      last_closer = q.copy().where('daily_cash_closer', 1).last()
+
+    if last_closer:
+      q.where('payments.id', last_closer.id, comparission = '>', placeholder = 'p_id')
 
     if done is not None: q.where('done', int(done))
     if user is not None: q.where('user_id', user.id)
@@ -227,6 +235,13 @@ class Payment(Model):
 
     if group:
       q.set_join('LEFT JOIN users ON users.id = payments.user_id')
-      q = q.where('group', '%'+group+'%', comparission = 'LIKE')
+      q.where('group', '%'+group+'%', comparission = 'LIKE')
 
     return q
+
+  @classmethod
+  def mark_last_as_closer(cls):
+    p = cls.where('date', datetime.datetime.now().date()).order_by('id DESC').first()
+    if p:
+      p.daily_cash_closer = True
+      p.save()

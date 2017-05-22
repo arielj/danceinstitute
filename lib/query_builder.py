@@ -1,4 +1,5 @@
 from database import Conn
+import copy
 
 class Query(object):
   def __init__(self, cls):
@@ -13,6 +14,19 @@ class Query(object):
     self.from_str = cls.table
     self.join_str = None
     self.group_str = None
+
+  def copy(self):
+    other = Query(self.cls)
+    other.wheres = copy.copy(self.wheres)
+    other.values = copy.copy(self.values)
+    other.limit = copy.copy(self.limit)
+    other.order = copy.copy(self.order)
+    other.offset = copy.copy(self.offset)
+    other.select_str = copy.copy(self.select_str)
+    other.from_str = copy.copy(self.from_str)
+    other.join_str = copy.copy(self.join_str)
+    other.group_str = copy.copy(self.group_str)
+    return other
 
   def _do_query(self, force = False):
     if self.query_result is None or force is True:

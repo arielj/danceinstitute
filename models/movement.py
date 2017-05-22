@@ -8,13 +8,14 @@ import datetime
 
 class Movement(Model):
   table = 'movements'
-  fields_for_save = ['amount', 'date', 'description', 'done']
+  fields_for_save = ['amount', 'date', 'description', 'done', 'daily_cash_closer']
 
   def __init__(self, attrs = {}):
     self._amount = Money(0)
     self._date = datetime.datetime.now().date()
     self.description = ''
     self.done = False
+    self.daily_cash_closer = False
     Model.__init__(self, attrs)
 
   @classmethod
@@ -73,7 +74,7 @@ class Movement(Model):
     self.validate_presence_of('date')
 
   def to_db(self):
-    return {'amount': self.amount, 'date': self.date, 'description': self.description, 'done': int(self.done)}
+    return {'amount': self.amount, 'date': self.date, 'description': self.description, 'done': int(self.done), 'daily_cash_closer': int(self.daily_cash_closer)}
 
   def to_s(self):
     return str(self.date) + ": $" + str(self.amount)
@@ -89,9 +90,24 @@ class Movement(Model):
     return q.where('done', 1)
 
   @classmethod
-  def by_date(cls, date_f, date_t = None):
+  def by_date(cls, date_f, date_t = None, since_closer = False):
     if isinstance(date_f, datetime.datetime): date_f = date_f.strftime('%Y-%m-%d')
     if date_t is None: date_t = date_f
 
-    return cls.where('date', date_f, comparission = '>=', placeholder = 'date_f').where('date', date_t, comparission = '<=', placeholder = 'date_t')
+    q = cls.where('date', date_f, comparission = '>=', placeholder = 'date_f').where('date', date_t, comparission = '<=', placeholder = 'date_t')
 
+    last_closer = None
+    if since_closer:
+      last_closer = q.copy().where('daily_cash_closer', 1).last()
+
+    if last_closer:
+      q.where('id', last_closer.id, comparission = '>')
+
+    return q
+
+  @classmethod
+  def mark_last_as_closer(cls):
+    p = cls.where('date', datetime.datetime.now().date()).last()
+    if p:
+      p.daily_cash_closer = True
+      p.save()

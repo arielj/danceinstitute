@@ -19,15 +19,16 @@ CONFIG_FILE = 'database.config'
 FILENAME = 'data.db'
 
 def strip_accents(s):
-   s = unicode(s)
-   return ''.join(c for c in unicodedata.normalize('NFD', s)
-                  if unicodedata.category(c) != 'Mn')
+  s = unicode(s)
+  return ''.join(c for c in unicodedata.normalize('NFD', s)
+                 if unicodedata.category(c) != 'Mn')
 
 def spanish_order(str1, str2):
   return cmp(strip_accents(str1), strip_accents(str2))
 
 def money_to_db(money):
   return money._cents
+
 sqlite3.register_adapter(Money, money_to_db)
 
 class Conn(object):
@@ -267,6 +268,15 @@ class Conn(object):
       cls.execute('''INSERT INTO settings (`key`, `value`) VALUES ('installments_to','11')''')
       version = cls.set_version('1.7')
 
+    if version == '1.7':
+      if cls._adapter == 'sqlite':
+        cls.execute('ALTER TABLE payments ADD COLUMN daily_cash_closer integer default 0;')
+        cls.execute('ALTER TABLE movements ADD COLUMN daily_cash_closer integer default 0;')
+      else:
+        cls.execute('ALTER TABLE payments ADD COLUMN daily_cash_closer BOOLEAN default 0;')
+        cls.execute('ALTER TABLE movements ADD COLUMN daily_cash_closer BOOLEAN default 0;')
+      version = cls.set_version('1.8')
+
   @classmethod
   def set_version(cls,version):
     cls.execute('UPDATE settings SET value = :version WHERE `key` = "version"',{'version': version})
@@ -284,9 +294,9 @@ class Conn(object):
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 20000, 1, 3, 'Student')''',(datetime.date(2015,3,3),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,4),))
     cls.execute('''INSERT INTO payments (date, amount, installment_id, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.date(2015,3,1),))
+    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO payments (date, amount, user_id, user_type, done) VALUES (?, 10000, 1, 'Teacher',1)''',(datetime.datetime.today().date(),))
     cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 2, 3, 'Student')''',(datetime.datetime.today().date(),))
-    cls.execute('''INSERT INTO payments (date, amount, description, user_id, user_type) VALUES (?, 10000, 'Inscripción', 3, 'Student')''',(datetime.date(2015,2,26),))
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 1, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (3, 2, 'Klass', 'Clase normal lalala')''')
     cls.execute('''INSERT INTO memberships (student_id, for_id, for_type, info) VALUES (5, 1, 'Klass', 'Clase normal lalala')''')

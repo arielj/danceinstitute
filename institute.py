@@ -129,6 +129,7 @@ class Controller(gobject.GObject):
     page.notes.save.connect_object('clicked',self.save_notes, page)
     page.daily_cash.movements_l.add_b.connect_object('clicked', self.add_movement_dialog, page)
     page.daily_cash.movements_l.delete_b.connect_object('clicked', self.ask_delete_movement, page)
+    page.daily_cash.movements_l.mark_closers.connect_object('clicked', self.mark_closers, page)
     self.save_signal(self.connect_object('movement-deleted', self.update_home_movements, page), page)
     self.save_signal(self.connect_object('payment-deleted', self.update_home_payments, page), page)
     self.save_signal(self.connect_object('payment-changed', self.update_home_payments, page), page)
@@ -1186,14 +1187,29 @@ class Controller(gobject.GObject):
     page.export_html.connect_object('clicked', self.export_daily_cash_html, page)
     page.export_csv.connect_object('clicked', self.export_daily_cash_csv, page)
     page.filter.connect_object('clicked', self.filter_daily_cash, page)
+    page.mark_closers.connect_object('clicked', self.mark_closers, page)
     page.connect('student-edit', self.edit_student)
     self.window.add_page(page)
     return page
 
+  def mark_closers(self, page):
+    dialog = ConfirmDialog('¿Marcar cierre?')
+    dialog.connect('response', self.do_mark_closers)
+    dialog.run()
+
+  def do_mark_closers(self, dialog, response):
+    if response == gtk.RESPONSE_ACCEPT:
+      Payment.mark_last_as_closer()
+      Movement.mark_last_as_closer()
+
+    dialog.destroy()
+
+
   def filter_daily_cash(self, page):
     date = page.get_date()
-    payments = Payment.filter(date,date,None)
-    movements = Movement.by_date(date)
+    since_closer = page.since_closer.get_active()
+    payments = Payment.filter(date, date, None, since_closer = since_closer)
+    movements = Movement.by_date(date, since_closer = since_closer)
 
     page.update(payments = payments, movements = movements)
 
