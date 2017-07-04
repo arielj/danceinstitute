@@ -18,14 +18,15 @@ def str_to_filename(strng):
   return ''.join(c for c in strng if c in valid_chars)
 
 class PaymentsReport(gtk.VBox):
-  def __init__(self, payments, users, klasses, packages):
+  def __init__(self, payments, movements, users, klasses, packages):
     self.payments = payments
+    self.movements = movements
     self.users = users
     self.klasses = klasses
     self.packages = packages
     gtk.VBox.__init__(self, False, 5)
 
-    content = gtk.HBox()
+    content = gtk.HBox(False, 5)
     self.pack_start(content, True)
 
     self.from_e = gtk.Entry(10)
@@ -107,6 +108,8 @@ class PaymentsReport(gtk.VBox):
 
     content.pack_start(self.form, False)
 
+    self.payments_wrapper = gtk.VBox()
+
     self.headings = ['Alumno/Profesor', 'Fecha', 'Monto', 'Detalle', 'Recibo N°']
 
     self.list = PaymentsList(payments, self.headings)
@@ -117,17 +120,39 @@ class PaymentsReport(gtk.VBox):
     self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     self.scroll.add(self.list)
 
-    content.pack_start(self.scroll, True)
+    self.payments_wrapper.pack_start(self.scroll, True)
 
     total_hbox = gtk.HBox()
     self.total_label = gtk.Label('Total: $'+self.sum_total(payments))
     total_hbox.pack_start(self.total_label, False)
-    self.pack_start(total_hbox, False)
+    self.payments_wrapper.pack_start(total_hbox, False)
+
+    content.pack_start(self.payments_wrapper, True)
+
+    self.movements_wrapper = gtk.VBox()
+
+    self.movement_headings = ['Detalle', 'Fecha', 'Monto']
+
+    self.list_movements = MovementsList(movements, self.movement_headings, to_row = self.movement_to_row)
+
+    self.scroll_movements = gtk.ScrolledWindow()
+    self.scroll_movements.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll_movements.add(self.list_movements)
+
+    self.movements_wrapper.pack_start(self.scroll_movements, True)
+
+    total_hbox = gtk.HBox()
+    self.total_label_movements = gtk.Label('Total: $'+self.sum_total(movements))
+    total_hbox.pack_start(self.total_label_movements, False)
+    self.movements_wrapper.pack_start(total_hbox, False)
+
+    content.pack_start(self.movements_wrapper, True)
 
     self.actions = gtk.HBox(False, 5)
     self.export_html = gtk.Button('Exportar HTML')
     self.export_csv = gtk.Button('Exportar CSV')
     self.print_b = gtk.Button('Imprimir')
+    self.print_b.set_sensitive(False)
     self.print_b.connect('clicked', self.on_print_b_clicked)
     self.actions.pack_start(self.export_html, False)
     self.actions.pack_start(self.export_csv, False)
@@ -158,9 +183,15 @@ class PaymentsReport(gtk.VBox):
   def values_for_html(self,p):
     return [p.user.to_label(),p.date.strftime(Settings.get_settings().date_format),'$'+str(p.amount),str(p.description), str(p.receipt_number or '')]
 
+  def m_values_for_html(self,m):
+    return [m.description,str(m.date),'$'+str(m.amount)]
+
   def to_csv(self):
     st = ';'.join(self.headings)+"\n"
     st += "\n".join(map(lambda p: ';'.join(self.values_for_html(p)), self.payments))
+    st += "\n\n"
+    st += ';'.join(self.movement_headings)+"\n"
+    st += "\n".join(map(lambda m: ';'.join(self.m_values_for_html(m)), self.movements))
     return st
 
   def csv_filename(self):
@@ -209,11 +240,16 @@ class PaymentsReport(gtk.VBox):
   def get_receipt_number(self):
     return self.receipt_e.get_text()
 
-  def update(self, payments = None):
+  def update(self, payments = None, movements = None):
     if payments is not None:
       self.payments = payments
     self.list.update(self.payments)
     self.total_label.set_text('Total: $'+self.sum_total(self.payments))
+
+    if movements is not None:
+      self.movements = movements
+    self.list_movements.update(self.movements)
+    self.total_label_movements.set_text('Total: $'+self.sum_total(self.movements))
 
   def sum_total(self, payments):
     return str(sum(map(lambda p: p.amount, payments)))
@@ -272,12 +308,14 @@ class PaymentsReport(gtk.VBox):
       self.klass_or_package.set_active_iter(k_or_p_model.get_iter_first())
 
   def payments_to_print(self):
-    store = self.list.store
     selected = []
+
+    store = self.list.store
     itr = store.get_iter_first()
     while itr is not None:
       if store.get_value(itr,6): selected.append(store.get_value(itr,0))
       itr = store.iter_next(itr)
+
     return selected
 
   def on_toggle_payment(self, renderer, path):
@@ -289,6 +327,9 @@ class PaymentsReport(gtk.VBox):
 
   def on_print_b_clicked(self, button):
     self.emit('print-payments', self.payments_to_print())
+
+  def movement_to_row(self, movement):
+    return (movement,str(movement.description),str(movement.date),str(movement.amount))
 
 gobject.type_register(PaymentsReport)
 gobject.signal_new('student-edit', \
@@ -572,7 +613,7 @@ gobject.signal_new('student-edit', \
 
 
 class MovementsList(gtk.TreeView):
-  def __init__(self, movements, headings, to_row = None):
+  def __init__(self, movements, headings, to_row = None, printable = False):
     if to_row is not None:
       self.to_row = to_row
     else:
@@ -585,6 +626,10 @@ class MovementsList(gtk.TreeView):
 
     for idx, heading in enumerate(headings, 1):
       self.add_column(heading,idx)
+
+    if printable:
+      self.renderer_checkbox = gtk.CellRendererToggle()
+      self.append_column(gtk.TreeViewColumn("Impr?", self.renderer_checkbox, active = 6))
 
   def add_column(self, label, text_idx):
     col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)

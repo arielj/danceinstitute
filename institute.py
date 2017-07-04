@@ -1154,7 +1154,7 @@ class Controller(gobject.GObject):
   #reports
   def payments_report(self, menu_item):
     today = datetime.datetime.today().date()
-    page = PaymentsReport(Payment.filter(today,today,False),User.all(), Klass.all(), Package.all())
+    page = PaymentsReport(Payment.filter(today,today,False), Movement.by_date(today,today).incoming(),User.all(), Klass.all(), Package.all())
     page.export_html.connect_object('clicked', self.export_payments_report_html, page)
     page.export_csv.connect_object('clicked', self.export_payments_report_csv, page)
     page.connect('print-payments', self.print_payments)
@@ -1172,7 +1172,18 @@ class Controller(gobject.GObject):
     q_term = page.get_filter()
     inactive = page.should_include_inactive()
     payments = Payment.filter(f,t, done_or_received, user, k_or_p,page.get_group(), page.get_receipt_number(), q_term, inactive)
-    page.update(payments)
+    if user is None and k_or_p is None and page.get_group() == '' and page.get_receipt_number() == '':
+      movements = Movement.by_date(f,t)
+      if done_or_received:
+        movements = movements.outgoing()
+      else:
+        movements = movements.incoming()
+      if q_term != '':
+        movements = movements.where('description', '%%%s%%' % q_term, comparission = 'LIKE')
+    else:
+      movements = []
+
+    page.update(payments, movements)
 
   def export_payments_report_html(self, page):
     self.export_html(page.to_html())
