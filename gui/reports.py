@@ -1184,7 +1184,7 @@ class StudentsHoursReport(gtk.VBox):
     for k in self.klass_index: row.append('')
     total = 0
 
-    for m in s.memberships:
+    for m in s.memberships.where('inactive', False):
       for k in m.klasses():
         row[self.klass_index[k.id]-1] = str(k.get_duration())
         total += k.get_duration()
@@ -1232,7 +1232,7 @@ class StudentsHoursList(gtk.TreeView):
     for k in self.indexes: row.append('')
     total = 0
 
-    for m in s.memberships:
+    for m in s.memberships.where('inactive', False):
       for k in m.klasses():
         row[self.indexes[k.id]] = str(k.get_duration())
         total += k.get_duration()
