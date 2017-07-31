@@ -82,6 +82,7 @@ class Controller(gobject.GObject):
     self.window.menu.installments.connect('activate', self.installments_report)
     self.window.menu.debts.connect('activate', self.debts)
     self.window.menu.receipts.connect('activate', self.receipts)
+    self.window.menu.students_hours.connect('activate', self.students_hours_report)
     self.window.menu.license.connect('activate', self.show_help_dialog, 'License')
     self.window.menu.about.connect('activate', self.show_help_dialog, 'About')
 
@@ -1298,6 +1299,20 @@ class Controller(gobject.GObject):
 
   def reprint_payments(self, page):
     Receipt(page.payments).do_print(False)
+
+
+  def students_hours_report(self, menu_item):
+    page = StudentsHoursReport(Student.where('inactive', False), Klass.active())
+    page.export_html.connect_object('clicked', self.export_students_hours_report_html, page)
+    page.export_csv.connect_object('clicked', self.export_students_hours_report_csv, page)
+    self.window.add_page(page)
+    return page
+
+  def export_students_hours_report_html(self, page):
+    self.export_html(page.to_html())
+
+  def export_students_hours_report_csv(self, page):
+    self.export_csv(page.to_csv(), page.csv_filename())
 
 
 

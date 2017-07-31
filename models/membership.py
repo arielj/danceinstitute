@@ -43,6 +43,12 @@ class Membership(Model):
     self.for_type = klass_or_package.__class__.__name__
     self._for = klass_or_package
 
+  def klasses(self):
+    if self.for_type == 'Klass':
+      return [self.klass_or_package]
+    else:
+      return self.klass_or_package.klasses
+
   def get_fee(self):
     obj = self.klass_or_package
     if isinstance(obj, klass.Klass):

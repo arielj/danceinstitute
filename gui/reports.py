@@ -1108,3 +1108,135 @@ gobject.signal_new('student-edit', \
                    Receipts, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+
+
+class StudentsHoursReport(gtk.VBox):
+  def __init__(self, students, klasses):
+    gtk.VBox.__init__(self, False, 5)
+
+
+    content = gtk.HBox()
+    self.pack_start(content, True)
+
+    self.students = students
+    self.klasses = klasses
+    self.klass_index = {}
+    self.headings = ['Alumno/a']
+
+    list_store_fields = [int, str] #user_id, user label
+    i = 2
+    for k in klasses:
+      self.klass_index[k.id] = i
+      try:
+        n = k.get_full_name()
+        idx = n.find('(')
+        n = n[:idx]+"\n"+n[idx:]
+        self.headings.append(n)
+      except IndexError:
+        self.headings.append(k.name)
+      list_store_fields.append(str) #klass hours
+      i += 1
+    list_store_fields.append(str) #total hours
+    self.headings.append("Total")
+
+    store = gtk.ListStore(*tuple(list_store_fields))
+
+    self.list = StudentsHoursList(students, self.headings, self.klass_index)
+    #self.list.connect('row-activated', self.on_row_activated)
+
+    self.scroll = gtk.ScrolledWindow()
+    self.scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.scroll.add(self.list)
+
+    content.pack_start(self.scroll, True)
+
+    self.actions = gtk.HBox(False, 5)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
+    self.pack_start(self.actions, False)
+
+    self.show_all()
+
+  def get_tab_label(self):
+    return "Alumnos (Horas/Clase)"
+
+  def to_html(self):
+    h1_content = "Alumnos (Horas/Clase)"
+
+    title = "<h1>%s</h1>" % h1_content
+    rows = map(lambda i: self.values_for_html(i), self.students)
+
+    return exporter.html_wrapper(title+exporter.html_table(self.headings, rows))
+
+  def to_csv(self):
+    st = '"'+'";"'.join(self.headings)+'"'+"\n"
+    st += "\n".join(map(lambda i: ';'.join(self.values_for_html(i)), self.students))
+    return st
+
+  def csv_filename(self):
+    f = 'alumnos: horas por clase'
+    return f+'.csv'
+
+  def values_for_html(self, s):
+    row = [s.to_label()]
+    for k in self.klass_index: row.append('')
+    total = 0
+
+    for m in s.memberships:
+      for k in m.klasses():
+        row[self.klass_index[k.id]-1] = str(k.get_duration())
+        total += k.get_duration()
+
+    row.append(str(total))
+    return row
+
+class StudentsHoursList(gtk.TreeView):
+  def __init__(self, students, headings, indexes):
+    self.students = students
+    self.indexes = indexes
+    self.create_store(students)
+
+    gtk.TreeView.__init__(self, self.store)
+    self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+
+    for idx, heading in enumerate(headings, 1):
+      self.add_column(heading,idx)
+
+  def add_column(self, label, text_idx):
+    col = gtk.TreeViewColumn(label, gtk.CellRendererText(), text=text_idx)
+    col.set_expand(True)
+    self.append_column(col)
+    return col
+
+  def create_store(self, students):
+    fields = [int, str] #user_id, user label
+    for k in self.indexes: fields.append(str) #klass hours
+    fields.append(str) #total hours
+    self.store = gtk.ListStore(*tuple(fields))
+    self.update(students)
+
+  def update(self, students):
+    self.store.clear()
+    self.students = students
+    self.set_model()
+
+  def set_model(self):
+    for s in self.students: self.store.append(self.to_row(s))
+
+  def to_row(self, student):
+    s = student
+    row = [s.id, s.to_label()]
+
+    for k in self.indexes: row.append('')
+    total = 0
+
+    for m in s.memberships:
+      for k in m.klasses():
+        row[self.indexes[k.id]] = str(k.get_duration())
+        total += k.get_duration()
+
+    row.append(str(total))
+
+    return tuple(row)

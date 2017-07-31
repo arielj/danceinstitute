@@ -85,13 +85,15 @@ class MainMenu(gtk.MenuBar):
     self.installments = gtk.MenuItem('Cuotas')
     self.debts = gtk.MenuItem('Deudas')
     self.receipts = gtk.MenuItem('Recibos')
+    self.students_hours = gtk.MenuItem('Alumos (Horas/Materia)')
 
     self.reports_menu.append(self.payments)
     self.reports_menu.append(self.daily_cash)
     self.reports_menu.append(self.installments)
     self.reports_menu.append(self.debts)
     self.reports_menu.append(self.receipts)
-    
+    self.reports_menu.append(self.students_hours)
+
     self.reports.set_submenu(self.reports_menu)
 
     #help menu
