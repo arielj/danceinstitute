@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
+
 import settings
 from translations import _t
 
@@ -92,10 +93,12 @@ class Config(gtk.ScrolledWindow):
 
     self.fees_l = gtk.Label('Precios por horas de clase')
     self.fees_ls = FeesList(self.settings.fees)
+    self.refresh_installment_fees = gtk.Button('Actualizar cuotas')
 
     field = gtk.VBox()
     field.pack_start(self.fees_l, False)
     field.pack_start(self.fees_ls, True)
+    field.pack_start(self.refresh_installment_fees, False)
     self.right.pack_start(field, False)
 
     self.submit = gtk.Button('Guardar')

@@ -47,7 +47,7 @@ class Package(Model):
   def get_hours_fee(self):
     hours = 0
     fixed_fee = 0
-    for klass in self.klasses():
+    for klass in self.klasses:
       if klass.normal_fee > 0:
         fixed_fee += int(klass.normal_fee)
       else:

@@ -297,7 +297,7 @@ class PaymentsReport(gtk.VBox):
       model_iter = k_or_p_model.get_iter_first()
       while model_iter is not None and found is None:
         iter_k_or_p = k_or_p_model.get_value(model_iter,0)
-        if iter_k_or_p is not None and iter_k_or_p.id == k_or_p.id and iter_k_or_p.__class__ == k_or_p._class:
+        if iter_k_or_p is not None and iter_k_or_p.id == k_or_p.id and iter_k_or_p.__class__ == k_or_p.__class__:
           found = model_iter
         else:
           model_iter = k_or_p_model.iter_next(model_iter)
@@ -1186,8 +1186,11 @@ class StudentsHoursReport(gtk.VBox):
 
     for m in s.memberships.where('inactive', False):
       for k in m.klasses():
-        row[self.klass_index[k.id]-1] = str(k.get_duration())
-        total += k.get_duration()
+        try:
+          row[self.klass_index[k.id]-1] = str(k.get_duration())
+          total += k.get_duration()
+        except KeyError:
+          print "ignoro: "+k.name
 
     row.append(str(total))
     return row
@@ -1234,8 +1237,11 @@ class StudentsHoursList(gtk.TreeView):
 
     for m in s.memberships.where('inactive', False):
       for k in m.klasses():
-        row[self.indexes[k.id]] = str(k.get_duration())
-        total += k.get_duration()
+        try:
+          row[self.indexes[k.id]] = str(k.get_duration())
+          total += k.get_duration()
+        except KeyError:
+          print "error: "+k.name
 
     row.append(str(total))
 

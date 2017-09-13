@@ -197,6 +197,7 @@ class Controller(gobject.GObject):
       return current
     else:
       page.submit.connect('clicked', self.save_config, page)
+      page.refresh_installment_fees.connect('clicked', self.refresh_installment_fees, page)
       self.window.add_page(page)
       return page
 
@@ -211,6 +212,24 @@ class Controller(gobject.GObject):
     if self.window.notebook.get_tab_pos() != pos:
       self.window.notebook.set_tab_pos(pos)
 
+  def refresh_installment_fees(self, button, page):
+    #for p in Package.all():
+    #  if int(p.fee) != int(p.get_hours_fee()):
+    #    p.fee = p.get_hours_fee()
+    #    p.save()
+
+    for i in Installment.where('status','waiting'):
+      m = i.membership
+      if m:
+        a1 = i.amount
+        a2 = 0
+        if m.for_type == 'Package':
+          a2 = m.klass_or_package.get_hours_fee()
+        else:
+          a2 = m.klass_or_package.get_hours_fee('normal')
+        if a1 < int(a2):
+          i.amount = a2
+          i.save()
 
 
   #rooms controls
@@ -1242,21 +1261,21 @@ class Controller(gobject.GObject):
     return page
 
   def filter_overdues(self, page):
-    installments = Installment.order_by('users.name ASC, users.lastname ASC')
+    inst = Installment.order_by('users.name ASC, users.lastname ASC')
 
     klass = page.get_selected_klass()
-    if klass is not None: installments = Installment.for_klass(klass,installments)
-    if page.is_only_overdue(): installments = Installment.overdues(None, installments)
-    if not page.include_paid.get_active(): installments.where('status','waiting')
-    if page.get_selected_month() is not None: installments.where('month', page.get_selected_month())
-    if page.get_year() != '': installments.where('year', page.get_year())
+    if klass is not None: inst = Installment.for_klass(klass,inst)
+    if page.is_only_overdue(): inst = Installment.overdues(None, inst)
+    if not page.include_paid.get_active(): inst.where('status','waiting')
+    if page.get_selected_month() is not None: inst.where('month', int(page.get_selected_month()))
+    if page.get_year() != '': inst.where('year', int(page.get_year()))
 
-    if page.is_only_active(): installments = Installment.only_active_users(installments)
+    if page.is_only_active(): inst = Installment.only_active_users(inst)
     else:
       #hago join para que ande el order_by
-      installments.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id')
+      inst.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id LEFT JOIN users ON memberships.student_id = users.id')
 
-    page.update(installments)
+    page.update(inst)
 
   def export_overdue_installments_report_html(self, page):
     self.export_html(page.to_html())

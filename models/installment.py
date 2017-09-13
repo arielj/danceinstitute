@@ -217,8 +217,8 @@ class Installment(Model):
     args = {'klass_id': klass.id}
     packages = package.Package.with_klass(klass)
     if packages.anything():
-      where = '('+where+') OR (memberships.for_id IN (:p_ids) AND memberships.for_type = "Package")'
-      args['p_ids'] = ','.join(map(lambda p: str(p.id), packages))
+      p_ids = ','.join(map(lambda p: str(p.id), packages))
+      where = '('+where+') OR (memberships.for_id IN ({0}) AND memberships.for_type = "Package")'.format(p_ids)
 
     return q.set_join('LEFT JOIN memberships ON memberships.id = installments.membership_id').where(where,args)
 
