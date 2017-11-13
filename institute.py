@@ -427,9 +427,17 @@ class Controller(gobject.GObject):
     page.connect('student-edit', self.edit_student)
     page.connect('student-add', self.add_student)
     page.connect('student-delete', self.ask_delete_student)
+    page.connect('students-export-html', self.students_export_html, page)
+    page.connect('students-export-csv', self.students_export_csv, page)
     page.results.connect('query-reorder', self.reorder_students, page)
     self.save_signal(self.connect('user-changed', page.on_search), page)
     self.save_signal(self.connect('student-deleted', page.on_search, None), page)
+
+  def students_export_html(self, button, page):
+    self.export_html(page.to_html())
+
+  def students_export_csv(self, button, page):
+    self.export_csv(page.to_csv(), page.csv_filename())
 
   def reorder_students(self, table, attr, page):
     value = page.form.get_value()

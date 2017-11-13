@@ -411,10 +411,16 @@ class SearchStudent(gtk.VBox):
     self.delete.set_sensitive(False)
     self.delete.connect('clicked', self.on_delete_student_clicked)
     self.results.students_t.get_selection().connect('changed', self.on_selection_changed)
+    self.export_html = gtk.Button('Exportar HTML')
+    self.export_html.connect('clicked', self.on_export_html_clicked)
+    self.export_csv = gtk.Button('Exportar CSV')
+    self.export_csv.connect('clicked', self.on_export_csv_clicked)
 
     self.actions.pack_start(self.add, False)
     self.actions.pack_start(self.edit, False)
     self.actions.pack_start(self.delete, False)
+    self.actions.pack_start(self.export_html, False)
+    self.actions.pack_start(self.export_csv, False)
 
     self.pack_start(self.actions, False)
 
@@ -450,6 +456,23 @@ class SearchStudent(gtk.VBox):
   def on_add_student_clicked(self,button):
     self.emit('student-add')
 
+  def on_export_html_clicked(self,button):
+    self.emit('students-export-html')
+
+  def on_export_csv_clicked(self,button):
+    self.emit('students-export-csv')
+
+  def to_html(self):
+    return self.results.to_html()
+
+  def to_csv(self):
+    return self.results.to_csv()
+
+  def csv_filename(self):
+    f = 'alumnos-as'
+    return f+'.csv'
+
+
 gobject.type_register(SearchStudent)
 gobject.signal_new('search', \
                    SearchStudent, \
@@ -467,6 +490,14 @@ gobject.signal_new('student-delete', \
                    SearchStudent, \
                    gobject.SIGNAL_RUN_FIRST, \
                    gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
+gobject.signal_new('students-export-csv', \
+                   SearchStudent, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
+gobject.signal_new('students-export-html', \
+                   SearchStudent, \
+                   gobject.SIGNAL_RUN_FIRST, \
+                   gobject.TYPE_NONE, ())
 
 class SearchForm(gtk.VBox):
   def __init__(self):
