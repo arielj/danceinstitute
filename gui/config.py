@@ -162,9 +162,12 @@ class FeesList(gtk.TreeView):
     self.set_model(fees)
 
   def set_model(self, fees):
-    for k in sorted(fees.keys()):
+    for k in sorted(fees.keys(), key=self.order_fees):
       self.store.append((k,str(fees[k])))
     self.store.append(('',''))
+
+  def order_fees(self, fee):
+    return float(fee)
 
   def get_values(self):
     d = {}
