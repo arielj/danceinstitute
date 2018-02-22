@@ -797,9 +797,8 @@ class Controller(gobject.GObject):
     if response == gtk.RESPONSE_ACCEPT:
       klasses = dialog.form.get_checked_klasses()
       if len(klasses) > 0:
-        package = Package.for_user(page.user)
-        if not package:
-          package = Package.for_user_with_klasses(klasses)
+        package = Package.for_user_with_klasses(klasses)
+        package.for_user = page.user.id
         package.fee = dialog.form.get_amount()
         package.save()
         membership = Membership()
