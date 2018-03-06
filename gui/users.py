@@ -653,8 +653,9 @@ class StudentsTable(gtk.TreeView):
   def to_csv(self):
     h = list(map(lambda x: _a('student',x), self.headings))
     h.insert(2,'Nombre y apellido')
+    h.append('Fecha de nacimiento')
     st = ';'.join(h)+"\n"
-    st += "\n".join(map(lambda s: ';'.join([s.name, s.lastname, s.to_label(), s.dni, s.email, s.address, s.cellphone]), self.students))
+    st += "\n".join(map(lambda s: ';'.join([s.name, s.lastname, s.to_label(), s.dni, s.email, s.address, s.cellphone, s.birthday.strftime(Settings.get_settings().date_format)]), self.students))
     return st
 
   def on_col_clicked(self, column):
