@@ -256,7 +256,8 @@ class Klass(Model):
     ms = membership.Membership.for_klass_or_package(self).do_get()
 
     for p in package.Package.with_klass(self):
-      ms = ms + membership.Membership.for_klass_or_package(p).do_get()
+      if p.id is not None:
+        ms = ms + membership.Membership.for_klass_or_package(p).do_get()
 
     uids = map(lambda m: str(m.student_id), ms)
 
