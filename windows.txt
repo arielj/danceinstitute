@@ -1,0 +1,5 @@
+- descargar source
+- copiar backup de database
+- python 2.7 32 bits!!! (agregar al path!!)
+- ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.24
+

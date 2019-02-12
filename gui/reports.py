@@ -512,7 +512,8 @@ class DailyCashReport(gtk.VBox):
 
   def to_csv(self):
     st = ';'.join(self.payment_headings)+"\n"
-    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:]), self.get_filtered_payments()))
+    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:-2]), self.get_filtered_payments()))
+    st += "\n"
     st += "\n"
     st += "\n".join(map(lambda m: ';'.join(list(self.m_to_row(m))[1:]), self.get_filtered_movements()))
     return st
