@@ -500,10 +500,21 @@ class DailyCashReport(gtk.VBox):
 
     return exporter.html_wrapper(title+"<div style='float:left;width:49%;min_width:400px;'>Pagos:"+p_table+"</div><div style='float:right;width:49%;min_width:400px;'>Movimientos:"+m_table+"</div><div class='clear'></div>")
 
-  def p_to_row(self,p):
+  def p_to_row(self, p, for_export = False):
     amount_in = p.amount if not p.done else ''
     amount_out = p.amount if p.done else ''
-    return (p,str(p.description),str(amount_in),str(amount_out),p.user.to_label(),str(p.receipt_number or ''), False)
+
+    fields = (p,str(p.description),str(amount_in),str(amount_out),p.user.to_label())
+
+    if for_export:
+      i = p.installment
+      month = i.month_name() if i is not None else ''
+      fields += (month,)
+    else:
+      fields += (str(p.receipt_number or ''), False)
+    
+    return fields
+
 
   def m_to_row(self,m):
     amount_in = m.amount if m.is_incoming() else ''
@@ -511,8 +522,8 @@ class DailyCashReport(gtk.VBox):
     return (m,str(m.description),str(amount_in),str(amount_out))
 
   def to_csv(self):
-    st = ';'.join(self.payment_headings)+"\n"
-    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p))[1:-2]), self.get_filtered_payments()))
+    st = ';'.join(self.payment_headings+["Mes de cuota"])+"\n"
+    st += "\n".join(map(lambda p: ';'.join(list(self.p_to_row(p,True))[1:]), self.get_filtered_payments()))
     st += "\n"
     st += "\n"
     st += "\n".join(map(lambda m: ';'.join(list(self.m_to_row(m))[1:]), self.get_filtered_movements()))
